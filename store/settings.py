@@ -192,10 +192,10 @@ else:
     # ✅ NEW: Tell Django to use S3 backends (this was the missing engine!)
     STORAGES = {
         "default": {
-            "BACKEND": "BLOG.storages.MediaStorage"
+            "BACKEND": "dashboard.storages.MediaStorage"
         },
         "staticfiles": {
-            "BACKEND": "BLOG.storages.StaticStorage"
+            "BACKEND": "dashboard.storages.StaticStorage"
         }
     }
 
