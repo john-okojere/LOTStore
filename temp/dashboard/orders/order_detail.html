@@ -1,0 +1,103 @@
+{% extends 'dashboard/index.html' %}
+{% load static %}
+{% block content %}
+
+    <link rel="stylesheet" href="{% static 'css/orders.css' %}">
+
+    <div class="order-details-container" style="padding:0 5%;">
+        <h2 class="order-details-header">Order Details</h2>
+        <hr class="separator">
+        <div style="display: flex;justify-content: space-between;align-items: start;flex-wrap: wrap;gap: 2rem;">
+            <div class="section">
+                <h3 class="section-title">Customer Details</h3>
+                <div class="detail">
+                    <p><strong>Name:</strong> {{ payment.full_name }}</p>
+                    <p><strong>Email:</strong> {{ payment.email }}</p>
+                    <p><strong>Phone Number:</strong> {{ payment.phone_number }}</p>
+                </div>
+            </div>
+    
+            <div class="section">
+                <h3 class="section-title">Shipping Address</h3>
+                <div class="detail">
+                    <p><strong>Address:</strong> {{ payment.address }}</p>
+                    <p><strong>City:</strong> {{ payment.city }}</p>
+                    <p><strong>State:</strong> {{ payment.state }}</p>
+                </div>
+            </div>
+    
+            <div class="section">
+                <h3 class="section-title">Payment Details</h3>
+                <div class="detail">
+                    <p><strong>Amount:</strong> ${{ payment.amount }}</p>
+                    <p><strong>Payment Method:</strong> {{ payment.pay }}</p>
+                    <p><strong>Payment Status:</strong>
+                        {% if payment.verified %}
+                            <span class="badge verified">Verified</span>
+                        {% else %}
+                            <span class="badge pending">Pending</span>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+    
+            <div class="section" style="width: 100%;">
+                <h3 class="section-title">Order Items</h3>
+                <table class="order-items-table">
+                    <thead>
+                        <tr>
+                            <th>S/N</th>
+                            <th>Image</th>
+                            <th>Product</th>
+                            <th>Size</th>
+                            <th>Quantity</th>
+                            <th>Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in cart_items %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td><img src="{{ item.product.image.url }}" style="width: 50px;" alt=""></td>
+                                <td>{{ item.product.name }}</td>
+                                <td>
+                                    {% for size in item.size.all %}
+                                        {{ size.name }}<br>
+                                    {% endfor %}
+                                </td>
+                                <td>{{ item.quantity }}</td>
+                                <td>${{ item.subtotal }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="section">
+                <h3 class="section-title">Order Status</h3>
+                <div class="detail">
+                    <p><strong>Packed:</strong> {% if order.packed %}Yes{% else %}No{% endif %}</p>
+                    <p><strong>Sent:</strong> {% if order.sent %}Yes{% else %}No{% endif %}</p>
+                    <p><strong>Delivered:</strong> {% if order.delivered %}Yes{% else %}No{% endif %}</p>
+                </div>
+            </div>
+            <div>
+                {% if not order.packed %}
+                    <a href="{% url 'update_order_status' order.id 'packed' %}" class="btn btn-warning">Mark as Packed</a>
+                {% endif %}
+                {% if not order.sent %}
+                    <a href="{% url 'update_order_status' order.id 'sent' %}" class="btn send">Mark as Sent</a>
+                {% endif %}
+                {% if not order.delivered %}
+                    <a href="{% url 'update_order_status' order.id 'delivered' %}" class="btn deliver">Mark as Delivered</a>
+                {% endif %}
+            </div>
+    
+        </div>
+        <br>
+        <div>
+            <center class="back-btn">
+                <a href="{% url 'manage_orders' %}" class="btn btn-primary">Back to Order Management</a>
+            </center>
+        </div>
+    </div>
+{% endblock %}

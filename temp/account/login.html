@@ -1,0 +1,59 @@
+{% extends "account/auth/base.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block main %}
+<div class="body d-flex p-0 ">
+    <div class="container-xxl">
+
+        <div class="row g-0">
+            <div class="col-lg-6 d-none d-lg-flex justify-content-center align-items-center rounded-lg auth-h100">
+                <div style="max-width: 25rem;">
+                    <div class="text-center mb-3">
+                          <span class="logo-icon">
+                    <img style="width:4rem;" src="{% static 'img/lot_logo.png' %}" alt="">
+                </span>
+                    </div>
+                    <div class="mb-3">
+                        <h2 class="color-900 text-center">Welcome</h2>
+                        <h6 class="color-900 text-center">to</h6>
+                        <h5 class="color-600 text-center">Layers of Truth International Ministries</h5>
+                    </div>
+                    <!-- Image block -->
+                    <div class="">
+                        <!--<img src="{% static 'assets/images/login-img.svg' %}" alt="login-img">-->
+                    </div>
+                </div>
+            </div>
+            <style>
+                                input {
+                                        width: 100% !important;
+                                    }   
+                            </style>
+            <div class="col-lg-6 d-flex justify-content-center align-items-center border-0 rounded-lg auth-h100">
+                <div class="w-100 p-3 p-md-5 card border-0 bg-dark text-light" style="max-width: 32rem;">
+                    <!-- Form -->
+                    <form class="row g-1 p-3 p-md-4" method="post" id="myForm">
+                        <div class="col-12 text-center mb-1 mb-lg-5">
+                            <div class="m-3 phone">
+                                <img style="width:4rem;" src="{% static 'img/lot_logo.png' %}" alt="">
+                            </div>
+                            <h1>Sign in</h1>
+                            <span> Access to our dashboard.</span>
+                        </div>
+                       <hr>
+                       {% csrf_token %}
+                        {{form | crispy}}
+                        <div class="col-12 text-center mt-4">
+                            <button type="submit" class="btn btn-lg btn-block btn-light lift text-uppercase" atl="signin">SIGN IN</button>
+                        </div>
+                        <div class="col-12 text-center mt-4">
+                            <span class="text-muted">Don't have an account yet?  <a href="{% url 'register' %}" class="text-secondary">Sign up here</a></span>
+                        </div>
+                    </form>
+                    <!-- End Form -->
+                </div>
+            </div>
+        </div> <!-- End Row -->
+    </div>
+</div>
+{% endblock main %}

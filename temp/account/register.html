@@ -1,0 +1,85 @@
+{% extends "account/auth/base.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block main %}
+<div class="body d-flex p-0 ">
+    <div class="container-xxl">
+
+        <div class="row g-0">
+            <div class="col-lg-6 d-none d-lg-flex justify-content-center align-items-center rounded-lg auth-h100">
+                <div style="max-width: 25rem;">
+                    <div class="text-center mb-5">
+                          <span class="logo-icon">
+                    <img style="width:4rem;" src="{% static 'img/lot_logo.png' %}" alt="">
+                </span>
+                    </div>
+                    <div class="mb-5">
+                        <h2 class="color-900 text-center">Welcome</h2>
+                        <h6 class="color-900 text-center">to</h6>
+                        <h4 class="color-600 text-center">Layers of Truth International Ministries</h4>
+                    </div>
+                    <!-- Image block -->
+                    <div class="">
+                        <!--<img src="{% static 'assets/images/login-img.svg' %}" alt="login-img">-->
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 d-flex justify-content-center align-items-center border-0 rounded-lg auth-h100">
+                <div class="w-100 p-3 p-md-5 card border-0 bg-dark text-light" style="max-width: 32rem;">
+                    <!-- Form -->
+                    <form class="row g-1" method="post" id="myForm">
+                        <div class="col-12 text-center mb-1 mb-lg-3">
+                            <div class="m-3 phone">
+                                <img style="width:3rem;" src="{% static 'img/lot_logo.png' %}" alt="">
+                            </div>
+                            <h1>Create your account</h1>
+                            <span> Join Our Community </span>
+                        </div>
+                       <hr>
+                       {% csrf_token %}
+                        <div class="formone" style="max-height: 60vh; display: flex; flex-wrap: wrap; gap: 2%;">
+                            <style>
+                                .formone > div:first-child,
+                                .formone > div:nth-child(2),
+                                .formone > div:nth-child(3),
+                                .formone > div:nth-child(6),
+                                .formone > div:nth-child(7),
+                                .formone > div:nth-child(8),
+                                .formone > div:nth-child(9){ 
+                                    width: 48% !important;
+                                }
+                                .formone > div:nth-child(4){
+                                    width: 58% !important;
+                                }
+                                .formone > div:nth-child(5) {
+                                    width: 38% !important;
+                                }
+                                @media screen and (max-width:960px) {
+                                    .formone > div:first-child,
+                                    .formone > div:nth-child(6),
+                                    .formone > div:nth-child(7),
+                                    .formone > div:nth-child(8),
+                                    .formone > div:nth-child(9), 
+                                    .formone > div:nth-child(4),
+                                    .formone > div:nth-child(5) {
+                                        width: 100% !important;
+                                    }   
+                                }
+                            </style>
+                            {{form | crispy}}
+                            <div class="col-12 text-center mt-4">
+                                <button type="submit" style="background-color: var(--color-200);" class="btn btn-lg btn-block lift text-uppercase" atl="signin">SIGN Up</button>
+                            </div>
+                        </div>
+
+                        <div class="col-12 text-center mt-4">
+                            <span class="text-muted">Already have an account?   <a href="{% url 'login' %}" class="text-secondary">Sign in here</a></span>
+                        </div>
+                    </form>
+                    <!-- End Form -->
+                </div>
+            </div>
+        </div> <!-- End Row -->
+    </div>
+</div>
+{% endblock main %}

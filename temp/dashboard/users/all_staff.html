@@ -1,0 +1,168 @@
+{% extends 'dashboard/index.html' %}
+{% block content %}
+<div class="card">
+    <h4>Staff Management</h4>
+    <hr>
+    <table id="userTable" class="display">
+        <thead>
+            <tr>
+                <th>S/N</th>
+                <th>First Name</th> 
+                <th>Last Name</th>
+                <th>Role</th>
+                <th>Gender</th>
+                <th>State</th>
+                <th>Date Joined</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+{% endblock content %}
+
+{% block script %}
+<script>
+    $(document).ready(function() {
+        // Function to get CSRF token
+        function getCSRFToken() {
+            return document.cookie.split('; ')
+                .find(row => row.startsWith('csrftoken='))
+                ?.split('=')[1];
+        }
+
+        // Initialize DataTable
+        var table = $('#userTable').DataTable({
+            ajax: {
+                url: '/dashboard/api/all_staff/',
+                dataSrc: 'data'
+            },
+            columns: [
+                { 
+                    data: null,
+                    render: function (data, type, row, meta) {
+                        return meta.row + 1;
+                    }
+                },
+                { data: 'user.first_name' },
+                { data: 'user.last_name' },
+                { data: 'role' },
+                { data: 'user.gender' },
+                { data: 'state' },
+                { data: 'date_joined' },
+                { 
+                    data: 'id',
+                    render: function(data) {
+                        return `
+                            <button class="view-btn btn btn-success" data-id="${data}">View</button>
+                        `;
+                    }
+                }
+            ]
+          });
+    })
+
+
+    // View User
+    $(document).on('click', '.view-btn', function() {
+        var userId = $(this).data('id');
+        window.location.href = `/dashboard/view_staff/${userId}/`;
+    });
+</script>
+
+<style>
+    /* DataTable Styling */
+    #userTable {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    #userTable thead {
+        background: #007bff;
+        color: white;
+    }
+    #userTable th, #userTable td {
+        padding: 10px;
+        text-align: center;
+        border: 1px solid #ddd;
+    }
+    
+    /* Modal Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 10;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.4);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    .modal-content {
+        background: white;
+        padding: 25px;
+        border-radius: 8px;
+        width: 350px;
+        text-align: left;
+        position: relative;
+        animation: fadeIn 0.3s ease-in-out;
+    }
+    .modal-title {
+        text-align: center;
+        margin-bottom: 15px;
+    }
+    .form-group {
+        margin-bottom: 15px;
+    }
+    .form-group label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+    .form-group input, 
+    .form-group select {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+    
+    /* Buttons */
+    .edit-btn, .delete-btn {
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        cursor: pointer;
+        border-radius: 4px;
+        transition: 0.2s;
+        margin-right: 5px;
+    }
+    .edit-btn {
+        background: #007bff;
+    }
+    .edit-btn:hover {
+        background: #0056b3;
+    }
+    .delete-btn {
+        background: #dc3545;
+    }
+    .delete-btn:hover {
+        background: #c82333;
+    }
+    .btn-update {
+        background: #28a745;
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        width: 100%;
+        cursor: pointer;
+        border-radius: 4px;
+        transition: 0.2s;
+    }
+    .btn-update:hover {
+        background: #218838;
+    }
+</style>
+{% endblock script %}

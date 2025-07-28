@@ -1,0 +1,69 @@
+{% extends 'dashboard/index.html' %}
+{% load static %}
+{% block content %}
+    <link rel="stylesheet" href="{% static 'css/orders.css' %}">
+
+    <div class="">
+        <div style="display: flex;justify-content: space-between;align-items: center;">
+            <h2 style="margin: 0 !important;">{{filter|title}} Order Management</h2>
+        </div>
+        
+        <hr>
+        <!-- Orders Table -->
+        <table id="ordersTable" class="orders-table display">
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>Customer</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Shipping Address</th>
+                    <th>Payment Status</th>
+                    <th>Created</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                    <tr>
+                        <td>#{{ order.id }}</td>
+                        <td>{{ order.payment.full_name }}</td>
+                        <td>₦{{ order.payment.amount }}</td>
+                        <td>
+                            {% if order.delivered %}
+                                <span class="badge delivered">Delivered</span>
+                            {% elif order.sent %}
+                                <span class="badge sent">Sent</span>
+                            {% elif order.packed %}
+                                <span class="badge ">Packed</span><Time></Time>
+                            {% else %}
+                                <span class="badge pending">Pending</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ order.payment.address }}, {{ order.payment.city }}, {{ order.payment.state }}</td>
+                        <td>
+                            {% if order.payment.verified %}
+                                <span class="badge verified">Verified</span>
+                            {% else %}
+                                <span class="badge pending">Pending</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ order.date_created }}</td>
+                        <td>
+                            <a href="{% url 'order_detail' order.id %}" class="btn btn-info">View Details</a>
+                           
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% block script %}
+        <script>
+            $(document).ready(function() {
+                $('#ordersTable').DataTable();
+            });
+        </script>
+    {% endblock %}
+{% endblock %}

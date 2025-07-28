@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% load static %}
+{% block main %}
+
+<style>
+    
+.about-section {
+  margin: 2rem auto;
+  max-width: 800px;
+  padding: 0 1rem;
+}
+
+.about-section h2 {
+  color: #fff;
+}
+
+</style>
+<style>
+    .carousel {
+     position: relative;
+     width: 100%;
+     overflow: hidden;
+ }
+ 
+ .slides {
+     display: flex;
+ }
+ 
+ .slide {
+     flex: 0 0 auto;
+     display: none;
+ }
+ 
+ .slide img {
+     width: 100%;
+ }
+ 
+ .active {
+     display: block;
+ }
+ 
+ .indicators {
+     position: absolute;
+     bottom: 10px;
+     left: 50%;
+     transform: translateX(-50%);
+     display: flex;
+ }
+ 
+ .indicator {
+     width: 10px;
+     height: 10px;
+     background-color: #ccc;
+     border-radius: 50%;
+     margin: 0 5px;
+     cursor: pointer;
+ }
+ 
+ .active-indicator {
+     background-color: #555;
+ }
+ 
+ </style>
+ <div class="carousel">
+    <div class="slides one">
+        <div class="slide">
+            <img src="{% static 'home/img/6.png' %}" alt="Banner 1">
+        </div>
+        <div class="slide">
+            <img src="{% static 'home/img/3.png' %}" alt="Banner 1">
+        </div>
+        <div class="slide">
+            <img src="{% static 'home/img/2.png' %}" alt="Banner 1">
+        </div>
+    </div>
+    <div class="indicators one"></div>
+</div>
+ 
+ <script>
+     document.addEventListener("DOMContentLoaded", function() {
+     var slides = document.querySelectorAll(".slide");
+     var indicatorsContainer = document.querySelector(".indicators");
+     var currentSlide = 0;
+ 
+     // Show the first slide initially
+     slides[currentSlide].classList.add("active");
+ 
+     // Function to move to the next slide
+     function nextSlide() {
+         slides[currentSlide].classList.remove("active");
+         indicators[currentSlide].classList.remove("active-indicator");
+         currentSlide = (currentSlide + 1) % slides.length;
+         slides[currentSlide].classList.add("active");
+         indicators[currentSlide].classList.add("active-indicator");
+     }
+ 
+     // Automatically move to the next slide every 5 seconds
+     setInterval(nextSlide, 5000);
+ 
+     // Create indicators
+     var indicators = [];
+     for (var i = 0; i < slides.length; i++) {
+         var indicator = document.createElement("div");
+         indicator.classList.add("indicator");
+         if (i === currentSlide) {
+             indicator.classList.add("active-indicator");
+         }
+         indicators.push(indicator);
+         indicatorsContainer.appendChild(indicator);
+     }
+ 
+     // Add click event listeners to indicators
+     indicators.forEach(function(indicator, index) {
+         indicator.addEventListener("click", function() {
+             slides[currentSlide].classList.remove("active");
+             indicators[currentSlide].classList.remove("active-indicator");
+             currentSlide = index;
+             slides[currentSlide].classList.add("active");
+             indicators[currentSlide].classList.add("active-indicator");
+         });
+     });
+ });
+ </script>
+ <section class="about-section">
+    <h2>About LOTSTORE</h2>
+    <p>
+        LotStore is a distinguished hub for faith-inspired fashion and lifestyle products, catering to a diverse community of individuals who seek to express their beliefs with grace and sophistication. We stand as more than just a brand; we are a beacon of inspiration and unity, bringing people together through our shared values and commitment to excellence.
+    </p>
+ </section>
+<section class="about-section">
+    <h2>Our Mission</h2>
+    <p>At LotStore, our mission is to empower individuals to boldly showcase their faith through stylish and meaningful apparel, accessories, and lifestyle products. We strive to create a welcoming space where people from all walks of life can come together to celebrate their beliefs, find inspiration, and connect with like-minded individuals.</p>
+  </section>
+
+  <section class="about-section">
+    <h2>Our Vision</h2>
+    <p>
+        We envision LotStore as a global leader in the faith-inspired retail sector, renowned for our unwavering dedication to quality, creativity, and inclusivity. Our goal is to inspire and uplift our community, fostering a sense of belonging and purpose through our carefully curated offerings and heartfelt connections.
+    </p>
+  </section>
+  <section class="about-section">
+<h2>
+    What We Offer
+
+</h2>
+<p>
+    LotStore offers a diverse range of products designed to reflect the beauty and depth of faith. From stylish graphic tees and elegant jewelry to cozy home decor, each item is crafted with care and attention to detail, ensuring that every purchase is a meaningful expression of one's beliefs.
+</p>
+  </section>
+  <section class="about-section">
+    <h2>Our Values</h2>
+    <ul>
+      <li><strong>Faith-Centered:</strong> Our store is rooted in Christian values, and we strive to uphold integrity, compassion, and humility in everything we do.</li>
+      <li><strong>Community-Oriented:</strong> We believe in the power of community and seek to foster connections among believers by providing resources that promote spiritual growth and fellowship.</li>
+      <li><strong>Quality Assurance:</strong> We are committed to offering only the highest quality products, sourced from trusted suppliers who share our dedication to excellence.</li>
+      <li><strong>Customer Satisfaction:</strong> Your satisfaction is our top priority. We aim to provide exceptional customer service and support to ensure that your shopping experience with us is enjoyable and fulfilling.</li>
+    </ul>
+  </section>
+<section class="about-section">
+<h2>
+    Why Choose LotStore:
+
+</h2>
+<p>
+    Whether you're looking for a meaningful gift or a stylish addition to your wardrobe, LotStore has something for everyone. Our unique designs, commitment to quality, and dedication to customer satisfaction set us apart as a trusted and beloved destination for faith-inspired products.
+</p>
+</section>
+ 
+{% endblock main %}

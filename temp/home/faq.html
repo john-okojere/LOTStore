@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% load static %}
+{% block main %}
+<style>
+
+.accordion-item {
+  margin-bottom: 20px;
+}
+
+.accordion-header {
+  background-color: #f4f4f4;
+  padding: 10px;
+  cursor: pointer;
+}
+
+.accordion-content {
+  display: none;
+  background-color: #fff;
+  padding: 10px;
+}
+
+.accordion-content.active {
+  display: block;
+}
+
+</style>
+<div class="container">
+    <h1>Frequently Asked Questions</h1>
+    <br>
+    <div class="accordion">
+      <div class="accordion-item">
+        <div class="accordion-header">What is LotStore?</div>
+        <div class="accordion-content">
+          LotStore stands as a distinguished destination for faith-inspired fashion and lifestyle products, embodying the motto "embrace your faith, wear your belief." We meticulously curate a collection of apparel, accessories, and home decor items that epitomize the beauty and depth of the Christian faith.
+        </div>
+      </div>
+      <div class="accordion-item">
+        <div class="accordion-header">How can I place an order?</div>
+        <div class="accordion-content">
+          To place an order, simply browse our online catalog, select the items you wish to purchase, and proceed to checkout. Follow the prompts to enter your shipping and payment information, and your order will be processed and shipped to you promptly.
+        </div>
+      </div>
+      <div class="accordion-item">
+        <div class="accordion-header">What types of products do you offer?</div>
+        <div class="accordion-content">
+          LotStore offers a diverse array of products spanning graphic tees, sweatshirts, jewelry, home decor, and more. Each item is thoughtfully curated to resonate with the values and beliefs cherished by our community. We pride ourselves on offering only items that can be printed on or inscribed with faith-inspired messages.
+
+        </div>
+      </div>
+      <div class="accordion-item">
+        <div class="accordion-header">What payment methods do you accept?</div>
+        <div class="accordion-content">
+          We use Paystack for your convenience in nigeria.
+        </div>
+      </div>
+      <div class="accordion-item">
+        <div class="accordion-header">How can I contact LotStore for assistance?</div>
+        <div class="accordion-content">
+          For prompt assistance, please reach out to our dedicated team via WhatsApp at +2348169404088 or email us at store@layersoftruth.org. We are committed to providing exceptional customer service and addressing any questions or inquiries you may have.
+
+        </div>
+      </div>
+      <div class="accordion-item">
+        <div class="accordion-header">Do you ship internationally?</div>
+        <div class="accordion-content">
+          Absolutely, we extend our shipping services internationally to select countries. Shipping rates and delivery times may vary depending on your location. Please don't hesitate to contact us for more details regarding international shipping options.
+        </div>
+      </div>
+      <div class="accordion-item">
+        <div class="accordion-header">What is your return policy?</div>
+        <div class="accordion-content">
+          We prioritize your satisfaction and offer a hassle-free return policy. If, for any reason, you are not completely satisfied with your purchase, you have the option to return your item(s) for a full refund or exchange. Kindly refer to our <a href="{% url 'return-policy' %}">Returns & Exchanges page</a> for comprehensive details.
+
+        </div>
+      </div>
+      <div class="accordion-item">
+        <div class="accordion-header">How can I stay updated on new arrivals and promotions?</div>
+        <div class="accordion-content">
+          Stay informed about our latest arrivals, exclusive promotions, and engaging community events by following us on all social media platforms (@LotStore). Additionally, subscribe to our newsletter to receive firsthand updates and exclusive offers straight to your inbox.
+        </div>
+      </div>
+      <div class="accordion-item">
+        <div class="accordion-header">Are the products at LotStore ethically sourced?</div>
+        <div class="accordion-content">
+          Absolutely, we are deeply committed to ethically sourcing our products. We collaborate with suppliers who share our values and adhere to fair labor practices. Many of our products are crafted from sustainable materials, ensuring minimal environmental impact without compromising on quality.
+        </div>
+      </div>
+      <div class="accordion-item">
+        <div class="accordion-header">Can I request a custom order or design?</div>
+        <div class="accordion-content">
+          While custom orders or designs are currently not offered, we highly value feedback and suggestions from our community. If you have a specific request or idea in mind, please feel free to reach out to us, and we'll explore possibilities to accommodate your needs.
+
+        </div>
+      </div>
+      <div class="accordion-item">
+        <div class="accordion-header">Do you offer wholesale or bulk pricing?</div>
+        <div class="accordion-content">
+          Certainly, we provide wholesale pricing options for select products. For inquiries regarding bulk purchases or wholesale partnerships, kindly reach out to us for more information on pricing and availability.
+
+        </div>
+      </div>
+      <div class="accordion-item">
+        <div class="accordion-header">How can I become a part of the LotStore community?</div>
+        <div class="accordion-content">
+          We warmly welcome individuals from diverse backgrounds and beliefs to become part of our thriving community at LotStore. Engage with us on social media, participate in our events, and share your experiences using #LotStore. Let's together spread love, hope, and faith through stylish expressions.
+        </div>
+      </div>
+      <div class="accordion-item">
+        <div class="accordion-header"> Are there special offers?</div>
+        <div class="accordion-content">
+          Yes, we regularly feature special offers and opportunities, including single buys, minimum purchases, free delivery, and pay-on-delivery options. Keep an eye out for these exclusive deals and discounts as we aim to enhance your shopping experience.
+        </div>
+      </div>
+      <!-- Add more FAQ items as needed -->
+    </div>
+  </div>
+  <div>
+    <h3><strong>Additional Information:</strong></h3>
+    <p>Please note that production commences 12 hours after an order has been placed. We strive to ensure prompt processing and delivery of your orders while maintaining our commitment to quality and excellence.</p>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+  var accordionHeaders = document.querySelectorAll('.accordion-header');
+
+  accordionHeaders.forEach(function(header) {
+    header.addEventListener('click', function() {
+      var content = this.nextElementSibling;
+      if (content.style.display === 'block') {
+        content.style.display = 'none';
+      } else {
+        content.style.display = 'block';
+      }
+    });
+  });
+});
+  </script>
+{% endblock main %}

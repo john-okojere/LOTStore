@@ -1,0 +1,38 @@
+{% extends "dashboard/index.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block content %}
+<style>
+    fieldset > div{
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    input[type="text"],input[type="file"],[type="number"], select{
+        min-width: 300px;
+        height: 50px;
+    }
+    textarea{
+        width:750px !important;
+        height: 100px !important;
+    }
+    .eee > div{
+        display: flex;
+        flex-direction: column;
+    }
+</style>
+<div style="padding: 20px;padding-top: 0;border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+    <h2 style="text-align: center; color: #000; font-weight: bold; margin-bottom: 20px;">Add New Product</h2>
+    <hr>
+    <form action="" method="post" id="myForm" enctype="multipart/form-data" style="max-width: 750px;margin: auto;">
+        {% csrf_token %}
+        <div class="eee" style="display: flex; flex-direction: row; flex-wrap: wrap; gap: 30px;justify-content: space-between;">
+            {{ form | crispy }}
+        </div>
+        <br>
+        <div class="for" style="text-align: center;">
+            <input type="submit" class="btn" value="Add Product" style="color: white; padding: 10px 20px; background: #cdab4b !important; border: none; border-radius: 5px; cursor: pointer; font-size: 16px;">
+        </div>
+    </form>
+</div>
+{% endblock content %}

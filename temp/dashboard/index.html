@@ -1,0 +1,130 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/admin_dashboard.css' %}">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table thead {
+            background-color: #f8f9fa;
+        }
+
+        table th, table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        table th {
+            background-color: #343a40;
+            color: #ffffff;
+        }
+
+        table tbody tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        table tbody tr:hover {
+            background-color: #e9ecef;
+        }
+
+        table tbody tr td {
+            color: #495057;
+        }
+
+        table tbody tr td a {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        table tbody tr td a:hover {
+            text-decoration: underline;
+        }
+    </style>
+    <link rel="icon" href="{% static 'home/img/logo/4.png' %}">
+</head>
+<body>
+    <style>
+        .sidebar li h4 {
+            display: flex;
+            gap: 10px;
+        }
+        .sidebar li h4 i{
+            margin: 0;
+        }
+    </style>
+    <!-- Sidebar --> 
+    <div class="sidebar" id="sidebar">
+        <h2 style="padding:20px 40px;margin: 0;">
+            <a href="{% url 'admin_dashboard' %}">
+                <img src="{% static 'home/img/logo/3.png' %}" alt="Logo" style="width: 100px;">
+            </a>
+        </h2>
+        <ul style="padding:0 20px;">
+            <li><a href="/"><h4><i class="fas fa-house"></i> Store</h4> </a></li>
+            <li><a href="/dashboard"><h4><i class="fas fa-bar-chart"></i> Dashboard</h4> </a></li>
+            <li>
+                <h4><i class="fas fa-table"></i> Shelf</h4>
+                <ul style="list-style: circle;">
+                    <li style="margin-left: 50px;padding: 7px;"><a href="{% url 'add-product' %}"> Add Product</a></li>
+                    <li style="margin-left: 50px;padding: 7px;"><a href="{% url 'product_list' %}"> All Product</a></li>
+                    <li style="margin-left: 50px;padding: 7px;"><a href="{% url 'category_list' %}"> All Category</a></li>
+                    <li style="margin-left: 50px;padding: 7px;"><a href="{% url 'sizes_list' %}"> All Sizes</a></li>
+                </ul>
+            </li>
+            <li>
+                <h4><i class="fas fa-clipboard"></i> Manage Orders</h4>
+                <ul style="list-style: circle;">
+                    <li style="margin-left: 50px;padding: 7px;"><a href="{% url 'manage_orders' %}"> All Orders</a></li>
+                    <li style="margin-left: 50px;padding: 7px;"><a href="{% url 'manage_orders' %}?status=pending"> Pending Orders</a></li>
+                    <li style="margin-left: 50px;padding: 7px;"><a href="{% url 'manage_orders' %}?status=packed"> Packed Orders</a></li>
+                    <li style="margin-left: 50px;padding: 7px;"><a href="{% url 'manage_orders' %}?status=sent"> Sent Orders</a></li>
+                    <li style="margin-left: 50px;padding: 7px;"><a href="{% url 'manage_orders' %}?status=delivered"> Delivered Orders</a></li>
+                </ul>
+            </li>
+            <li>
+                <h4><i class="fas fa-users"></i> Manage Users</h4>
+                <ul style="list-style: circle;">
+                    <li style="margin-left: 50px;padding: 7px;"><a href="{% url 'all_users' %}"> Customers</a></li>
+                    <li style="margin-left: 50px;padding: 7px;"><a href="{% url 'all_staffs' %}"> Staffs</a></li>
+                </ul>
+            </li>
+            
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="navbar" style="border-radius: 0;">
+            <h3>Welcome, {{ user.full_name | title }} to Dashboard</h3>
+            <button class="toggle-btn" id="toggleBtn">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+       
+        <div class="content">
+           {% block content %}
+           {% endblock %}
+        </div>
+    </div>
+    <script src="{% static 'js/admin_dashboard.js' %}"></script>
+    <script src="https://code.jquery.com/jquery-3.5.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+    {% block script %}
+    {% endblock %}  
+
+    
+</body>
+</html>

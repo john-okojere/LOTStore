@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% load static %}
+{% block head %}
+<title> Layers Of Truth | Profile - {{ puser.first_name }} {{ puser.last_name }}</title>
+<link rel="stylesheet" href="{% static 'css/account/profile.css' %}">
+<link rel="stylesheet" href="{% static 'css/card/style.css' %}">
+{% endblock head %}
+
+{% block content %}
+<br>
+   <div class="d-md-flex m-3">
+    {% for puser in puser %}
+    <div class="m-2 border-1 border-dark p-2" style="border-style: solid;">
+        <div class="lotcard">
+            <div class="front">
+                <div class="info">
+                    <img src="{% static 'card/new/LOT.svg' %}" alt="">
+                    <div>
+                            <h4>{{ puser.first_name | upper }} {{ puser.last_name | upper }}</h4>
+                            <h1>{{ puser.department }}</h1>
+                            <p> <img class="svg" src="{% static 'card/new/vector.svg' %}" alt=""> layersoftruth.org/siloam2024</p>
+                    </div>
+                </div>
+                <div>
+                <img src="{% static 'card/new/Rect.png' %}" alt="">
+        
+                </div>
+            </div>
+            <div class="back">
+                <div>
+                    <div>
+                    <img style="border-radius: 0;" src="{{ puser.qr_code }}" alt="QR Code">
+    
+                    </div>
+                </div>
+                <div>
+                    <ul>
+                        <li>Siloam`24</li>
+                        <li>Siloam`24</li>
+                        <li>Siloam`24</li>
+                        <li>Siloam`24</li>
+                        <li>Siloam`24</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <br>
+        <a href="{% url 'profile' puser.uid %}" class="btn btn-dark">view profile</a>
+    </div>
+{% endfor %}
+   
+   </div>
+
+<script>
+    const profileLink = document.querySelector('.navbar-item:nth-child(5) > a');
+    profileLink.classList.add('active');
+</script>
+{% endblock content %}

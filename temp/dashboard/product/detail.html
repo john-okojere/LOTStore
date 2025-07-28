@@ -1,0 +1,133 @@
+{% extends 'dashboard/index.html' %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<div class=" mt-4">
+    <div class="card shadow-lg p-4">
+        <h3 class="mb-3 text-primary"><i class="fas fa-box-open"></i> Product Details</h3>
+        <hr>
+
+        <div class="row">
+            <!-- Product Image -->
+            <div class="col-md-4 text-center">
+                <img src="{{ product.image.url }}" class="img-fluid rounded shadow-lg" alt="{{ product.name }}" style="width: 100%;">
+            </div>
+
+            <!-- Product Details -->
+            <div class="col-md-8">
+                <h4 class="text-dark">{{ product.name }}</h4>
+                <p><strong>Categories:</strong> {{ product.categories.all|join:", " }}</p>
+                <p><strong>Sizes:</strong> {{ product.size.all|join:", " }}</p>
+                <p><strong>Price:</strong> ${{ product.price }}</p>
+                <p><strong>Stock:</strong> {{ product.stock }}</p>
+                <p><strong>Payment Type:</strong> {{ product.pay }}</p>
+                <p><strong>Delivery Method:</strong> {{ product.delivery }}</p>
+                <p><strong>Product Type:</strong> {{ product.productType }}</p>
+                <p><strong>Minimum Buy:</strong> {{ product.minBuy }}</p>
+                </div>
+        </div>
+        <br>
+        <p><strong>Description:</strong> {{ product.description | safe }}</p>
+
+        <a href="{% url 'edit-product' product.uid %}" class="btn btn-warning"><i class="fas fa-edit"></i> Edit</a>
+        <a href="{% url 'delete_product' product.uid %}" class="btn btn-danger"><i class="fas fa-trash"></i> Delete</a>
+    
+    </div>
+    <h2>📊 Product Analytics: {{ product.name }}</h2>
+    
+    <p><strong>Total Views:</strong> {{ total_views }}</p>
+    <p><strong>Total Times Added to Cart:</strong> {{ total_cart_adds }}</p>
+
+    <!-- Table for Product Views -->
+    <h3>Recent Product Views</h3>
+    <table id="productViewsTable">
+        <thead>
+            <tr>
+                <th>User</th>
+                <th>IP Address</th>
+                <th>State</th>
+                <th>Country</th>
+                <th>Time Spent (sec)</th>
+                <th>Timestamp</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for view in product_views %}
+            <tr>
+                <td>{{ view.user.full_name|default:"Anonymous" }}</td>
+                <td>{{ view.ip_address }}</td>
+                <td>{{ view.state|default:"Unknown" }}</td>
+                <td>{{ view.country|default:"Unknown" }}</td>
+                <td>{{ view.duration }}</td>
+                <td>{{ view.timestamp }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Table for Cart Activities -->
+    <h3>Recent Cart Activities</h3>
+    <table id="cartTable">
+        <thead>
+            <tr>
+                <th>User</th>
+                <th>IP Address</th>
+                <th>State</th>
+                <th>Country</th>
+                <th>Timestamp</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for cart in cart_activities %}
+            <tr>
+                <td>{{ cart.user.full_name|default:"Anonymous" }}</td>
+                <td>{{ cart.ip_address }}</td>
+                <td>{{ cart.state|default:"Unknown" }}</td>
+                <td>{{ cart.country|default:"Unknown" }}</td>
+                <td>{{ cart.timestamp }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- State Distribution Chart -->
+    <h3>State Distribution</h3>
+    <canvas id="stateChart"></canvas>
+
+    <!-- DataTables Script -->
+    <script>
+        $(document).ready(function() {
+            $('#productViewsTable').DataTable();
+            $('#cartTable').DataTable();
+        });
+
+        // Prepare state data for chart
+        var stateLabels = [{% for data in product_views %}"{{ data.state }}",{% endfor %}];
+        var stateCounts = {};
+        stateLabels.forEach(function(state) {
+            stateCounts[state] = (stateCounts[state] || 0) + 1;
+        });
+
+        var stateDataLabels = Object.keys(stateCounts);
+        var stateDataValues = Object.values(stateCounts);
+
+        // Render State Distribution Chart
+        var ctxState = document.getElementById('stateChart').getContext('2d');
+        new Chart(ctxState, {
+            type: 'bar',
+            data: {
+                labels: stateDataLabels,
+                datasets: [{
+                    label: 'Product Views by State',
+                    data: stateDataValues,
+                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                }]
+            }
+        });
+    </script>
+</div>
+{% endblock %}

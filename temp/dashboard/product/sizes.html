@@ -1,0 +1,211 @@
+{% extends 'dashboard/index.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    .modal-backdrop{
+        position: absolute;
+        background: rgba(0, 0, 0, 0.657);
+    }
+
+</style>
+<div class="mt-4 m-auto" style="margin: auto;">
+    <div class="card shadow-lg p-4" style="width: 1000px !important;">
+        <h3 class="mb-4 text-primary"><i class="fas fa-box"></i> Size Management</h3>
+        <button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#addSizeModal">
+            <i class="fas fa-plus"></i> Add Size
+        </button>
+        <hr>
+
+        <!-- Table -->
+        <table id="productsTable" class="table table-striped table-hover">
+            <thead class="thead-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for size in sizes %}
+                    <tr>
+                        <td>{{ size.id }}</td>
+                        <td>{{ size.name }}</td>
+                        <td>
+                            <button class="btn btn-warning btn-sm edit-size" data-id="{{ size.id }}" data-name="{{ size.name }}">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button class="btn btn-danger btn-sm delete-size" data-id="{{ size.id }}" data-name="{{ size.name }}">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add Size Modal -->
+<div class="modal" id="addSizeModal" tabindex="-1" aria-labelledby="addSizeModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addSizeModalLabel">Add Size</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addSizeForm">
+                    <div class="mb-3">
+                        <label for="newSizeName" class="form-label">Size Name</label>
+                        <input type="text" class="form-control" id="newSizeName" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Size</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Size Modal -->
+<div class="modal" id="editSizeModal" tabindex="-1" aria-labelledby="editSizeModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editSizeModalLabel">Edit Size</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editSizeForm">
+                    <input type="hidden" id="editSizeId">
+                    <div class="mb-3">
+                        <label for="editSizeName" class="form-label">Size Name</label>
+                        <input type="text" class="form-control" id="editSizeName" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal" id="deleteSizeModal" tabindex="-1" aria-labelledby="deleteSizeModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteSizeModalLabel">Delete Size</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete <strong id="deleteSizeName"></strong>?</p>
+                <button type="button" class="btn btn-danger" id="confirmDeleteSize">Yes, Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}
+
+{% block script %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    $(document).ready(function () {
+    // Initialize DataTable
+    $('#productsTable').DataTable();
+ 
+    // CSRF Token setup for Django AJAX requests
+    $.ajaxSetup({
+        headers: { "X-CSRFToken": "{{ csrf_token }}" }
+    });
+
+        // Handle Add Size Form Submission
+        $('#addSizeForm').submit(function (e) {
+        e.preventDefault();
+        let sizeName = $('#newSizeName').val();
+
+        $.ajax({
+            url: "/dashboard/size/add/",
+            method: "POST",
+            data: { name: sizeName },
+            success: function (response) {
+                if (response.success) {
+                    location.reload();
+                } else {
+                    alert("Error adding size.");
+                }
+            },
+            error: function () {
+                alert("Something went wrong. Try again!");
+            }
+        });
+    });
+
+    // Handle Edit Button Click
+    $('.edit-size').click(function () {
+        let sizeId = $(this).data('id');
+        let sizeName = $(this).data('name');
+
+        $('#editSizeId').val(sizeId);
+        $('#editSizeName').val(sizeName);
+        $('#editSizeModal').modal('show');  
+        console.log("kkk")
+        // Ensure Bootstrap JS is loaded properly
+    });
+
+    // Handle Edit Form Submission
+    $('#editSizeForm').submit(function (e) {
+        e.preventDefault();
+        let sizeId = $('#editSizeId').val();
+        let sizeName = $('#editSizeName').val();
+
+        $.ajax({
+            url: `/dashboard/size/update/${sizeId}/`,
+            method: "POST",
+            data: { name: sizeName },
+            success: function (response) {
+                if (response.success) {
+                    location.reload();  // Reload to reflect updates
+                } else {
+                    alert("Error updating size.");
+                }
+            },
+            error: function () {
+                alert("Something went wrong. Try again!");
+            }
+        });
+    });
+
+    // Handle Delete Button Click
+    $('.delete-size').click(function () {
+        let sizeId = $(this).data('id');
+        let sizeName = $(this).data('name');
+
+        $('#deleteSizeName').text(sizeName);
+        $('#confirmDeleteSize').data('id', sizeId);
+        $('#deleteSizeModal').modal('show');
+    });
+
+    // Handle Confirm Delete
+    $('#confirmDeleteSize').click(function () {
+        let sizeId = $(this).data('id');
+
+        $.ajax({
+            url: `/dashboard/size/delete/${sizeId}/`,
+            method: "POST",
+            success: function (response) {
+                if (response.success) {
+                    location.reload();
+                } else {
+                    alert("Error deleting size.");
+                }
+            },
+            error: function () {
+                alert("Something went wrong. Try again!");
+            }
+        });
+    });
+});
+</script>
+
+{% endblock script %}

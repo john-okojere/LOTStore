@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+{% load static %}
+
+    {% block meta %}
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{product.name | title}} - LOT Store</title>
+    <meta name="description" content="{{product.description | truncatechars:200}}">
+    <meta name="keywords" content="Religious Books, Church Merchandise, Christian Apparel, Inspirational Gifts, Spiritual Accessories, Faith-based Products, Bible Study Materials, Devotional Items, Religious Artwork, Worship Supplies, Christian Jewelry, Prayer Tools, Religious Decor, Church Resources, Spiritual Literature, Sacred Music, Christian Homeware, Church Apparel, Religious Symbols, Faith-based Decor,     {% for cat in product.categories.all %}{{cat}},{% endfor %}">
+    <meta name="author" content="Layers of Truth Church">
+    <meta property="og:title" content="{{product.name | title}} - LOT Store">
+    <meta property="og:description" content="{{product.description | truncatechars:200}}">
+    <meta property="og:image" content="{{product.image.url}}">
+    <meta property="og:url" content="{% url 'details' product.uid %}">
+    <meta property="og:type" content="product">
+    <meta name="twitter:card" content="{{product.image.url}}">
+    <meta name="twitter:title" content="{{product.name | title}} - LOT Store">
+    <meta name="twitter:description" content="{{product.description | truncatechars:200}}">
+    <meta name="twitter:image" content="{{product.image.url}}">
+    {% endblock meta %}
+
+{% block main %}
+<link rel="stylesheet" href="{% static 'home/css/details.css' %}">
+<section class="details" style="display: flex; gap: 30px; align-items: start; padding: 20px;">
+    <div class="img" style="flex: 1; text-align: center;">
+        <img src="{{product.image.url}}" alt="{{product.name}}" style="max-width: 100%; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+    </div>
+    <div class="info" style="flex: 1;">
+        <h1 style="font-size: 28px; font-weight: bold; color: #fff;">{{ product.name | upper }}</h1>
+        <table style="width: 100%; border-collapse: collapse;">
+            <tbody>
+                <tr><th>Price:</th> <td style="color: #e60000; font-size: 18px; font-weight: bold;">&#8358; {{ product.price }}</td></tr>
+                <tr><th>Sizes:</th> <td>{% for size in product.size.all %} {{ size }}, {% endfor %}</td></tr>
+                <tr><th>Delivery:</th> <td>{{ product.delivery | title }}</td></tr>
+                <tr><th>Type:</th> <td>{{ product.productType | title }}</td></tr>
+                <tr><th>Min. Buy:</th> <td>{{ product.minBuy | title }}</td></tr>
+                <tr><th>Stock:</th> <td>{{ product.stock }}</td></tr>
+                <tr><th>Payment:</th> <td>{{ product.pay | title }}</td></tr>
+                <tr>
+                    <th>Categories:</th>
+                    <td>
+                        {% for cat in product.categories.all %}
+                            <a href="{% url 'category' cat.name %}"><span style="background-color: #f0f0f0;color: #000; padding: 5px 10px; margin: 5px; border-radius: 5px;">{{ cat }}</span></a>
+                        {% endfor %}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <form id="add-to-cart-form" method="post" style="margin-top: 20px;">
+            {% csrf_token %}
+            <div style="display: flex; gap: 10px; align-items: center;">
+                
+                <input type="number" id="id_quantity" name="quantity" min="1" value="1" required style="{% if product.productType == 'Single Buy' %} display: none; {% endif %} width: 60px; padding: 5px; border: 1px solid #ddd; border-radius: 5px;">
+                <input type="text" id="info" placeholder="Extra information" name="info" style="flex: 1; padding: 5px; border: 1px solid #ddd; border-radius: 5px;">
+                    <input type="submit" class="btn" value="Add to Cart" style="background-color: #e60000; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">
+               
+            </div>
+        </form>
+    </div>
+</section>
+
+<section style="padding: 20px;">
+    <fieldset style="border: 1px solid #ddd; padding: 15px; border-radius: 10px;">
+        <legend style="font-size: 20px; font-weight: bold;">Description</legend>
+        <hr>
+        <p style="line-height: 1.6;">{{ product.description|linebreaks }}</p>
+    </fieldset>
+</section>
+{% if user.is_authenticated and user.is_staff %}
+    <div style="text-align: center; margin: 20px 0;">
+        <a href="{% url 'edit-product' product.uid %}" class="btn" style="background-color: #333; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none;">Edit Product</a>
+    </div>
+{% endif %}
+
+<section style="padding: 20px;">
+    
+<section class="items">
+    {% for product in products %}
+    <div class="item">
+        <div class="rect">
+            <a href="{% url 'details' product.uid %}">
+                <div style="min-height: 250px;width: 100%;height: 100%;position: relative;;background: url({{product.image.url}});background-position: center;background-repeat: no-repeat;background-size: cover;">
+                {% if product.delivery == "Free Delivery" %}
+                <span style="position: absolute;top:0;padding: 5px 10px; background: #323A45;">{{product.delivery | title}}</span>
+                {% elif product.productType == "Gift on Buy" %}
+                <span style="position: absolute;top:0;padding: 5px 10px; background: #008751;">{{product.productType | title}}</span>
+                {% elif product.productType == "Single Buy" %}
+                <span style="position: absolute;top:0;padding: 5px 10px; background: #cdab4b;">{{product.productType | title}}</span>
+                {% endif %}
+                </div>
+            </a>
+        </div>
+        <div class="info" style="gap:5px;flex-direction: column;">
+            {{product.name | title | truncatechars:25}} 
+            <div style="display: flex;justify-content: space-between;gap: 10px;align-items: center;">
+                <div>
+                <p class="title">
+                <span class="price">&#8358; {{product.price}} - Min. {{product.minBuy}} pcs </span>  </p>
+
+                </div>                    
+                <span class="price"><a href="{% url 'details' product.uid %}" style="padding: 2px 10px; background-color: #fff;color: #000;" class="btn">BUY</a></span>
+            </div>
+        </div>
+    </div>
+        {% endfor %}  
+    </section>
+</section>
+<script>
+    $(document).ready(function(){
+        $('#add-to-cart-form').on('submit', function(event){
+            
+            event.preventDefault();
+            var csrfToken = $('input[name="csrfmiddlewaretoken"]').val();
+            var selectedSizes = [];
+            $('input[name="size"]:checked').each(function(){
+                selectedSizes.push($(this).val());
+            });
+            console.log($('#info').val())
+            console.log(selectedSizes)
+            var formData = {
+                    'quantity': $('#id_quantity').val(),
+                    'size': selectedSizes,
+                    'info': $('#info').val(),
+                    'csrfmiddlewaretoken': csrfToken
+                };
+            $.ajax({
+                type: 'POST',
+                url: "{% url 'add_to_cart' product.uid %}",
+                data: formData,
+                success: function(response){
+                    alert('Product added to cart successfully!');
+                    $('#cart-count').text(response.cart_count);
+                    fetch("{% url 'track_add_to_cart' %}", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRFToken": "{{ csrf_token }}"
+                        },
+                        body: JSON.stringify({
+                            product_uid: "{{ product.uid }}"
+                        })
+                    });
+                },
+                error: function(response){
+                    alert('An error occurred. Please try again.');
+                }
+            });
+        });
+    });
+</script>
+<script>
+    let startTime = new Date().getTime();
+
+    window.addEventListener("beforeunload", function () {
+        let endTime = new Date().getTime();
+        let timeSpent = Math.round((endTime - startTime) / 1000);  // Convert to seconds
+
+        // Send data to Django using AJAX
+        navigator.sendBeacon("{% url 'track_time_spent' %}", JSON.stringify({
+            product_uid: "{{ product.uid }}",
+            time_spent: timeSpent
+        }));
+    });
+
+    document.getElementById("addToCartBtn").addEventListener("click", function () {
+        
+    });
+</script>
+{% endblock main %}

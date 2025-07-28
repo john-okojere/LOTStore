@@ -1,0 +1,290 @@
+{% extends 'dashboard/index.html' %}
+{% block content %}
+<div class="card">
+    <h4>User Management</h4>
+    <hr>
+    <table id="userTable" class="display">
+        <thead>
+            <tr>
+                <th>S/N</th>
+                <th>First Name</th> 
+                <th>Last Name</th>
+                <th>Email</th>
+                <th>Gender</th>
+                <th>Cart Items</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+<style>
+    #userTable > tbody > tr > td:nth-child(7){
+        display: flex;
+        gap: 10px;
+    }
+</style>
+<!-- Edit User Modal -->
+<div id="editUserModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h3 class="modal-title">Edit User</h3>
+        <form id="editUserForm">
+            {% csrf_token %}
+            <input type="hidden" id="user_id">
+
+            <div class="form-group">
+                <label>First Name:</label>
+                <input type="text" id="edit_first_name" required>
+            </div>
+
+            <div class="form-group">
+                <label>Last Name:</label>
+                <input type="text" id="edit_last_name" required>
+            </div>
+
+            <div class="form-group">
+                <label>Email:</label>
+                <input type="email" id="edit_email" required>
+            </div>
+
+            <div class="form-group">
+                <label>Gender:</label>
+                <select id="edit_gender">
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn-update">Update</button>
+        </form>
+    </div>
+</div>
+
+{% endblock content %}
+
+{% block script %}
+<script>
+    $(document).ready(function() {
+        // Function to get CSRF token
+        function getCSRFToken() {
+            return document.cookie.split('; ')
+                .find(row => row.startsWith('csrftoken='))
+                ?.split('=')[1];
+        }
+
+        // Initialize DataTable
+        var table = $('#userTable').DataTable({
+            ajax: {
+                url: '/dashboard/api/all_users/',
+                dataSrc: 'data'
+            },
+            columns: [
+                { 
+                    data: null,
+                    render: function (data, type, row, meta) {
+                        return meta.row + 1;
+                    }
+                },
+                { data: 'first_name' },
+                { data: 'last_name' },
+                { data: 'email' },
+                { data: 'gender' },
+                { data: 'cart_item_count' },
+                { 
+                    data: 'id',
+                    render: function(data) {
+                        return `
+                            <button class="view-btn btn btn-success" data-id="${data}">View</button>
+                            <button class="edit-btn btn btn-primary" data-id="${data}">Edit</button>
+                            <button class="delete-btn btn btn-danger" data-id="${data}">Delete</button>
+                        `;
+                    }
+                }
+            ]
+        });
+
+        // Open Edit Modal
+        $(document).on('click', '.edit-btn', function() {
+            var userId = $(this).data('id');
+            $.ajax({
+                url: `/dashboard/api/edit_user/${userId}/`,
+                method: 'GET',
+                success: function(user) {
+                    $('#user_id').val(userId);
+                    $('#edit_first_name').val(user.first_name);
+                    $('#edit_last_name').val(user.last_name);
+                    $('#edit_email').val(user.email);
+                    $('#edit_gender').val(user.gender);
+                    $('#editUserModal').fadeIn();
+                }
+            });
+        });
+
+        // Close Modal
+        $('.close').click(function() {
+            $('#editUserModal').fadeOut();
+        });
+
+        // Handle Edit User Form Submission
+        $('#editUserForm').submit(function(event) {
+            event.preventDefault();
+            var userId = $('#user_id').val();
+            var updatedData = {
+                first_name: $('#edit_first_name').val(),
+                last_name: $('#edit_last_name').val(),
+                email: $('#edit_email').val(),
+                gender: $('#edit_gender').val()
+            };
+
+            $.ajax({
+                url: `/dashboard/api/edit_user/${userId}/`,
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(updatedData),
+                headers: {
+                    "X-CSRFToken": getCSRFToken()
+                },
+                success: function() {
+                    alert('User updated successfully!');
+                    $('#editUserModal').fadeOut();
+                    table.ajax.reload(); // Refresh Table
+                },
+                error: function(xhr) {
+                    alert('Error updating user: ' + xhr.responseJSON.error);
+                }
+            });
+        });
+
+        // Delete User
+        $(document).on('click', '.delete-btn', function() {
+            var userId = $(this).data('id');
+
+            if (confirm("Are you sure you want to delete this user?")) {
+                $.ajax({
+                    url: `/dashboard/api/delete_user/${userId}/`,
+                    method: 'DELETE',
+                    headers: {
+                        "X-CSRFToken": getCSRFToken()
+                    },
+                    success: function() {
+                        alert('User deleted successfully!');
+                        table.ajax.reload(); // Refresh Table
+                    },
+                    error: function(xhr) {
+                        alert('Error deleting user: ' + xhr.responseJSON.error);
+                    }
+                });
+            }
+        });
+
+        // Close modal when clicking outside of it
+        $(window).click(function(event) {
+            if ($(event.target).is('#editUserModal')) {
+                $('#editUserModal').fadeOut();
+            }
+        });
+    });
+    // View User
+    $(document).on('click', '.view-btn', function() {
+        var userId = $(this).data('id');
+        window.location.href = `/dashboard/view_user/${userId}/`;
+    });
+</script>
+
+<style>
+    /* DataTable Styling */
+    #userTable {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    #userTable thead {
+        background: #007bff;
+        color: white;
+    }
+    #userTable th, #userTable td {
+        padding: 10px;
+        text-align: center;
+        border: 1px solid #ddd;
+    }
+    
+    /* Modal Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 10;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.4);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    .modal-content {
+        background: white;
+        padding: 25px;
+        border-radius: 8px;
+        width: 350px;
+        text-align: left;
+        position: relative;
+        animation: fadeIn 0.3s ease-in-out;
+    }
+    .modal-title {
+        text-align: center;
+        margin-bottom: 15px;
+    }
+    .form-group {
+        margin-bottom: 15px;
+    }
+    .form-group label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+    .form-group input, 
+    .form-group select {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+    
+    /* Buttons */
+    .edit-btn, .delete-btn {
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        cursor: pointer;
+        border-radius: 4px;
+        transition: 0.2s;
+        margin-right: 5px;
+    }
+    .edit-btn {
+        background: #007bff;
+    }
+    .edit-btn:hover {
+        background: #0056b3;
+    }
+    .delete-btn {
+        background: #dc3545;
+    }
+    .delete-btn:hover {
+        background: #c82333;
+    }
+    .btn-update {
+        background: #28a745;
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        width: 100%;
+        cursor: pointer;
+        border-radius: 4px;
+        transition: 0.2s;
+    }
+    .btn-update:hover {
+        background: #218838;
+    }
+</style>
+{% endblock script %}

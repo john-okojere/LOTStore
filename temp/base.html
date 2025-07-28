@@ -1,0 +1,567 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    {% block meta %}
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %} {% endblock title %}  LOT Store | Online Shopping for Faith-Inspired Apparel - Embrace His Grace, Wear His Love</title>
+    <meta name="description" content="Explore a wide range of products at LOT Store, the official online store of Layers of Truth Church. Shop for books, merchandise, and more.">
+    <meta name="keywords" content="LOT Store, Layers of Truth Church, religious books, merchandise, online store">
+    <meta name="author" content="Layers of Truth Church">
+    <meta property="og:title" content="LOT Store - Layers of Truth Church">
+    <meta property="og:description" content="Explore a wide range of products at LOT Store, the official online store of Layers of Truth Church. Shop for books, merchandise, and more.">
+    <meta property="og:image" content="{% static 'home/img/logo/4.png' %}">
+    <meta property="og:url" content="https://store.layersoftruth.org">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="{% static 'home/img/logo/4.png' %}">
+    <meta name="twitter:title" content="LOT Store - Layers of Truth Church">
+    <meta name="twitter:description" content="Explore a wide range of products at LOT Store, the official online store of Layers of Truth Church. Shop for books, merchandise, and more.">
+    <meta name="twitter:image" content="{% static 'home/img/logo/4.png' %}">
+    {% endblock meta %}
+    <style>
+      nav .search i{
+        font-weight: bold !important;
+      }
+      input#search_item::placeholder{
+        font-size: 1rem !important;
+        font-weight: lighter !important;
+        padding: 0 !important;
+        color: rgba(128, 128, 128, 0.872);
+      }
+      input#search_item{
+        padding: 0;
+      }
+    </style>
+    <link rel="shortcut icon" href="{% static 'home/img/logo/4.png' %}" type="image/x-icon">
+    <link
+      rel="stylesheet"
+      href="{% static 'assets/css/my-task.style.min.css' %}"
+    />
+    <link rel="stylesheet" href="{% static 'home/css/style.css' %}" />
+    <link rel="stylesheet" href="{% static 'home/css/shelf.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/font-awesome.min.css' %}" />
+    <script
+      src="https://kit.fontawesome.com/7559e3d310.js"
+      crossorigin="anonymous"
+    ></script>
+    <style>
+      .search-info{
+        width: 300px; 
+      }
+    </style>
+  </head>
+  <body>
+   <div class="header">
+    <div style="background-color: white;color: #000;padding: 0.5rem 2%">
+      <div style="display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px; 
+      list-style: none;
+      width: 100%;
+      max-width: 1400px;
+      margin: auto;
+       ">
+      <div style="display: flex;column-gap: 1rem;flex-wrap: wrap;font-weight: bold;">
+        <div><i class="fa fa-whatsapp"></i> +234(0) 816 940 4088</div> 
+        <div><i class="fa fa-envelope"></i> store@layersoftruth.org</div> 
+      </div>
+      <div>
+        <ul style="display: flex;list-style: none;gap: 1rem;align-items: center;justify-content: center;font-weight: bold;">
+          <li><i class="fa fa-facebook-official"></i></li>
+          <li><i class="fa fa-instagram"></i></li>
+          <li style="    display: flex;justify-content: center;align-items: center;gap: 3px;"><img style="width: 20px;" src="{% static 'home/img/download.png' %}" alt="Nigeria Flag" style="width: 30px;"> EN</li>
+        </ul>
+      </div> 
+      </div>
+    </div>
+    <nav>
+      <div style="
+          display: flex;
+     justify-content: space-between;
+     align-items: center;
+     gap: 20px; 
+     list-style: none;
+     width: 100%;
+     max-width: 1400px;
+     margin: auto;
+      ">
+           <!-- Logo Section -->
+           <div class="logo logo-side" style="padding: 0;min-width: 180px;">
+         <a href="/"><img src="{% static 'home/img/logo/3.png' %}" alt="" style="width: 100px;"></a>
+       </div>
+       
+       <!-- Search Section -->
+       <div class="search" style="text-align: center;">
+         <form action="{% url 'search' %}" method="get" style="display: flex;align-items: center;justify-content: center;gap: 10px;">
+           <i class="fa fa-search"></i>
+           <input type="text" name="item" id="search_item" placeholder="Search T-Shirt, Sizes, Text" style="min-width: 400px;"/>
+           <button type="submit" class="btn" style="background-color: #cdab4b;" id="search_submit">
+             Search
+           </button>
+           <ul id="search-suggestions"></ul>
+         </form>
+       </div>
+ 
+       <!-- Menu Bar Section -->
+       <div class="menus_bar" style="width: 100px;">
+        <div style="display: flex;gap: 20px;align-items: center;">
+          <a href="{% url 'view_cart' %}" style=""> <i style="font-size: 1rem;" class="fa fa-shopping-cart"></i> ( <span style="font-family: fantasy; {% if cart.cartitem_set.all.count > 0 %}color: orangered;{% endif %}" id="cart-count">{{cart.cartitem_set.all.count}}</span> )</a>
+         <a class="menu-toggle" style="position: initial;">
+           <i class="fa fa-bars" style="font-size: 24px;"></i>
+           <i class="fa fa-times" style="font-size: 24px; display: none;"></i>
+         </a>
+        </div>
+       </div>
+ 
+       <!-- User and Navigation Items -->
+       <div class="items" style="min-width: 250px;">
+         <ul style="display: flex; align-items: center; gap: 25px;">
+           <li><a href="/">Home</a></li>
+           <li><a href="{% url 'merchs' %}">Merchs</a></li>
+           {% if user.is_authenticated %}
+           <li class="dropdown" id="accountDropdown" style="display: flex;gap: 10px;align-items: center;">
+             <img style="width: 30px; height: 30px; border-radius: 50%;" src="{{user.profilepic.image.url}}" alt="">
+             <div>
+               <small><div style="font-weight: 100 !important;margin: 0 !important;">Hello,</div>
+               <span style="display: flex;gap: 5px; align-items: center;"> {{user.full_name|title}} <a style="display: flex;gap: 0.5rem;align-items: center;"><i class="fa fa-angle-down"></i></a></span></small>
+               <div class="dropdown-content" id="accountDropdownContent">
+                 <a href="{% url 'profile' user.uid %}">Profile</a>
+                 <a href="{% url 'logout' %}">Logout</a>
+                 {% if user.level >= 2 %}
+                 <a href="{% url 'admin_dashboard' %}">Dashboard</a>
+                 {% endif %}
+               </div>
+             </div>
+           </li>
+           
+           {% else %}
+           <li style="text-align: center;">
+             <a href="{% url 'login' %}" style="font-weight: bold;">Login</a> |
+             <a href="{% url 'register' %}" style="font-weight: bold;">Sign Up</a> 
+           </li>
+           {% endif %}
+ 
+           <!-- Help and Flag Section -->
+           <li style="display: flex; align-items: center; gap: 0.5rem;">
+            <div class="dropdown">
+              <a href="#">Help?</a>
+              <div class="dropdown-content">
+                <a href="{% url 'faq' %}">FAQs</a>
+                <a href="{% url 'contact' %}">Contact Us</a>
+                <a href="https://w.app/LOTSTORE" target="_blank">Chat Us on WhatsApp</a>
+              </div>
+            </div>
+          </li>
+         </ul>
+       </div>
+      </div>
+     </nav>
+   </div>
+ 
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+  const dropdown = document.querySelector(".dropdown");
+  const dropdownContent = document.querySelector(".dropdown-content");
+
+  dropdown.addEventListener("click", () => {
+    const isVisible = dropdownContent.style.display === "block";
+    dropdownContent.style.display = isVisible ? "none" : "block";
+  });
+
+  document.addEventListener("click", (event) => {
+    if (!dropdown.contains(event.target)) {
+      dropdownContent.style.display = "none";
+    }
+  });
+});
+
+      // JavaScript to handle dropdown functionality
+document.addEventListener("DOMContentLoaded", function() {
+  var accountDropdown = document.getElementById("accountDropdown");
+  var accountDropdownContent = document.getElementById("accountDropdownContent");
+
+  // Show dropdown content when hovering over the dropdown
+  accountDropdown.addEventListener("mouseenter", function() {
+    accountDropdownContent.style.display = "block";
+  });
+
+  // Hide dropdown content when mouse leaves the dropdown
+  accountDropdown.addEventListener("mouseleave", function() {
+    accountDropdownContent.style.display = "none";
+  });
+});
+
+    </script>
+    <!-- <hr> -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+      <script>
+        $(document).ready(function () {
+            $('#search_item').on('input', function () {
+                var inputText = $(this).val();
+                if (inputText.length > 0) {
+                  $.ajax({
+                    url: "{% url 'search_suggestions' %}",
+                    data: {
+                        'item': inputText
+                    },
+                    dataType: 'json',
+                    success: function (data) {
+                        var suggestions = data.suggestions;
+                        var suggestionList = $('#search-suggestions');
+                        suggestionList.empty();
+                        suggestions.forEach(function (suggestion) {
+                          suggestions.forEach(function (product) {
+                            var html = '<li style="display: flex;justify-content: space-between;align-items: center;">';
+                            html += '<img src="' + product.image + '" style="width: 70px;" alt="">';
+                            html += '<div class="search-info">';
+                            html += '<h5>' + product.name + '</h5>';
+                            html += '<p>' + product.size + ' - &#8358;' + product.price + '</p>';
+                            html += '</div>';
+                            html += '<div>';
+                            html += '<a href="/details/' + product.details_url + '"><i class="fa fa-eye"></i></a>';
+                            html += '</div>';
+                            html += '</li>';
+                            // Append the HTML to the suggestion list
+                            suggestionList.append(html);
+                        });
+                        });
+                    }
+                });
+                }else{
+                  $('#search-suggestions').empty();
+                }
+            });
+        });
+
+    function adjustNavMargin() {
+      const  mainbody = document.getElementById("main-body")
+      const  main = document.querySelector("main")
+      var  aside = document.querySelector("#aside")
+      var navHeight = document.querySelector('.header').offsetHeight;
+      mainbody.style.paddingTop = navHeight + 'px';
+      aside.style.paddingTop = navHeight + 'px';
+
+      if (window.innerWidth > 1020) {
+        main.style.height = aside.offsetHeight + 'px';
+        main.style.overflow = 'hidden';
+        main.style.overflowY = 'scroll';
+      }
+  }
+      
+  window.addEventListener('load', adjustNavMargin);
+  window.addEventListener('resize', adjustNavMargin);
+    </script>
+
+    <style>
+      /* Custom scrollbar styles */
+      ::-webkit-scrollbar {
+        width: 3px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 10px;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: #555;
+      }
+    </style>
+    <br />
+    <div class="main-body" id="main-body">
+      <aside class="side-menu" id="aside" >
+    <div>
+      <div>
+        <form
+          class="filter filter-options"
+          method="POST"
+          action="{% url 'filter_items' %}"
+        >
+          {% csrf_token %}
+          <select id="category-filter" name="category-filter">
+            <option value="0" {% if category_id ==  0 %} selected {% endif %}>Category</option>
+            {% for cat in category %}
+            <option value="{{ cat.id }}" {% if category_id == cat.id %} selected {% endif %}>{{ cat.name }}</option>
+            {% endfor %}
+        </select>
+          <div class="sizes">
+            <h6>Sizes</h6>
+            {% for size in all_sizes %}
+                <div>
+                  <input type="checkbox" name="size" id="{{size.name}}" value="{{size.id}}" 
+                  {% if size in size_filter %} checked {% endif %}
+                  />
+                  <label for="{{size.name}}"> {{ size.name | title }} </label>
+                </div>
+            {% endfor %}
+          </div>
+          <div class="filter-option">
+            <div>
+              <span>&#8358;</span>
+              <input
+                type="price"
+                id="price-filter"
+                min="0"
+                max="100"
+                value="{% if min_price_filter %}{{min_price_filter}}{% else %}0{% endif %}"
+              /> 
+            </div>
+            -
+            <div>
+              <span>&#8358;</span>
+              <input
+                type="price"
+                id="price-filter"
+                min="0"
+                max="100"
+                value="{% if max_price_filter %}{{ max_price_filter }}{% else %}10000{% endif %}"
+                name="max-price"
+              />
+            </div>
+          </div>
+          <button type="submit" class="btn">Filter</button>
+        </form>
+      </div>
+      <br>
+      <div>
+        <img src="{% static '1x1/1.png' %}" alt="">
+      </div>
+      <br>
+      <div>
+        <h3>Categories</h3>
+        <hr />
+        <ul>
+          {% for cat in category %}
+          <li>
+            <a href="{% url 'category' cat.name %}">
+              <p>
+                <span class="name">{{cat.name}}</span>
+                <span class="quantity">{{cat.count}}</span>
+              </p>
+            </a>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+      <br>
+      <div class="setting">
+        <h3>Settings</h3>
+        <hr />
+        <ul>
+          {% if user.level >= 2 %}
+          <li>
+            <a href="{% url 'admin_dashboard' %}">
+              <p>
+                <span>Dashboard</span>
+                <span><i class="fa fa-history"></i></span>
+              </p>
+            </a>
+          </li>
+          {% endif %}
+          <li>
+            <a href="{% url 'view_cart' %}">
+              <p>
+                <span>Cart</span>
+                <span><i class="fa fa-shopping-cart"></i></span>
+              </p>
+            </a>
+          </li>
+         {% if user.is_authenticated %}
+          <li>
+            <a href="{% url 'profile' user.uid %}">
+              <p>
+                <span>Profile</span>
+                <span><i class="fa fa-user-circle-o"></i></span>
+              </p>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'logout' %}">
+              <p>
+                <span>Logout</span>
+                <span><i class="fa fa-sign-out"></i></span>
+              </p>
+            </a>
+          </li>
+          {% else %}
+          <li>
+            <a href="{% url 'login' %}">
+              <p>
+              <span>Login</span>
+              <span><i class="fa fa-sign-in"></i></span>
+            </p>
+          </a>
+          </li>
+          <li>
+            <a href="{% url 'register' %}">
+              <p>
+              <span>Register</span>
+              <span><i class="fa fa-pencil"></i></span>
+            </p>
+            </a>
+          </li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+      </aside>
+      <div class="overlay"></div>
+      <script>
+         document.addEventListener("DOMContentLoaded", function() {
+          var sideMenu = document.querySelector(".side-menu");
+          var menuToggle = document.querySelector(".menu-toggle");
+          var overlay = document.querySelector(".overlay");
+
+          menuToggle.addEventListener("click", function() {
+            sideMenu.classList.toggle("open");
+            overlay.classList.toggle("show");
+            menuToggle.classList.toggle("open");
+          });
+        });
+      </script>
+      <main>
+        <div>
+          {% block main %} {% endblock main %}
+        </div>
+      </main>
+    </div>
+<section>
+  <style>
+    
+    .whatsapp-button {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: #008751;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 50%;
+  cursor: pointer;
+  z-index: 1000;
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+  background-color: #fefefe;
+  margin: 20% auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 80%;
+  color: #000;
+}
+
+.close {
+  color: #000;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
+}
+footer > div{
+  align-items: start;
+}
+  </style>
+  
+  
+</section>
+<style>
+  footer div ul {
+    align-items: start;
+    gap: 2rem;
+    list-style: none;
+  }
+  .items strong{
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+  }
+</style>
+    <footer>
+      <hr />
+      <div>
+        <div style="display: flex;flex-direction: row;flex-wrap: wrap;justify-content: space-between;gap: 2rem;align-items: center;">
+          <div>
+        <a href="/"><img src="{% static 'home/img/logo/3.png' %}" alt="" style="width: 200px;"></a><br>
+            <sub>Embrace Your Faith, Wear Your Belief.</sub>
+          </div>
+          <div>
+            <h6>JOIN OUR COMMUNITY</h6>
+          <ul class="items">
+            <li><a href="https://www.facebook.com/people/Lotstore/61558265454027/"><i class="fa fa-facebook-official"></i></a></li>
+            <li><a href="https://www.facebook.com/people/Lotstore/61558265454027/"><i class="fa fa-instagram"></i></a></li>
+            <li><a href="https://www.facebook.com/people/Lotstore/61558265454027/"><i class="fa fa-twitter"></i></a></li>
+            <li><a href="https://www.facebook.com/people/Lotstore/61558265454027/"><i class="fa fa-linkedin"></i></a></li>
+            <li><a href="https://www.facebook.com/people/Lotstore/61558265454027/"><i class="fa fa-youtube"></i></a></li>
+          </ul>
+          </div>
+        </div>
+        <ul style="flex-wrap: wrap;">
+          <li class="items">
+                <strong>PAYMENT METHODS</strong>
+              <br><br>
+              <ul class="items">
+                  <li>Pay On Delivery</li>
+                  <li>Bank Transfer</li>
+                  <li>Visa Card</li>
+                  <li>Mastercard</li>
+                  <li>Verve</li>
+                </ul>
+          </li>
+          <li class="items">
+            <strong>Need Help?</strong>
+            <br><br>
+            <ul>
+              <li><a href="{% url 'faq' %}">FAQs</a></li>
+              <li><a href="{% url 'contact' %}">Contact Us</a></li>
+              <li><a href="https://w.app/LOTSTORE" target="_blank">Chat Us on WhatsApp</a></li>
+            </ul>
+          </li>
+          <li class="items">
+            <strong>Policies</strong>
+            <br><br>
+            <ul>
+              <li><a href="{% url 'return-policy' %}">Return Policy</a></li>
+              <li><a href="{% url 'delivery-policy' %}">Delivery Policy</a></li>
+              <li><a href="{% url 'privacy-policy' %}">Privacy Policy</a></li>
+              <li><a href="{% url 'TermsCondition' %}">Terms & Condition</a></li>
+            </ul>
+          </li>
+          <li class="items">
+            <strong>Useful Links</strong>
+            <br><br>
+            <ul>
+              <li><a href="{% url 'about' %}">About Us</a></li>
+              <li><a href="/#">Back to Homepage</a></li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+      
+     
+    
+    </footer>
+    <script src="{% static 'home/js/script.js' %}"></script>
+  </body>
+</html>

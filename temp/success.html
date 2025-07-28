@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% load static %}
+{% block main %}
+<link rel="stylesheet" href="{% static 'home/css/cart_view.css' %}">
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 ">
+            <div class="card border-0 shadow-sm p-4">
+                <div class="text-center">
+                    <h2 class="mt-3" style="color: #0fad00;">Success</h2>
+                    {% if message %}
+                    <p class="mt-3" style="font-size: 1.2rem; color: #0fad00;">{{ message }}</p>
+                    {% endif %}
+                    <h3 class="mt-3">Dear {{ payment.full_name }}</h3>
+                    <p class="mt-3" style="font-size: 1.2rem; color: #5C5C5C;">Your transaction was successful.</p>
+                </div>
+                <hr>
+                <div class="card border-0 shadow-sm p-4">
+                    <p class="mb-3">Transaction Details:</p>
+                    <ul class="list-group mb-3">
+                        <li class="list-group-item"><strong>Amount:</strong> &#8358;{{ payment.amount }}</li>
+                        <li class="list-group-item"><strong>Date:</strong> {{ payment.date_created }}</li>
+                        <li class="list-group-item"><strong>Reference:</strong> {{ payment.ref }}</li>
+                        <!-- Add more details as needed -->
+                    </ul>
+                    <p class="mb-3">Thank you for your purchase!</p>
+                    <a href="{% url 'homepage' %}" class="btn btn-primary">Go to Home</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<table>
+    <thead>
+        <tr>
+            <th>S/N</th>
+            <th>Image</th>
+            <th>Product</th>
+            <th>Quantity</th>
+            <th>Info</th>
+            <th>Total</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for cart_item in cart_items %}
+        <tr>
+            <td>{{forloop.counter}}</td>
+            <td><img src="{{cart_item.product.image.url}}" style="width: 50px;" alt=""></td>
+            <td><a href="{% url 'details' cart_item.product.uid %}">{{ cart_item.product.name }}</a></td>
+            <td class="quantity">{{ cart_item.quantity }}</td>
+            <td class="quantity">{{ cart_item.info }}</td>
+            <td class="subtotal">&#8358;{{ cart_item.subtotal }}</td>
+        </tr>
+        {% endfor %}
+        <tr>
+            <td colspan="4"><strong>Total:</strong></td>
+            <td id="total" colspan="4">&#8358;{{ total }}</td>  <!-- Display the overall total price of the cart -->
+        </tr>
+    </tbody>
+</table>
+
+<table>
+    <tbody>
+        <tr>
+            <th>Full Name</th>
+            <td>{{payment.full_name}}</td>
+        </tr>
+        <tr>
+            <th>Address</th>
+            <td>{{payment.address}}</td>
+        </tr>
+        <tr>
+            <th>City</th>
+            <td>{{payment.city}}</td>
+        </tr>
+        <tr>
+            <th>State</th>
+            <td>{{payment.state}}</td>
+        </tr>
+        <tr>
+            <th>Phone Number</th>
+            <td>{{payment.phone_number}}</td>
+        </tr>
+    </tbody>
+</table>
+
+{% endblock main %}

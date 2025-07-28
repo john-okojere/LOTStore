@@ -1,0 +1,85 @@
+{% load static %}
+<!doctype html>
+<html class="no-js" lang="en" dir="ltr">
+<head>
+       <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Authentication | Layers Of Truth Church Administration Dashboard</title>
+    <meta name="description" content="The Layers Of Truth Church Administration Dashboard is a comprehensive platform designed for managing Layers Of Truth Church events, departments, and member information. Ensure smooth Layers Of Truth Church operations with our user-friendly and feature-rich dashboard.">
+    <meta name="keywords" content="Layers Of Truth Church administration, Layers Of Truth Church events, Layers Of Truth Church departments, Layers Of Truth Church member management, event management, attendance tracking, Layers Of Truth Church dashboard, member information, Layers Of Truth Church QR code scanner">
+    <meta name="author" content="Layers Of Truth">
+    <meta name="robots" content="index, follow">
+
+ <!-- Favicon -->
+    <link rel="icon" href="{% static 'img/lot_logo.png' %}" type="image/x-icon">
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'img/lot_logo.png' %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'img/lot_logo.png' %}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'img/lot_logo.png' %}">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:title" content="Layers Of Truth Church Administration Dashboard">
+    <meta property="og:description" content="A comprehensive platform for managing Layers Of Truth Church events, departments, and member information.">
+    <meta property="og:image" content="{% static 'assets/images/login-img.svg' %}">
+    <meta property="og:url" content="https://www.layersoftruth.org">
+    <meta property="og:type" content="website">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="{% static 'assets/images/login-img.svg' %}">
+    <meta name="twitter:title" content="Layers Of Truth Church Administration Dashboard">
+    <meta name="twitter:description" content="A comprehensive platform for managing Layers Of Truth Church events, departments, and member information.">
+    <meta name="twitter:image" content="{% static 'assets/images/login-img.svg' %}">
+    <meta name="twitter:site" content="@yourLayers Of Truth Churchhandle">
+
+    <!-- Canonical Link -->
+    <link rel="canonical" href="https://dashboard.layersoftruth.org">
+
+    <!-- Additional Meta Tags -->
+    <meta name="theme-color" content="#ffffff">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <!-- project css file  -->
+    <link rel="stylesheet" href="{% static 'assets/css/my-task.style.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/font-awesome.min.css' %}">
+    <style>
+        .phone{
+                display: none;
+            }
+        @media screen and (max-width:960px) {
+            .phone{
+                display: block;
+            }
+            .main{
+                display: flex;
+                align-items: center;
+            }
+        }
+        @media screen and (min-width:960px) {
+            .phone{
+                display: none;
+            }
+        }
+        .form-text{
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+<div id="mytask-layout" class="theme-indigo">
+
+    <!-- main body area -->
+    <div class="main p-2 py-3 p-xl-5 " style="display: flex;justify-content: center;align-items: center;">
+        
+        <!-- Body: Body -->
+        {% block main %}
+        
+        {% endblock main %}
+    </div>
+</div>
+
+<!-- Jquery Core Js -->
+<script src="{% static 'assets/bundles/libscripts.bundle.js' %}"></script>
+
+</body>

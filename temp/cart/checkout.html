@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load static %}
+{% block main %}
+<div class="checkout-container" style="max-width: 600px; margin: auto; padding: 20px; background: white; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center;">
+    <h2 style="color: #333; margin-bottom: 20px;">Checkout</h2>
+    <p style="font-size: 14px; color: #555;">Complete your payment securely to finalize your order.</p>
+    <form id="paymentForm" style="margin-top: 20px;">
+        <div class="form-submit">
+            <button type="submit" onclick="payWithPaystack()" style="background: #007bff; color: white; padding: 10px 20px; border-radius: 5px; border: none; cursor: pointer;">Pay Now</button>
+        </div>
+    </form>
+</div>
+<script>
+    const paymentForm = document.getElementById('paymentForm');
+    paymentForm.addEventListener("submit", payWithPaystack, false);
+    function payWithPaystack(e) {
+        e.preventDefault();
+        let handler = PaystackPop.setup({
+            key: 'YOUR_PUBLIC_KEY', // Replace with your public key
+            email: "{{payment.cart.user.email}}",
+            amount: {{ total }} * 100,
+            ref: ''+Math.floor((Math.random() * 1000000000) + 1), // Generates a unique reference
+            onClose: function(){
+                alert('Payment window closed.');
+            },
+            callback: function(response){ 
+                window.location = "{% url 'initiate_payment' %}";
+            }
+        });
+        handler.openIframe();
+    }
+</script>
+{% endblock main %}

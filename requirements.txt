@@ -1,0 +1,6 @@
+asgiref
+Django
+pytz
+sqlparse
+gunicorn
+requests 
