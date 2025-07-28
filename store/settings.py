@@ -27,9 +27,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-6sha*qzn=0udkb8+q8+29tc$scd^t^yf9m^z#@%m*#o5@_=%9('
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DEBUG')
 
 ALLOWED_HOSTS = ['*']
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://layersoftruth.org",
+    "https://store.layersoftruth.org",
+]
 
 
 AUTH_USER_MODEL = 'user.User'
