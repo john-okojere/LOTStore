@@ -175,8 +175,8 @@ else:
     AWS_S3_REGION_NAME = config("AWS_S3_REGION_NAME", "us-east-1")  # default to us-east-1 if not set
     AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
 
-    AWS_LOCATION_STATIC = "static"
-    AWS_LOCATION_MEDIA = "media"
+    AWS_LOCATION_STATIC = "lot-store/static"
+    AWS_LOCATION_MEDIA = "lot-store/media"
     AWS_S3_OBJECT_PARAMETERS = {
         "CacheControl": "max-age=86400",
     }
