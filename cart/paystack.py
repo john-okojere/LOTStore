@@ -1,5 +1,6 @@
 from django.conf import settings
 import requests
+from requests import RequestException
 
 class Paystack:
     PAYSTACK_SK = settings.PAYSTACK_SECRET_KEY
@@ -12,15 +13,13 @@ class Paystack:
             "Content-Type": "application/json",
         }
         url = self.base_url + path
-        response = requests.get(url, headers=headers)
-        
-        print(
-             f"\n\nTransaction with ref: {ref} has a response {response} and status_code of {response.status_code}\n\n")
-        
-        if response.status_code == 200:
+        try:
+            response = requests.get(url, headers=headers, timeout=15)
             response_data = response.json()
-            return response_data['status'], response_data['data']
+        except (RequestException, ValueError):
+            return False, "Unable to verify payment right now."
 
-        response_data = response.json()
+        if response.status_code == 200 and response_data.get('status'):
+            return True, response_data.get('data', {})
 
-        return response_data['status'], response_data['message']
+        return False, response_data.get('message', "Unable to verify payment.")

@@ -25,7 +25,8 @@ class Cart(models.Model):
         return f'{self.code}'
 
     def save(self, *args, **kwargs):
-        self.generate_code()
+        if not self.code or self.code == "0000":
+            self.generate_code()
         return super().save(*args, **kwargs)
 
 
@@ -89,8 +90,8 @@ class Payment(models.Model):
     def verify_payment(self):
         paystack = Paystack()
         status, result = paystack.verify_payment(self.ref, self.amount)
-        if status:
-            if result['amount'] / 102 == self.amount:
+        if status and isinstance(result, dict):
+            if result.get('amount', 0) / 102 == self.amount:
                 self.verified = True
             self.save()
         if self.verified:

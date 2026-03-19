@@ -212,8 +212,7 @@ document.addEventListener("DOMContentLoaded", function() {
                         var suggestions = data.suggestions;
                         var suggestionList = $('#search-suggestions');
                         suggestionList.empty();
-                        suggestions.forEach(function (suggestion) {
-                          suggestions.forEach(function (product) {
+                        suggestions.forEach(function (product) {
                             var html = '<li style="display: flex;justify-content: space-between;align-items: center;">';
                             html += '<img src="' + product.image + '" style="width: 70px;" alt="">';
                             html += '<div class="search-info">';
@@ -226,7 +225,6 @@ document.addEventListener("DOMContentLoaded", function() {
                             html += '</li>';
                             // Append the HTML to the suggestion list
                             suggestionList.append(html);
-                        });
                         });
                     }
                 });

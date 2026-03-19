@@ -13,8 +13,8 @@ urlpatterns = [
 	path('payment-view/<str:ref>/', views.viewpayment, name='payment_view'),
 	path('payment-history/', views.payment_history, name='payment_history'),
 
-	path('Delivery-Sent/', views.sent_order, name='sent_order'),
-	path('Delivered/', views.order_delivered, name='order_delivered'),
+	path('Delivery-Sent/<str:ref>/', views.sent_order, name='sent_order'),
+	path('Delivered/<str:ref>/', views.order_delivered, name='order_delivered'),
     
-	path('sm/', views.sm, name=''),
+	path('sm/', views.sm, name='sm'),
 ]

@@ -1,10 +1,8 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, authenticate, logout
-from django.contrib.auth.forms import AuthenticationForm
 from .models import User, ProfilePic
 from .forms import RegisterForm, EditRegisterForm
-from django.http import JsonResponse
 
 from django.contrib import messages
 from django.contrib.auth import get_user_model
@@ -24,7 +22,6 @@ def signup(request):
         form = RegisterForm(request.POST)
         if form.is_valid():
             rform = form.save(commit=False)
-            rform.role = "USER"
             rform.save()
             email = form.cleaned_data.get('email')
             raw_password = form.cleaned_data.get('password1')
@@ -46,7 +43,11 @@ def signup(request):
             from_email = 'store@layersoftruth.org'
             to_email = email
             
-            send_mail(subject, plain_message, from_email, [to_email], html_message=html_message)
+            try:
+                send_mail(subject, plain_message, from_email, [to_email], html_message=html_message)
+            except Exception:
+                # User creation should not fail when email delivery is unavailable.
+                pass
             
             return redirect('/')
     else:
@@ -64,7 +65,6 @@ def editprofile(request):
     if request.method == 'POST':
         form = EditRegisterForm(request.POST, instance = request.user)
         if form.is_valid():
-            rform = form.save(commit=False)
             form.save()
             return redirect('profile', uid=request.user.uid)
     else:
@@ -75,24 +75,19 @@ def editprofile(request):
 from .forms import ProfileForm
 @login_required
 def add_profilepic(request):
+    profile_pic, _ = ProfilePic.objects.get_or_create(
+        user=request.user,
+        defaults={'image': 'default/lg/avatar2.jpg'},
+    )
+
     if request.method == "POST":
-        try:
-            request.user.profilepic
-            if request.user.profilepic:
-                form =  ProfileForm(request.POST, request.FILES, instance=request.user.profilepic)
-                if form.is_valid():
-                    c_form = form.save(commit=False)
-                    c_form.user = request.user
-                    form.save()
-        except:
-            form =  ProfileForm(request.POST, request.FILES)
-            if form.is_valid():
-                c_form = form.save(commit=False)
-                c_form.user = request.user
-                form.save()
-    else:
-        form =  ProfileForm()
-    return redirect('profile', request.user.username)
+        form = ProfileForm(request.POST, request.FILES, instance=profile_pic)
+        if form.is_valid():
+            c_form = form.save(commit=False)
+            c_form.user = request.user
+            c_form.save()
+
+    return redirect('profile', uid=request.user.uid)
 
 
 from .forms import BioForm

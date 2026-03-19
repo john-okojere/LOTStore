@@ -1,11 +1,10 @@
 import json
 from django.shortcuts import render, redirect
-from user.forms import EditRegisterForm
 from django.contrib.auth.decorators import login_required
 from user.models import User, Staff
 from cart.models import Cart, CartItem
 from shelf.models import Product
-from django.http import JsonResponse
+from django.http import HttpResponseForbidden, JsonResponse
 from django.db.models import Count
 
 @login_required
@@ -130,6 +129,8 @@ def view_staff(request, staff_id):
 
 @login_required
 def get_user_orders(request, user_id):
+    if request.user.level < 2:
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
     orders = Order.objects.filter(payment__user_id=user_id).values(
         "payment__amount", "payment__verified", "packed" ,"sent", "delivered", "date_created"
     )
@@ -137,6 +138,8 @@ def get_user_orders(request, user_id):
 
 @login_required
 def get_user_cart(request, user_id):
+    if request.user.level < 2:
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
     cart_items = CartItem.objects.filter(cart__user_id=user_id).values(
         "product__name", "quantity", 'size' ,"created_date"
     )
@@ -144,6 +147,8 @@ def get_user_cart(request, user_id):
 
 @login_required
 def get_user_payments(request, user_id):
+    if request.user.level < 2:
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
     payments = Payment.objects.filter(user_id=user_id).values(
         "amount", "verified", "date_created"
     )
@@ -204,6 +209,8 @@ from cart.models import Order, Payment
 
 @login_required
 def manage_orders(request):
+    if request.user.level < 2:
+        return HttpResponseForbidden('Unauthorized')
     orders = Order.objects.select_related("payment").all()
     status_filter = request.GET.get("status")
     if status_filter:
@@ -225,6 +232,8 @@ def manage_orders(request):
 
 @login_required
 def update_order_status(request, order_id, status):
+    if request.user.level < 2:
+        return HttpResponseForbidden('Unauthorized')
     order = get_object_or_404(Order, id=order_id)
 
     if status == "packed":
@@ -239,6 +248,8 @@ def update_order_status(request, order_id, status):
 
 @login_required
 def order_detail(request, order_id):
+    if request.user.level < 2:
+        return HttpResponseForbidden('Unauthorized')
     # Get the order with related payment details
     order = get_object_or_404(Order, id=order_id)
     payment = order.payment  # Associated payment
@@ -259,10 +270,15 @@ from shelf.models import Product, Category, Sizes
 
 @login_required
 def product_category(request):
+    if request.user.level < 2:
+        return HttpResponseForbidden('Unauthorized')
     product_category = Category.objects.all()
     return render(request, 'dashboard/product/category.html', {'category':product_category})
 
+@login_required
 def add_category(request):
+    if request.user.level < 2:
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
     if request.method == "POST":
         name = request.POST.get("name")
         if name:
@@ -270,7 +286,10 @@ def add_category(request):
             return JsonResponse({"success": True})
     return JsonResponse({"success": False})
 
+@login_required
 def update_category(request, category_id):
+    if request.user.level < 2:
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
     if request.method == "POST":
         category = get_object_or_404(Category, id=category_id)
         new_name = request.POST.get("name")
@@ -279,7 +298,10 @@ def update_category(request, category_id):
         return JsonResponse({"success": True})
     return JsonResponse({"success": False})
 
+@login_required
 def delete_category(request, category_id):
+    if request.user.level < 2:
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
     if request.method == "POST":
         category = get_object_or_404(Category, id=category_id)
         category.delete()
@@ -289,10 +311,15 @@ def delete_category(request, category_id):
 
 @login_required
 def product_sizes(request):
+    if request.user.level < 2:
+        return HttpResponseForbidden('Unauthorized')
     product_sizes = Sizes.objects.all()
     return render(request, 'dashboard/product/sizes.html', {'sizes':product_sizes})
 
+@login_required
 def add_sizes(request):
+    if request.user.level < 2:
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
     if request.method == "POST":
         name = request.POST.get("name")
         if name:
@@ -300,7 +327,10 @@ def add_sizes(request):
             return JsonResponse({"success": True})
     return JsonResponse({"success": False})
 
+@login_required
 def update_sizes(request, sizes_id):
+    if request.user.level < 2:
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
     if request.method == "POST":
         sizes = get_object_or_404(Sizes, id=sizes_id)
         new_name = request.POST.get("name")
@@ -309,7 +339,10 @@ def update_sizes(request, sizes_id):
         return JsonResponse({"success": True})
     return JsonResponse({"success": False})
 
+@login_required
 def delete_sizes(request, sizes_id):
+    if request.user.level < 2:
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
     if request.method == "POST":
         sizes = get_object_or_404(Sizes, id=sizes_id)
         sizes.delete()
@@ -319,6 +352,8 @@ def delete_sizes(request, sizes_id):
 
 @login_required
 def product_list_api(request):
+    if request.user.level < 2:
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
     products = Product.objects.all().values('uid','id' ,'name', 'price', 'stock', 'productType', 'image')
     data = list(products)
     for product in data:
@@ -327,16 +362,24 @@ def product_list_api(request):
         product['image'] = product_obj.image.url if product_obj.image else '/static/images/default.png'
     return JsonResponse({"data": data})
 
+@login_required
 def product_list_view(request):
+    if request.user.level < 2:
+        return HttpResponseForbidden('Unauthorized')
     return render(request, 'dashboard/product/all.html')
 
+@login_required
 def delete_product(request, uid):
+    if request.user.level < 2:
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
     product = get_object_or_404(Product, uid=uid)
     product.delete()
     return JsonResponse({"message": "Product deleted successfully"})
 
 @login_required
 def add_product(request):
+    if request.user.level < 2:
+        return HttpResponseForbidden('Unauthorized')
     if request.method == 'POST':
         form = ProductForm(request.POST, request.FILES)
         if form.is_valid():
@@ -351,6 +394,8 @@ def add_product(request):
 
 @login_required
 def edit_product(request, uid):
+    if request.user.level < 2:
+        return HttpResponseForbidden('Unauthorized')
     product  = Product.objects.get(uid = uid)
     if request.method == 'POST':
         form = ProductForm(request.POST, request.FILES, instance=product)
@@ -364,7 +409,10 @@ def edit_product(request, uid):
     
     return render(request, 'dashboard/product/add_product.html', {'form': form})
 
+@login_required
 def product_detail_view(request, uid):
+    if request.user.level < 2:
+        return HttpResponseForbidden('Unauthorized')
     product = get_object_or_404(Product, uid=uid)
      # Get analytics data
     product_views = ProductView.objects.filter(product=product).order_by("-timestamp")

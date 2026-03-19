@@ -1,7 +1,5 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import get_object_or_404, render, redirect
 from .models import Product, Category
-from django.contrib.auth.decorators import login_required
-from django.views.decorators.http import require_GET
 from django.http import JsonResponse
 from django.db.models import Q
 from django.core.mail import send_mail
@@ -63,18 +61,15 @@ def contact(request):
     return render(request, 'home/contact.html')
 
 def category_view(request, cat):
-    cate = Category.objects.get(name = cat)
+    cate = get_object_or_404(Category, name=cat)
     products = Product.objects.filter(categories=cate).order_by('-created_date')
     info = f'Result for {cate.name} items'
     return render(request, 'home/merchs.html', {'products':products, 'info':info})
 
 
 def details(request, uid):
-    product = Product.objects.get(uid=uid)
-    products = []
-    for category in product.categories.all():
-        prods = Product.objects.filter(categories = category ).order_by('-created_date')
-        products.extend(prods)
+    product = get_object_or_404(Product, uid=uid)
+    products = Product.objects.filter(categories__in=product.categories.all()).exclude(uid=uid).distinct().order_by('-created_date')
     return render(request, 'home/details.html', {'product':product,'products':products})
 
 
@@ -131,7 +126,7 @@ def search(request):
             Q(categories__name__icontains=search) | 
             Q(size__name__icontains=search) | 
             Q(description__icontains=search)
-        )
+        ).distinct()
         info = f"Search result for {search}: {len(filtered_items)}"
         user = request.user if request.user.is_authenticated else None
         ip_address = request.META.get('REMOTE_ADDR')
@@ -151,7 +146,7 @@ def search_suggestions(request):
         for product in suggestions:
             product_data = {
                 'name': product.name,
-                'size': product.size.name,
+                'size': ', '.join(product.size.values_list('name', flat=True)),
                 'price': product.price,
                 'image': product.image.url,  # Assuming image field is a FileField or ImageField
                 'details_url': product.uid # Assuming you have a method to get product details URL
