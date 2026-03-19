@@ -130,7 +130,7 @@
                <div class="dropdown-content" id="accountDropdownContent">
                  <a href="{% url 'profile' user.uid %}">Profile</a>
                  <a href="{% url 'logout' %}">Logout</a>
-                 {% if user.level >= 2 %}
+                 {% if user.is_staff or user.level >= 2 %}
                  <a href="{% url 'admin_dashboard' %}">Dashboard</a>
                  {% endif %}
                </div>
@@ -284,9 +284,9 @@ document.addEventListener("DOMContentLoaded", function() {
         >
           {% csrf_token %}
           <select id="category-filter" name="category-filter">
-            <option value="0" {% if category_id ==  0 %} selected {% endif %}>Category</option>
+            <option value="0" {% if category_id == 0 or category_id == "0" %} selected {% endif %}>Category</option>
             {% for cat in category %}
-            <option value="{{ cat.id }}" {% if category_id == cat.id %} selected {% endif %}>{{ cat.name }}</option>
+            <option value="{{ cat.id }}" {% if category_id == cat.id|stringformat:"s" %} selected {% endif %}>{{ cat.name }}</option>
             {% endfor %}
         </select>
           <div class="sizes">
@@ -294,7 +294,7 @@ document.addEventListener("DOMContentLoaded", function() {
             {% for size in all_sizes %}
                 <div>
                   <input type="checkbox" name="size" id="{{size.name}}" value="{{size.id}}" 
-                  {% if size in size_filter %} checked {% endif %}
+                  {% if size.id|stringformat:"s" in size_filter %} checked {% endif %}
                   />
                   <label for="{{size.name}}"> {{ size.name | title }} </label>
                 </div>
@@ -305,10 +305,11 @@ document.addEventListener("DOMContentLoaded", function() {
               <span>&#8358;</span>
               <input
                 type="price"
-                id="price-filter"
+                id="min-price-filter"
                 min="0"
                 max="100"
                 value="{% if min_price_filter %}{{min_price_filter}}{% else %}0{% endif %}"
+                name="min-price"
               /> 
             </div>
             -
@@ -316,7 +317,7 @@ document.addEventListener("DOMContentLoaded", function() {
               <span>&#8358;</span>
               <input
                 type="price"
-                id="price-filter"
+                id="max-price-filter"
                 min="0"
                 max="100"
                 value="{% if max_price_filter %}{{ max_price_filter }}{% else %}10000{% endif %}"
@@ -353,7 +354,7 @@ document.addEventListener("DOMContentLoaded", function() {
         <h3>Settings</h3>
         <hr />
         <ul>
-          {% if user.level >= 2 %}
+          {% if user.is_staff or user.level >= 2 %}
           <li>
             <a href="{% url 'admin_dashboard' %}">
               <p>

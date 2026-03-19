@@ -1,247 +1,33 @@
 {% extends "base.html" %}
 {% load static %}
-{% block head %}
-<title> Layers Of Truth | Profile - {{ puser.first_name }} {{ puser.last_name }}</title>
-<link rel="stylesheet" href="{% static 'css/account/profile.css' %}">
-<link rel="stylesheet" href="{% static 'css/card/style.css' %}">
-{% endblock head %}
 
-{% block content %}
-<div class="profile-container">
-    <aside class="profile-card">
-    {% if puser.profilepic %}
-        <img src="{{ puser.profilepic.image.url }}" alt="Profile Picture">
-    {% else %}
-        <img src="{% static 'images/default.jpg' %}" alt="Default Profile Picture">
-    {% endif %}
-    <h1>{{ puser.first_name | title }} {{ puser.last_name | title }}</h1>
-    <div class="profile-extra-info">
-        <p><strong>Email:</strong> {{ puser.email }}</p>
-        <p><strong>Phone:</strong> {{ puser.phone }}</p>
-        <p><strong>Gender:</strong> {{ puser.gender }}</p>
-        <p><strong>Birth Date:</strong> {{ puser.date_of_birth }}</p>
+{% block main %}
+<div style="max-width: 960px; margin: 0 auto; padding: 20px;">
+  <h2 style="margin-bottom: 16px;">My Profile</h2>
+  <div style="display: grid; grid-template-columns: 220px 1fr; gap: 20px; background: #fff; padding: 20px; border-radius: 8px;">
+    <div style="text-align: center;">
+      {% if profile_pic %}
+      <img src="{{ profile_pic.image.url }}" alt="Profile Picture" style="width: 160px; height: 160px; border-radius: 50%; object-fit: cover;">
+      {% else %}
+      <img src="{% static 'assets/images/lg/avatar2.jpg' %}" alt="Default Profile Picture" style="width: 160px; height: 160px; border-radius: 50%; object-fit: cover;">
+      {% endif %}
     </div>
-    </aside>
-    <style>
-        
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 1;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0, 0, 0, 0.5);
-}
 
-.modal-content {
-    background-color: white;
-    margin: 10% auto;
-    padding: 20px;
-    border: 1px solid #888;
-    width: 80%;
-    max-width: 500px;
-    border-radius: 5px;
-}
-
-.close {
-    color: #aaa;
-    float: right;
-    font-size: 28px;
-    font-weight: bold;
-}
-
-.close:hover,
-.close:focus {
-    color: black;
-    text-decoration: none;
-    cursor: pointer;
-}
-
-.modal-content {
-    border-radius: 5px;
-    padding: 20px;
-}
-
-.modal-header .close {
-    outline: none;
-}
-
-.modal-body h5 {
-    font-size: 1.5em;
-    margin-bottom: 10px;
-}
-
-.modal-body p {
-    font-size: 1em;
-    margin-bottom: 10px;
-}
-.btn-dark {
-    background-color: #484c7f;
-    color: #fff;
-}
-
-.btn-dark:hover {
-    background-color: #555;
-}
-    </style>
-    
     <div>
-        <div class="lotcard">
-            <div class="front">
-                <div class="info">
-                    <img src="{% static 'card/new/LOT.svg' %}" alt="">
-                    <div>
-                            <h4>{{ puser.first_name | upper }} {{ puser.last_name | upper }}</h4>
-                            <h1>{{ department }}</h1>
-                            <p> <img class="svg" src="{% static 'card/new/vector.svg' %}" alt=""> layersoftruth.org/siloam2024</p>
-                    </div>
-                </div>
-                <div>
-                <img src="{% static 'card/new/Rect.png' %}" alt="">
-        
-                </div>
-            </div>
-            <div class="back">
-                <div>
-                    <div>
-                    <img style="border-radius: 0;" src="{{ puser.qr_code }}" alt="QR Code">
-    
-                    </div>
-                </div>
-                <div>
-                    <ul>
-                        <li>Siloam`24</li>
-                        <li>Siloam`24</li>
-                        <li>Siloam`24</li>
-                        <li>Siloam`24</li>
-                        <li>Siloam`24</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-        <div class="my-5">
-        <p><strong>Address:</strong> {{ puser.aboutprofile.address }}, {{ puser.aboutprofile.state }}, {{ puser.aboutprofile.country }}</p>
-        <p><strong>About:</strong> {{ puser.aboutprofile.about }}</p>
-        <p><strong>Registered Date:</strong> {{ puser.date_joined }}</p>
-        {% if puser.is_staff or request.user == user %}
-        {% if puser.aboutprofile.about %}
-        {% else %}
-        <button class="btn btn-block btn-dark " id="create-department-btn">Edit About</button>
-        {% endif %}
-    {% endif %}
+      <p><strong>Name:</strong> {{ person.first_name|title }} {{ person.last_name|title }}</p>
+      <p><strong>Email:</strong> {{ person.email }}</p>
+      <p><strong>Phone:</strong> {{ person.phone }}</p>
+      <p><strong>Gender:</strong> {{ person.gender|default:"Not set" }}</p>
+      <p><strong>Date of Birth:</strong> {{ person.date_of_birth|default:"Not set" }}</p>
+      <p><strong>Joined:</strong> {{ person.date_joined }}</p>
+
+      {% if request.user == person %}
+      <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px;">
+        <a href="{% url 'editprofile' %}" class="btn" style="background: #323a45; color: #fff;">Edit Profile</a>
+        <a href="{% url 'payment_history' %}" class="btn" style="background: #008751; color: #fff;">Payment History</a>
+      </div>
+      {% endif %}
     </div>
-    </div>
-</div> 
-<div id="create-department-modal" class="modal">
-    <div class="modal-content">
-        <span class="close">&times;</span>
-        <h2>Edit Profile</h2>
-        <hr>
-        <form id="create-department-form" method="post">
-            {% csrf_token %}
-            <div class="d-md-flex g-md-2" style="gap: 10px;">
-                <div class="form-group mb-2">
-                    <label for="country">Country:</label>
-                    <input class="form-control" type="text" id="country" name="country" required>
-                </div>
-                <div class="form-group mb-2">
-                    <label for="state">State:</label>
-                    <input class="form-control" type="text" id="state" name="state" required>
-                </div>
-            </div>
-            <div class="form-group mb-2">
-                <label for="address">Address:</label>
-                <input class="form-control" type="text" id="address" name="address" required>
-            </div>
-            <div class="form-group mb-2">
-                <label for="about">About:</label>
-                <textarea class="form-control" id="about" name="about" required></textarea>
-            </div>
-            
-            <button class="btn btn-block btn-dark " type="submit">Update</button>
-        </form>
-    </div>
+  </div>
 </div>
-{% if puser.is_staff or request.user == user %}
-{% if department == 'PARTICIPANT' %}
-<div id="info-modal" class="modal">
-    <div class="modal-content">
-        <span class="close">&times;</span>
-        <h2>Join a Department</h2>
-        <hr>
-        <div>
-            <p>You don't have a primary department assigned. Please visit the department dashboard to set or update your primary department to ensure it reflects on your card.</p>
-            <a href="{% url 'department_page' %}" class="btn btn-block btn-dark">Go to Department</a>
-        </div>
-    </div>
-</div>
-{% else %}
-        {% if puser.aboutprofile.about %}
-        {% else %}
-        <div id="info-profile-modal" class="modal">
-            <div class="modal-content">
-                <span class="close">&times;</span>
-                <h2>Update Profile Detail</h2>
-                <hr>
-                <div>
-                    <p>Please update your profile information to ensure it is accurate and complete.</p>
-                    <button class="btn btn-block btn-dark " id="create-department-btn2">Edit About</button>
-                </div>
-            </div>
-        </div>
-        {% endif %}
-    {% endif %}
-{% endif %}
-
-<script>
-    function openModal(modalId) {
-        $(modalId).fadeIn();
-    }
-
-    function closeModal(modalId) {
-        $(modalId).fadeOut();
-    }
-    $('.close').on('click', function() {
-        closeModal('.modal');
-    });
-    
-     $('#create-department-btn').on('click', function() {
-        openModal('#create-department-modal');
-    });
-    $('#create-department-btn2').on('click', function() {
-        openModal('#create-department-modal');
-        closeModal('#info-profile-modal');
-    });
-    $('#create-department-form').on('submit', function(e) {
-        e.preventDefault();
-        const data = $(this).serialize();
-        $.ajax({
-            type: 'POST',
-            url: '{% url "AddAbout" %}',
-            data: data,
-            headers: {'X-CSRFToken': '{{ csrf_token }}'},
-            success: function(response) {
-                closeModal('#create-department-modal');
-                location.reload();
-            },
-            error: function(error) {
-                alert('Error creating department');
-            }
-        });
-    });
-
-    $(this).delay(1000).queue(function() {
-        openModal('#info-profile-modal');
-        openModal('#info-modal');
-        $(this).dequeue();
-    });
-</script>
-
-<script>
-    const profileLink = document.querySelector('.navbar-item:nth-child(1) > a');
-    profileLink.classList.add('active');
-</script>
-{% endblock content %}
+{% endblock main %}

@@ -73,7 +73,8 @@
         </h2>
         <ul style="padding:0 20px;">
             <li><a href="/"><h4><i class="fas fa-house"></i> Store</h4> </a></li>
-            <li><a href="/dashboard"><h4><i class="fas fa-bar-chart"></i> Dashboard</h4> </a></li>
+            <li><a href="{% url 'admin_dashboard' %}"><h4><i class="fas fa-bar-chart"></i> Analytics</h4> </a></li>
+            <li><a href="{% url 'system_logs' %}"><h4><i class="fas fa-file-lines"></i> System Logs</h4> </a></li>
             <li>
                 <h4><i class="fas fa-table"></i> Shelf</h4>
                 <ul style="list-style: circle;">

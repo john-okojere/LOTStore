@@ -125,8 +125,13 @@
 </div>
 
 <br>
+{% if not products %}
+<div style="padding: 1rem; text-align: center; background: #f7f7f7; border-radius: 6px; margin-bottom: 1rem;">
+    No products are available right now. Please check back shortly.
+</div>
+{% endif %}
 <section class="items">
-    {% for product in products|slice:"4" %}
+    {% for product in products|slice:":4" %}
     <div class="item">
         <div class="rect">
             <a href="{% url 'details' product.uid %}">
@@ -238,7 +243,7 @@
 
     // Add click event listeners to indicators
     indicators2.forEach(function(indicator, index) {
-        indicator2.addEventListener("click", function() {
+        indicator.addEventListener("click", function() {
             slides2[currentSlide2].classList.remove("active");
             indicators2[currentSlide2].classList.remove("active-indicator");
             currentSlide2 = index;
@@ -331,7 +336,7 @@
 
     // Add click event listeners to indicators
     indicators3.forEach(function(indicator, index) {
-        indicator3.addEventListener("click", function() {
+        indicator.addEventListener("click", function() {
             slides3[currentSlide3].classList.remove("active");
             indicators3[currentSlide3].classList.remove("active-indicator");
             currentSlide3 = index;

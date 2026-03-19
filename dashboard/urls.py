@@ -3,6 +3,7 @@ from . import views
 
 urlpatterns = [
     path('', views.admin_dashboard, name='admin_dashboard'),
+    path('system-logs/', views.system_logs, name='system_logs'),
 
     #users
     path('all_users/', views.all_users, name='all_users'),

@@ -1,9 +1,10 @@
-from django.shortcuts import get_object_or_404, render, redirect
+from django.shortcuts import get_object_or_404, render
 from .models import Product, Category
 from django.http import JsonResponse
 from django.db.models import Q
 from django.core.mail import send_mail
 from django.core.cache import cache
+from django.conf import settings
 
 def homepage(request):
     products = cache.get('homepage_products')
@@ -42,6 +43,7 @@ def deliveryPolicy(request):
 
 
 def contact(request):
+    context = {}
     if request.method == 'POST':
         name = request.POST.get('name', '')
         email = request.POST.get('email', '')
@@ -50,15 +52,15 @@ def contact(request):
         subject = 'Message from LOT Store Contact Form'
         body = f"Name: {name}\nEmail: {email}\nMessage: {message}"
 
-        recipient_email = 'johnokojere08@gmail.com'
+        recipient_email = settings.DEFAULT_FROM_EMAIL or 'store@layersoftruth.org'
 
         try:
-            send_mail(subject, body, email, [recipient_email])
-            return JsonResponse({'success': True, 'message': 'Email sent successfully!'})
-        except Exception as e:
-            return JsonResponse({'success': False, 'message': str(e)})
+            send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, [recipient_email], fail_silently=False)
+            context['success_message'] = 'Message sent successfully. Our team will respond shortly.'
+        except Exception:
+            context['error_message'] = 'Unable to send message right now. Please try again later or use WhatsApp support.'
 
-    return render(request, 'home/contact.html')
+    return render(request, 'home/contact.html', context)
 
 def category_view(request, cat):
     cate = get_object_or_404(Category, name=cat)
@@ -119,7 +121,6 @@ from .models import SearchQuery
 
 def search(request):
     search = request.GET.get('item')
-    print(search)
     if search:
         filtered_items = Product.objects.filter(
             Q(name__icontains=search) | 

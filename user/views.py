@@ -58,7 +58,10 @@ def signup(request):
 @login_required
 def profile(request, uid):
     person = get_object_or_404(User, uid=uid)
-    return render(request, 'account/index.html', {'person':person})
+    if request.user != person and not request.user.is_staff:
+        return redirect('profile', uid=request.user.uid)
+    profile_pic = getattr(person, 'profilepic', None)
+    return render(request, 'account/index.html', {'person': person, 'profile_pic': profile_pic})
 
 @login_required
 def editprofile(request):

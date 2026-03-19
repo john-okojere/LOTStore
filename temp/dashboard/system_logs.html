@@ -1,0 +1,142 @@
+{% extends 'dashboard/index.html' %}
+
+{% block content %}
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+
+<div class="mx-auto p-6 bg-white shadow-lg rounded-lg">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-3xl font-bold text-gray-800">System Logs</h2>
+        <a href="{% url 'admin_dashboard' %}" class="px-4 py-2 bg-gray-800 text-white rounded-md">Back to Analytics</a>
+    </div>
+
+    <div class="mb-8">
+        <h3 class="text-xl font-semibold text-gray-700 mb-2">Admin Action Logs</h3>
+        <div class="overflow-x-auto">
+            <table id="adminActionTable" class="min-w-full bg-white border border-gray-300 shadow-md rounded-lg">
+                <thead>
+                    <tr class="bg-gray-100 text-gray-700 uppercase leading-normal">
+                        <th class="py-3 px-6">Time</th>
+                        <th class="py-3 px-6">Admin</th>
+                        <th class="py-3 px-6">Action</th>
+                        <th class="py-3 px-6">Object</th>
+                        <th class="py-3 px-6">Details</th>
+                    </tr>
+                </thead>
+                <tbody class="text-gray-600">
+                    {% for log in admin_logs %}
+                    <tr class="border-b hover:bg-gray-100">
+                        <td class="py-3 px-6">{{ log.action_time }}</td>
+                        <td class="py-3 px-6">{{ log.user }}</td>
+                        <td class="py-3 px-6">{{ log.get_action_flag_display }}</td>
+                        <td class="py-3 px-6">{{ log.content_type }} - {{ log.object_repr }}</td>
+                        <td class="py-3 px-6">{{ log.change_message|default:"-" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="mb-8">
+        <h3 class="text-xl font-semibold text-gray-700 mb-2">Recent Product Views</h3>
+        <div class="overflow-x-auto">
+            <table id="viewLogsTable" class="min-w-full bg-white border border-gray-300 shadow-md rounded-lg">
+                <thead>
+                    <tr class="bg-gray-100 text-gray-700 uppercase leading-normal">
+                        <th class="py-3 px-6">Time</th>
+                        <th class="py-3 px-6">Product</th>
+                        <th class="py-3 px-6">User</th>
+                        <th class="py-3 px-6">IP</th>
+                        <th class="py-3 px-6">State</th>
+                        <th class="py-3 px-6">Country</th>
+                    </tr>
+                </thead>
+                <tbody class="text-gray-600">
+                    {% for item in recent_views %}
+                    <tr class="border-b hover:bg-gray-100">
+                        <td class="py-3 px-6">{{ item.timestamp }}</td>
+                        <td class="py-3 px-6">{{ item.product.name }}</td>
+                        <td class="py-3 px-6">{{ item.user.full_name|default:"Anonymous" }}</td>
+                        <td class="py-3 px-6">{{ item.ip_address }}</td>
+                        <td class="py-3 px-6">{{ item.state|default:"Unknown" }}</td>
+                        <td class="py-3 px-6">{{ item.country|default:"Unknown" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="mb-8">
+        <h3 class="text-xl font-semibold text-gray-700 mb-2">Recent Add-To-Cart Events</h3>
+        <div class="overflow-x-auto">
+            <table id="cartLogsTable" class="min-w-full bg-white border border-gray-300 shadow-md rounded-lg">
+                <thead>
+                    <tr class="bg-gray-100 text-gray-700 uppercase leading-normal">
+                        <th class="py-3 px-6">Time</th>
+                        <th class="py-3 px-6">Product</th>
+                        <th class="py-3 px-6">User</th>
+                        <th class="py-3 px-6">IP</th>
+                        <th class="py-3 px-6">State</th>
+                        <th class="py-3 px-6">Country</th>
+                    </tr>
+                </thead>
+                <tbody class="text-gray-600">
+                    {% for item in recent_cart_adds %}
+                    <tr class="border-b hover:bg-gray-100">
+                        <td class="py-3 px-6">{{ item.timestamp }}</td>
+                        <td class="py-3 px-6">{{ item.product.name }}</td>
+                        <td class="py-3 px-6">{{ item.user.full_name|default:"Anonymous" }}</td>
+                        <td class="py-3 px-6">{{ item.ip_address }}</td>
+                        <td class="py-3 px-6">{{ item.state|default:"Unknown" }}</td>
+                        <td class="py-3 px-6">{{ item.country|default:"Unknown" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div>
+        <h3 class="text-xl font-semibold text-gray-700 mb-2">Recent Searches</h3>
+        <div class="overflow-x-auto">
+            <table id="searchLogsTable" class="min-w-full bg-white border border-gray-300 shadow-md rounded-lg">
+                <thead>
+                    <tr class="bg-gray-100 text-gray-700 uppercase leading-normal">
+                        <th class="py-3 px-6">Time</th>
+                        <th class="py-3 px-6">User</th>
+                        <th class="py-3 px-6">Query</th>
+                        <th class="py-3 px-6">IP</th>
+                        <th class="py-3 px-6">State</th>
+                        <th class="py-3 px-6">Country</th>
+                    </tr>
+                </thead>
+                <tbody class="text-gray-600">
+                    {% for search in recent_searches %}
+                    <tr class="border-b hover:bg-gray-100">
+                        <td class="py-3 px-6">{{ search.timestamp }}</td>
+                        <td class="py-3 px-6">{{ search.user.full_name|default:"Anonymous" }}</td>
+                        <td class="py-3 px-6">{{ search.query }}</td>
+                        <td class="py-3 px-6">{{ search.ip_address }}</td>
+                        <td class="py-3 px-6">{{ search.state|default:"Unknown" }}</td>
+                        <td class="py-3 px-6">{{ search.country|default:"Unknown" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        $('#adminActionTable').DataTable();
+        $('#viewLogsTable').DataTable();
+        $('#cartLogsTable').DataTable();
+        $('#searchLogsTable').DataTable();
+    });
+</script>
+{% endblock %}
