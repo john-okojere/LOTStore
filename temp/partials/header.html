@@ -1,0 +1,94 @@
+{% load static %}
+<div class="header lot-header" id="site-header">
+
+  {# Announcement bar: contact on the left, rotating highlights in the middle #}
+  <div class="lot-announce">
+    <div class="lot-announce__wrap">
+      <div class="lot-announce__inner">
+        <div class="lot-announce__contact">
+          <a href="https://wa.me/2347044448932" target="_blank" rel="noopener"><i class="fa fa-whatsapp"></i> Pastor Oshoma: +234 704 444 8932</a>
+          <a href="mailto:store@layersoftruth.org"><i class="fa fa-envelope"></i> store@layersoftruth.org</a>
+        </div>
+        <div class="lot-announce__rotator" data-rotator>
+          <span class="is-active"><i class="fa fa-lock"></i> Secure checkout with Paystack</span>
+          <span><i class="fa fa-bolt"></i> Production starts 12 hours after you order</span>
+          <span><i class="fa fa-truck"></i> Faith-inspired designs, delivered to your door</span>
+        </div>
+        <div class="lot-announce__social">
+          <a href="https://www.facebook.com/people/Lotstore/61558265454027/" target="_blank" rel="noopener" aria-label="LOT Store on Facebook"><i class="fa fa-facebook-official"></i></a>
+          <span class="lot-announce__locale"><img src="{% static 'home/img/download.png' %}" alt="Nigeria flag"> EN</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# Main bar #}
+  <div class="lot-nav">
+    <div class="lot-nav__inner">
+      <button type="button" class="menu-toggle lot-burger" aria-label="Open menu" aria-controls="aside" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+
+      <a href="/" class="lot-logo" aria-label="LOT Store home"><img src="{% static 'home/img/logo/3.png' %}" alt="LOT Store"></a>
+
+      <form class="lot-search" id="lot-search" action="{% url 'search' %}" method="get" role="search" data-suggest-url="{% url 'search_suggestions' %}" autocomplete="off">
+        <i class="fa fa-search lot-search__icon" aria-hidden="true"></i>
+        <input type="search" name="item" id="search_item" placeholder="Search tees, hoodies, sizes..." aria-label="Search products" aria-controls="search-suggestions" aria-autocomplete="list" value="{{ request.GET.item|default:'' }}">
+        <kbd class="lot-search__kbd" title="Press / to search">/</kbd>
+        <button type="submit" class="lot-search__btn" id="search_submit" aria-label="Search"><i class="fa fa-arrow-right"></i></button>
+        <div id="search-suggestions" class="lot-suggest" role="listbox" hidden></div>
+      </form>
+
+      <div class="lot-links" role="navigation" aria-label="Main">
+        <a href="/" class="lot-link{% if request.path == '/' %} is-current{% endif %}">Home</a>
+        <a href="{% url 'merchs' %}" class="lot-link{% if request.path == '/merchs/' %} is-current{% endif %}">Shop</a>
+        <div class="lot-dd">
+          <button type="button" class="lot-link lot-dd__toggle" aria-expanded="false" aria-haspopup="true">Help <i class="fa fa-chevron-down"></i></button>
+          <div class="lot-dd__menu">
+            <a href="{% url 'faq' %}"><i class="fa fa-question-circle"></i> FAQs</a>
+            <a href="{% url 'contact' %}"><i class="fa fa-envelope"></i> Contact us</a>
+            <a href="{% url 'delivery-policy' %}"><i class="fa fa-truck"></i> Delivery policy</a>
+            <a href="{% url 'return-policy' %}"><i class="fa fa-undo"></i> Return policy</a>
+            <a href="https://wa.me/2347044448932" target="_blank" rel="noopener" class="lot-dd__wa"><i class="fa fa-whatsapp"></i> Chat with Pastor Oshoma</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="lot-actions">
+        <button type="button" class="lot-iconbtn lot-search-toggle" aria-label="Search" aria-expanded="false" aria-controls="lot-search"><i class="fa fa-search"></i></button>
+
+        {% if user.is_authenticated %}
+        <div class="lot-dd lot-account">
+          <button type="button" class="lot-dd__toggle lot-account__toggle" aria-expanded="false" aria-haspopup="true" aria-label="Account menu">
+            <span class="lot-account__avatar">
+              {% if user.profilepic.image %}<img src="{{ user.profilepic.image.url }}" alt="">{% elif user.first_name %}{{ user.first_name|first|upper }}{% else %}<i class="fa fa-user"></i>{% endif %}
+            </span>
+            <span class="lot-account__hello"><small>Hello,</small>{{ user.first_name|default:"friend"|title }}</span>
+            <i class="fa fa-chevron-down lot-account__chev"></i>
+          </button>
+          <div class="lot-dd__menu lot-dd__menu--right">
+            <div class="lot-dd__head">
+              <strong>{{ user.first_name|default:"Your account"|title }} {{ user.last_name|title }}</strong>
+              <small>{{ user.email }}</small>
+            </div>
+            <a href="{% url 'profile' user.uid %}"><i class="fa fa-user"></i> Profile</a>
+            <a href="{% url 'payment_history' %}"><i class="fa fa-shopping-bag"></i> My orders</a>
+            {% if user.is_staff or user.level >= 2 %}
+            <a href="{% url 'admin_dashboard' %}"><i class="fa fa-tachometer"></i> Dashboard</a>
+            {% endif %}
+            <hr>
+            <a href="{% url 'logout' %}"><i class="fa fa-sign-out"></i> Logout</a>
+          </div>
+        </div>
+        {% else %}
+        <a href="{% url 'login' %}" class="lot-signin"><i class="fa fa-user-o"></i><span>Sign in</span></a>
+        {% endif %}
+
+        <a href="{% url 'view_cart' %}" class="lot-iconbtn lot-cart-link{% if request.path == '/cart/view-cart/' %} is-current{% endif %}" aria-label="View cart">
+          <i class="fa fa-shopping-bag"></i>
+          <span id="cart-count" class="lot-cart-badge" data-count="{{ cart_items|length }}">{{ cart_items|length }}</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>

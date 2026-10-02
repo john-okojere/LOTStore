@@ -22,20 +22,6 @@
     <meta name="twitter:image" content="{{ request.scheme }}://{{ request.get_host }}{% static 'home/img/logo/4.png' %}">
     {% endblock meta %}
     <meta name="theme-color" content="#282a36">
-    <style>
-      nav .search i{
-        font-weight: bold !important;
-      }
-      input#search_item::placeholder{
-        font-size: 1rem !important;
-        font-weight: lighter !important;
-        padding: 0 !important;
-        color: rgba(128, 128, 128, 0.872);
-      }
-      input#search_item{
-        padding: 0;
-      }
-    </style>
     <link rel="shortcut icon" href="{% static 'home/img/logo/4.png' %}" type="image/x-icon">
     <link
       rel="stylesheet"
@@ -50,203 +36,12 @@
     <link rel="stylesheet" href="{% static 'fontawesomefree/css/solid.min.css' %}" />
     <link rel="stylesheet" href="{% static 'fontawesomefree/css/brands.min.css' %}" />
     <link rel="stylesheet" href="{% static 'fontawesomefree/css/v4-shims.min.css' %}" />
-    <style>
-      .search-info{
-        width: 300px; 
-      }
-    </style>
   </head>
   <body>
-   <div class="header">
-    <div style="background-color: #fff;color: var(--lot-ink);padding: 0.5rem 2%;font-size: 0.9rem;">
-      <div style="display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 20px; 
-      list-style: none;
-      width: 100%;
-      max-width: 1400px;
-      margin: auto;
-       ">
-      <div style="display: flex;column-gap: 1rem;flex-wrap: wrap;font-weight: 600;">
-        <div><a href="https://wa.me/2347044448932" target="_blank" rel="noopener" style="color: inherit;"><i class="fa fa-whatsapp"></i> Pastor Oshoma: +234 704 444 8932</a></div>
-        <div><a href="mailto:store@layersoftruth.org" style="color: inherit;"><i class="fa fa-envelope"></i> store@layersoftruth.org</a></div>
-      </div>
-      <div>
-        <ul style="display: flex;list-style: none;gap: 1rem;align-items: center;justify-content: center;font-weight: 600;">
-          <li><a href="https://www.facebook.com/people/Lotstore/61558265454027/" target="_blank" rel="noopener" aria-label="LOT Store on Facebook" style="color: inherit;"><i class="fa fa-facebook-official"></i></a></li>
-          <li style="display: flex;justify-content: center;align-items: center;gap: 3px;"><img style="width: 20px;" src="{% static 'home/img/download.png' %}" alt="Nigeria flag"> EN</li>
-        </ul>
-      </div> 
-      </div>
-    </div>
-    <nav>
-      <div style="
-          display: flex;
-     justify-content: space-between;
-     align-items: center;
-     gap: 20px; 
-     list-style: none;
-     width: 100%;
-     max-width: 1400px;
-     margin: auto;
-      ">
-           <!-- Logo Section -->
-           <div class="logo logo-side" style="padding: 0;min-width: 180px;">
-         <a href="/"><img src="{% static 'home/img/logo/3.png' %}" alt="LOT Store" style="width: 100px;"></a>
-       </div>
-       
-       <!-- Search Section -->
-       <div class="search" style="text-align: center;">
-         <form action="{% url 'search' %}" method="get" style="display: flex;align-items: center;justify-content: center;gap: 10px;">
-           <i class="fa fa-search"></i>
-           <input type="text" name="item" id="search_item" placeholder="Search T-Shirt, Sizes, Text" aria-label="Search products" style="width: 400px; max-width: 100%;"/>
-           <button type="submit" class="btn" id="search_submit">
-             Search
-           </button>
-           <ul id="search-suggestions"></ul>
-         </form>
-       </div>
+   {% include "partials/header.html" %}
  
-       <!-- Menu Bar Section -->
-       <div class="menus_bar" style="width: 100px;">
-        <div style="display: flex;gap: 20px;align-items: center;">
-          <a href="{% url 'view_cart' %}" aria-label="View cart" class="lot-cart-link"> <i style="font-size: 1rem;" class="fa fa-shopping-cart"></i> ( <span style="font-weight: 600; {% if cart_items %}color: var(--lot-gold);{% endif %}" id="cart-count">{{ cart_items|length }}</span> )</a>
-         <a class="menu-toggle" style="position: initial;" role="button" aria-label="Open menu" tabindex="0">
-           <i class="fa fa-bars" style="font-size: 24px;"></i>
-           <i class="fa fa-times" style="font-size: 24px; display: none;"></i>
-         </a>
-        </div>
-       </div>
- 
-       <!-- User and Navigation Items -->
-       <div class="items" style="min-width: 250px;">
-         <ul style="display: flex; align-items: center; gap: 25px;">
-           <li><a href="/">Home</a></li>
-           <li><a href="{% url 'merchs' %}">Merchs</a></li>
-           {% if user.is_authenticated %}
-           <li class="dropdown" id="accountDropdown" style="display: flex;gap: 10px;align-items: center;">
-             {% if user.profilepic.image %}<img style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover;" src="{{ user.profilepic.image.url }}" alt="">{% else %}<span style="display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--lot-gold); color: var(--lot-ink); font-weight: 700;">{% if user.first_name %}{{ user.first_name|first|upper }}{% else %}<i class="fa fa-user"></i>{% endif %}</span>{% endif %}
-             <div>
-               <small><div style="font-weight: 300;margin: 0;">Hello,</div>
-               <span style="display: flex;gap: 5px; align-items: center;"> {{user.full_name|title}} <a style="display: flex;gap: 0.5rem;align-items: center;"><i class="fa fa-angle-down"></i></a></span></small>
-               <div class="dropdown-content" id="accountDropdownContent">
-                 <a href="{% url 'profile' user.uid %}">Profile</a>
-                 <a href="{% url 'payment_history' %}">My Orders</a>
-                 <a href="{% url 'logout' %}">Logout</a>
-                 {% if user.is_staff or user.level >= 2 %}
-                 <a href="{% url 'admin_dashboard' %}">Dashboard</a>
-                 {% endif %}
-               </div>
-             </div>
-           </li>
-           
-           {% else %}
-           <li style="text-align: center;">
-             <a href="{% url 'login' %}">Login</a> |
-             <a href="{% url 'register' %}">Sign Up</a> 
-           </li>
-           {% endif %}
- 
-           <!-- Help and Flag Section -->
-           <li style="display: flex; align-items: center; gap: 0.5rem;">
-            <div class="dropdown">
-              <a href="#">Help?</a>
-              <div class="dropdown-content">
-                <a href="{% url 'faq' %}">FAQs</a>
-                <a href="{% url 'contact' %}">Contact Us</a>
-                <a href="https://wa.me/2347044448932" target="_blank" rel="noopener">Chat Us on WhatsApp</a>
-              </div>
-            </div>
-          </li>
-         </ul>
-       </div>
-      </div>
-     </nav>
-   </div>
- 
-    <script>
-      document.addEventListener("DOMContentLoaded", () => {
-  document.querySelectorAll(".dropdown").forEach((dropdown) => {
-    const dropdownContent = dropdown.querySelector(".dropdown-content");
-    if (!dropdownContent) return;
-
-    dropdown.addEventListener("click", () => {
-      const isVisible = dropdownContent.style.display === "block";
-      dropdownContent.style.display = isVisible ? "none" : "block";
-    });
-
-    document.addEventListener("click", (event) => {
-      if (!dropdown.contains(event.target)) {
-        dropdownContent.style.display = "none";
-      }
-    });
-  });
-});
-
-      // JavaScript to handle dropdown functionality
-document.addEventListener("DOMContentLoaded", function() {
-  var accountDropdown = document.getElementById("accountDropdown");
-  var accountDropdownContent = document.getElementById("accountDropdownContent");
-  if (!accountDropdown || !accountDropdownContent) return;
-
-  // Show dropdown content when hovering over the dropdown
-  accountDropdown.addEventListener("mouseenter", function() {
-    accountDropdownContent.style.display = "block";
-  });
-
-  // Hide dropdown content when mouse leaves the dropdown
-  accountDropdown.addEventListener("mouseleave", function() {
-    accountDropdownContent.style.display = "none";
-  });
-});
-
-    </script>
     <!-- <hr> -->
     <script src="{% static 'js/jquery-3.5.1.min.js' %}"></script>
-      <script>
-        $(document).ready(function () {
-            var searchTimer = null;
-            $('#search_item').on('input', function () {
-                var inputText = $(this).val();
-                window.clearTimeout(searchTimer);
-                if (inputText.length > 0) {
-                  searchTimer = window.setTimeout(function () {
-                  $.ajax({
-                    url: "{% url 'search_suggestions' %}",
-                    data: {
-                        'item': inputText
-                    },
-                    dataType: 'json',
-                    success: function (data) {
-                        var suggestions = data.suggestions;
-                        var suggestionList = $('#search-suggestions');
-                        suggestionList.empty();
-                        var esc = function (v) { return $('<div>').text(v == null ? '' : String(v)).html(); };
-                        suggestions.forEach(function (product) {
-                            var html = '<li style="display: flex;justify-content: space-between;align-items: center;">';
-                            html += '<img src="' + esc(product.image) + '" style="width: 70px;" alt="">';
-                            html += '<div class="search-info">';
-                            html += '<h5>' + esc(product.name) + '</h5>';
-                            html += '<p>' + esc(product.size) + ' - &#8358;' + esc(product.price) + '</p>';
-                            html += '</div>';
-                            html += '<div>';
-                            html += '<a href="/details/' + encodeURIComponent(product.details_url) + '/" aria-label="View product"><i class="fa fa-eye"></i></a>';
-                            html += '</div>';
-                            html += '</li>';
-                            // Append the HTML to the suggestion list
-                            suggestionList.append(html);
-                        });
-                    }
-                });
-                  }, 200);
-                }else{
-                  $('#search-suggestions').empty();
-                }
-            });
-        });
-
-    </script>
 
     <style>
       /* Custom scrollbar styles */
@@ -281,13 +76,11 @@ document.addEventListener("DOMContentLoaded", function() {
             overlay.classList.toggle("show", open);
             menuToggle.classList.toggle("open", open);
             menuToggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+            menuToggle.setAttribute("aria-expanded", open ? "true" : "false");
             document.body.style.overflow = open ? "hidden" : "";
           }
           menuToggle.addEventListener("click", function() {
             setMenu(!sideMenu.classList.contains("open"));
-          });
-          menuToggle.addEventListener("keydown", function(e) {
-            if (e.key === "Enter" || e.key === " ") { e.preventDefault(); menuToggle.click(); }
           });
           overlay.addEventListener("click", function() { setMenu(false); });
           document.querySelectorAll("[data-close-menu]").forEach(function(btn) {

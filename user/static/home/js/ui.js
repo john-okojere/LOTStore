@@ -20,6 +20,8 @@
         if (!header) { return; }
 
         function measure() {
+            // The open phone search row floats over the page; it never pushes content down.
+            if (header.classList.contains('is-search-open')) { return; }
             var h = header.offsetHeight;
             document.documentElement.style.setProperty('--header-h', h + 'px');
             if (body && !header.classList.contains('is-scrolled')) { body.style.paddingTop = h + 'px'; }
@@ -33,16 +35,184 @@
             if (ticking) { return; }
             ticking = true;
             window.requestAnimationFrame(function () {
-                header.classList.toggle('is-scrolled', window.scrollY > 40);
+                var scrolled = window.scrollY > 40;
+                if (scrolled !== header.classList.contains('is-scrolled')) {
+                    header.classList.toggle('is-scrolled', scrolled);
+                    // Let the compact header settle, then update the sticky offset.
+                    window.setTimeout(measure, 380);
+                }
                 var top = document.querySelector('.lot-fab--top');
                 if (top) { top.classList.toggle('is-visible', window.scrollY > 600); }
                 ticking = false;
             });
         }, { passive: true });
+    }
 
-        // Highlight the nav link for the current page.
-        document.querySelectorAll('nav .items > ul > li > a').forEach(function (a) {
-            if (a.getAttribute('href') === window.location.pathname) { a.classList.add('is-current'); }
+    /* ---------- Announcement bar: rotate highlights ---------- */
+    function initRotator() {
+        document.querySelectorAll('[data-rotator]').forEach(function (rotator) {
+            var items = rotator.children;
+            if (items.length < 2 || reduceMotion) { return; }
+            var current = 0;
+            window.setInterval(function () {
+                if (document.hidden) { return; }
+                var leaving = items[current];
+                leaving.classList.remove('is-active');
+                leaving.classList.add('is-leaving');
+                window.setTimeout(function () { leaving.classList.remove('is-leaving'); }, 460);
+                current = (current + 1) % items.length;
+                items[current].classList.add('is-active');
+            }, 4000);
+        });
+    }
+
+    /* ---------- Dropdowns (Help, account) ---------- */
+    function initDropdowns() {
+        var dds = document.querySelectorAll('.lot-dd');
+        function closeAll(except) {
+            dds.forEach(function (dd) {
+                if (dd === except) { return; }
+                dd.classList.remove('is-open');
+                var t = dd.querySelector('.lot-dd__toggle');
+                if (t) { t.setAttribute('aria-expanded', 'false'); }
+            });
+        }
+        dds.forEach(function (dd) {
+            var toggle = dd.querySelector('.lot-dd__toggle');
+            if (!toggle) { return; }
+            toggle.addEventListener('click', function (e) {
+                e.stopPropagation();
+                var open = !dd.classList.contains('is-open');
+                closeAll(dd);
+                dd.classList.toggle('is-open', open);
+                toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+                if (open) {
+                    var first = dd.querySelector('.lot-dd__menu a');
+                    if (first && e.detail === 0) { first.focus(); } // opened with the keyboard
+                }
+            });
+        });
+        document.addEventListener('click', function (e) {
+            if (!e.target.closest('.lot-dd')) { closeAll(null); }
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key !== 'Escape') { return; }
+            var open = document.querySelector('.lot-dd.is-open');
+            if (open) {
+                closeAll(null);
+                var t = open.querySelector('.lot-dd__toggle');
+                if (t) { t.focus(); }
+            }
+        });
+    }
+
+    /* ---------- Search: phone toggle, "/" shortcut, live suggestions ---------- */
+    function initSearch() {
+        var header = document.querySelector('.lot-header');
+        var form = document.getElementById('lot-search');
+        var input = document.getElementById('search_item');
+        var panel = document.getElementById('search-suggestions');
+        var toggle = document.querySelector('.lot-search-toggle');
+        if (!form || !input || !panel) { return; }
+        var url = form.getAttribute('data-suggest-url');
+        var timer = null;
+        var lastQuery = '';
+        var active = -1;
+
+        function setSearchOpen(open) {
+            header.classList.toggle('is-search-open', open);
+            if (toggle) { toggle.setAttribute('aria-expanded', open ? 'true' : 'false'); }
+            if (open) { window.setTimeout(function () { input.focus(); }, 50); } else { hide(); }
+        }
+        if (toggle) {
+            toggle.addEventListener('click', function () {
+                setSearchOpen(!header.classList.contains('is-search-open'));
+            });
+        }
+
+        // Press "/" anywhere (outside a text field) to jump to search.
+        document.addEventListener('keydown', function (e) {
+            if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey) { return; }
+            var tag = (document.activeElement && document.activeElement.tagName) || '';
+            if (/INPUT|TEXTAREA|SELECT/.test(tag) || document.activeElement.isContentEditable) { return; }
+            e.preventDefault();
+            if (toggle && window.getComputedStyle(toggle).display !== 'none') { setSearchOpen(true); } else { input.focus(); }
+        });
+
+        function hide() {
+            panel.hidden = true;
+            active = -1;
+        }
+        function options() { return panel.querySelectorAll('[data-option]'); }
+        function highlight(index) {
+            var opts = options();
+            opts.forEach(function (o) { o.classList.remove('is-active'); });
+            if (!opts.length) { active = -1; return; }
+            active = (index + opts.length) % opts.length;
+            opts[active].classList.add('is-active');
+            opts[active].scrollIntoView({ block: 'nearest' });
+        }
+        function esc(v) {
+            var d = document.createElement('div');
+            d.textContent = v == null ? '' : String(v);
+            return d.innerHTML;
+        }
+        function mark(name, q) {
+            var safe = esc(name);
+            var i = name.toLowerCase().indexOf(q.toLowerCase());
+            if (i < 0) { return safe; }
+            return esc(name.slice(0, i)) + '<mark>' + esc(name.slice(i, i + q.length)) + '</mark>' + esc(name.slice(i + q.length));
+        }
+        function render(items, q) {
+            var all = form.getAttribute('action') + '?item=' + encodeURIComponent(q);
+            var html = '';
+            if (!items.length) {
+                html = '<div class="lot-suggest__empty">No products named "' + esc(q) + '" yet. Try searching sizes or categories.</div>';
+            }
+            items.forEach(function (p, i) {
+                html += '<a class="lot-suggest__item" data-option role="option" style="animation-delay:' + (i * 40) + 'ms" href="/details/' + encodeURIComponent(p.details_url) + '/">' +
+                    (p.image ? '<img src="' + esc(p.image) + '" alt="">' : '') +
+                    '<span class="lot-suggest__text"><span class="lot-suggest__name">' + mark(p.name, q) + '</span>' +
+                    (p.size ? '<span class="lot-suggest__meta">Sizes: ' + esc(p.size) + '</span>' : '') + '</span>' +
+                    '<span class="lot-suggest__price">&#8358;' + Number(p.price).toLocaleString('en-NG') + '</span></a>';
+            });
+            html += '<a class="lot-suggest__all" data-option href="' + all + '"><span>See all results for "' + esc(q) + '"</span><i class="fa fa-arrow-right"></i></a>';
+            panel.innerHTML = html;
+            panel.hidden = false;
+            active = -1;
+        }
+
+        input.addEventListener('input', function () {
+            var q = input.value.trim();
+            window.clearTimeout(timer);
+            if (!q) { hide(); lastQuery = ''; return; }
+            timer = window.setTimeout(function () {
+                lastQuery = q;
+                fetch(url + '?item=' + encodeURIComponent(q), { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) {
+                        // Ignore responses for an older query.
+                        if (q === lastQuery && input.value.trim() === q) { render(data.suggestions || [], q); }
+                    })
+                    .catch(hide);
+            }, 200);
+        });
+        input.addEventListener('keydown', function (e) {
+            if (panel.hidden) { return; }
+            if (e.key === 'ArrowDown') { e.preventDefault(); highlight(active + 1); }
+            else if (e.key === 'ArrowUp') { e.preventDefault(); highlight(active - 1); }
+            else if (e.key === 'Enter' && active >= 0) { e.preventDefault(); options()[active].click(); }
+            else if (e.key === 'Escape') { hide(); }
+        });
+        input.addEventListener('focus', function () {
+            if (input.value.trim() && panel.innerHTML) { panel.hidden = false; }
+        });
+        document.addEventListener('click', function (e) {
+            if (!form.contains(e.target)) { hide(); }
+            if (header.classList.contains('is-search-open') && !header.contains(e.target)) { setSearchOpen(false); }
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && header.classList.contains('is-search-open')) { setSearchOpen(false); if (toggle) { toggle.focus(); } }
         });
     }
 
@@ -186,7 +356,7 @@
         var counter = document.getElementById('cart-count');
         if (counter && typeof count !== 'undefined') {
             counter.textContent = count;
-            counter.style.color = 'var(--lot-gold)';
+            counter.setAttribute('data-count', count);
         }
         var sideCount = document.querySelector('[data-side-cart-count]');
         if (sideCount && typeof count !== 'undefined') { sideCount.textContent = count; }
@@ -358,6 +528,9 @@
 
     ready(function () {
         initHeader();
+        initRotator();
+        initDropdowns();
+        initSearch();
         initReveal();
         initImages();
         document.querySelectorAll('[data-carousel]').forEach(initCarousel);

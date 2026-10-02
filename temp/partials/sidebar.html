@@ -18,7 +18,7 @@
     <div class="lot-side__card lot-side__user lot-side__item">
       {% if user.is_authenticated %}
       <a href="{% url 'profile' user.uid %}" class="lot-side__avatar">
-        {% if user.profilepic.image %}<img src="{{ user.profilepic.image.url }}" alt="">{% else %}<span>{{ user.first_name|first|upper }}</span>{% endif %}
+        {% if user.profilepic.image %}<img src="{{ user.profilepic.image.url }}" alt="">{% elif user.first_name %}<span>{{ user.first_name|first|upper }}</span>{% else %}<span><i class="fa fa-user"></i></span>{% endif %}
       </a>
       <div style="min-width: 0;">
         <small class="lot-text-muted">Welcome back,</small>
