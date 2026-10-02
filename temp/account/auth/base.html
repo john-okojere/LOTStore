@@ -2,46 +2,57 @@
 <!doctype html>
 <html class="no-js" lang="en" dir="ltr">
 <head>
-       <meta charset="UTF-8">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Authentication | Layers Of Truth Church Administration Dashboard</title>
-    <meta name="description" content="The Layers Of Truth Church Administration Dashboard is a comprehensive platform designed for managing Layers Of Truth Church events, departments, and member information. Ensure smooth Layers Of Truth Church operations with our user-friendly and feature-rich dashboard.">
-    <meta name="keywords" content="Layers Of Truth Church administration, Layers Of Truth Church events, Layers Of Truth Church departments, Layers Of Truth Church member management, event management, attendance tracking, Layers Of Truth Church dashboard, member information, Layers Of Truth Church QR code scanner">
-    <meta name="author" content="Layers Of Truth">
-    <meta name="robots" content="index, follow">
+    <title>{% block title %}Account{% endblock title %} | LOT Store</title>
+    <meta name="description" content="Sign in or create your LOT Store account to shop faith-inspired apparel from Layers of Truth Church.">
+    <meta name="robots" content="noindex, follow">
+    <meta name="theme-color" content="#282a36">
+    <link rel="icon" href="{% static 'home/img/logo/4.png' %}" type="image/png">
+    <link rel="apple-touch-icon" href="{% static 'home/img/logo/4.png' %}">
 
- <!-- Favicon -->
-    <link rel="icon" href="{% static 'img/lot_logo.png' %}" type="image/x-icon">
-    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'img/lot_logo.png' %}">
-    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'img/lot_logo.png' %}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'img/lot_logo.png' %}">
-
-    <!-- Open Graph / Facebook -->
-    <meta property="og:title" content="Layers Of Truth Church Administration Dashboard">
-    <meta property="og:description" content="A comprehensive platform for managing Layers Of Truth Church events, departments, and member information.">
-    <meta property="og:image" content="{% static 'assets/images/login-img.svg' %}">
-    <meta property="og:url" content="https://www.layersoftruth.org">
-    <meta property="og:type" content="website">
-
-    <!-- Twitter -->
-    <meta name="twitter:card" content="{% static 'assets/images/login-img.svg' %}">
-    <meta name="twitter:title" content="Layers Of Truth Church Administration Dashboard">
-    <meta name="twitter:description" content="A comprehensive platform for managing Layers Of Truth Church events, departments, and member information.">
-    <meta name="twitter:image" content="{% static 'assets/images/login-img.svg' %}">
-    <meta name="twitter:site" content="@yourLayers Of Truth Churchhandle">
-
-    <!-- Canonical Link -->
-    <link rel="canonical" href="https://dashboard.layersoftruth.org">
-
-    <!-- Additional Meta Tags -->
-    <meta name="theme-color" content="#ffffff">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    
     <!-- project css file  -->
     <link rel="stylesheet" href="{% static 'assets/css/my-task.style.min.css' %}">
-    <link rel="stylesheet" href="{% static 'css/font-awesome.min.css' %}">
+    <link rel="preload" href="{% static 'home/fonts/poppins-400.woff2' %}" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="{% static 'home/css/brand.css' %}">
+    <link rel="stylesheet" href="{% static 'fontawesomefree/css/fontawesome.min.css' %}">
+    <link rel="stylesheet" href="{% static 'fontawesomefree/css/solid.min.css' %}">
+    <link rel="stylesheet" href="{% static 'fontawesomefree/css/v4-shims.min.css' %}">
     <style>
+        /* Match the storefront: dark surfaces, Poppins, gold actions. */
+        body, #mytask-layout, #mytask-layout .main {
+            background: var(--lot-bg) !important;
+            color: var(--lot-text);
+            font-family: var(--lot-font);
+        }
+        #mytask-layout h1, #mytask-layout h2, #mytask-layout h5, #mytask-layout h6,
+        #mytask-layout .color-900 { color: var(--lot-text) !important; font-family: var(--lot-font); }
+        #mytask-layout .color-600, #mytask-layout .text-muted { color: var(--lot-text-muted) !important; }
+        #mytask-layout .card.bg-dark {
+            background: var(--lot-surface) !important;
+            border: 1px solid var(--lot-border) !important;
+            border-radius: 12px;
+        }
+        #mytask-layout a, #mytask-layout a.text-secondary { color: var(--lot-gold) !important; }
+        #mytask-layout form .btn[type=submit] {
+            background: var(--lot-gold) !important;
+            color: var(--lot-ink) !important;
+            border: none;
+            font-weight: 600;
+            width: 100%;
+            text-transform: none;
+        }
+        #mytask-layout form .btn[type=submit]:hover { background: var(--lot-gold-dark) !important; }
+        #mytask-layout .form-control, #mytask-layout .form-select {
+            background-color: #fff;
+            color: var(--lot-ink);
+            border: 1px solid transparent;
+        }
+        #mytask-layout .form-control:focus, #mytask-layout .form-select:focus {
+            border-color: var(--lot-gold);
+            box-shadow: 0 0 0 3px rgba(205, 171, 75, 0.35);
+        }
+        .lot-back { display: inline-flex; gap: 6px; align-items: center; font-size: 0.9rem; }
         .phone{
                 display: none;
             }
@@ -68,6 +79,9 @@
 <body>
 
 <div id="mytask-layout" class="theme-indigo">
+    <div style="padding: 16px 20px;">
+        <a href="{% url 'homepage' %}" class="lot-back"><i class="fa fa-arrow-left"></i> Back to LOT Store</a>
+    </div>
 
     <!-- main body area -->
     <div class="main p-2 py-3 p-xl-5 " style="display: flex;justify-content: center;align-items: center;">

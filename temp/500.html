@@ -1,0 +1,20 @@
+{% load static %}<!DOCTYPE html>
+{# Rendered without context processors or the database, so keep this page self-contained. #}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Something went wrong | LOT Store</title>
+    <link rel="stylesheet" href="{% static 'home/css/brand.css' %}">
+    <style>
+        body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--lot-bg); color: var(--lot-text); padding: 16px; }
+    </style>
+</head>
+<body>
+    <div class="lot-panel" style="max-width: 520px; text-align: center;">
+        <h1 style="font-size: 1.6rem; font-weight: 600; margin: 0 0 12px;">Something went wrong</h1>
+        <p class="lot-text-muted" style="margin: 0 0 24px;">We've been notified and are looking into it. Please try again in a few minutes.</p>
+        <a href="/" class="btn">Back to LOT Store</a>
+    </div>
+</body>
+</html>

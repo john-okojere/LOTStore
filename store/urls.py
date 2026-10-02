@@ -15,6 +15,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include, re_path
+from django.views.generic import TemplateView
 from django.views.static import serve
 
 from django.conf import settings
@@ -22,6 +23,7 @@ from django.conf.urls.static import static
 
 
 urlpatterns = [
+    path('robots.txt', TemplateView.as_view(template_name='robots.txt', content_type='text/plain')),
     path('admin/', admin.site.urls),
     path('cart/', include('cart.urls')),
     path('', include('shelf.urls')),

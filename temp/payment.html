@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static humanize %}
 {% block main %}
 <!-- CSS only -->
 <!-- JavaScript Bundle with Popper -->
@@ -7,12 +7,12 @@
 
 <link rel="stylesheet" href="{% static 'home/css/cart_view.css' %}">
 <section>
-        <h1>Checkout</h1>
+        <h1 style="font-weight: 600;">Checkout</h1>
         <br>
       <!-- Receipt Info Section -->
     <div class="d-flex justify-content-between align-items-center mb-4">
       <h5>Receipt ID:</h5>
-      <button onclick="copyToClipboard()" id="copyButton" class="btn btn-outline-secondary d-flex align-items-center">
+      <button onclick="copyToClipboard()" id="copyButton" class="btn lot-btn-secondary d-flex align-items-center" aria-label="Copy receipt ID">
         <span id="textToCopy">{{ cart.code }}</span>
         <i class="fas fa-copy ms-2"></i>
       </button>
@@ -47,8 +47,8 @@
   <div class="container">
     <div class="row justify-content-center">
       <div class="col-lg-6">
-        <div class="card bg-dark text-white border rounded-5">
-          <div class="card-body p-4">
+        <div class="lot-panel">
+          <div class="p-2">
             <h2 class="card-title">Shipping Address</h2>
             <hr class="text-white">
             {% if stock_problems %}
@@ -100,9 +100,9 @@
               </div>
               <div class="mb-3 d-flex" style="gap: 1rem;">
                 <span class="form-label text-white">Amount:</span>
-                <div>&#8358;{{ total }}</div>
+                <div style="font-weight: 600; color: var(--lot-gold);">&#8358;{{ total|intcomma }}</div>
               </div>
-              <button type="submit" class="btn lot-btn-primary" {% if stock_problems %}disabled{% endif %}>Proceed to Payment</button>
+              <button type="submit" class="btn lot-btn-primary" style="width: 100%;" {% if stock_problems %}disabled{% endif %}>Proceed to Payment</button>
             </form>
           </div>
         </div>

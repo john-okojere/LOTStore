@@ -41,10 +41,12 @@ db.sqlite3
 media/
 staticfiles/
 
-# Secrets & Configs
+# Secrets & Configs (any .env variant or backup; only the example is committed)
 .env
-.env.local
+.env.*
+!.env.example
 *.bak
+*.bak-*
 *.tmp
 
 # Coverage & Testing

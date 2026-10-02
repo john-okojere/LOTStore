@@ -1,11 +1,11 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static humanize %}
 {% block main %}
 <div class="container">
     <div class="row">
         <div class="col-md-8 offset-md-2">
             <h2 class="mt-4 mb-3">Payment History</h2>
-            <table class="table">
+            <table class="table" style="color: var(--lot-text);">
                 <thead>
                     <tr>
                         <th scope="col">S/N</th>
@@ -21,7 +21,7 @@
                     <tr>
                         <td>{{ forloop.counter }}</td>
                         <td><a href="{% url 'payment_view' payment.ref %}">{{ payment.ref }}</a></td>
-                        <td>&#8358;{{ payment.amount }}</td>
+                        <td>&#8358;{{ payment.amount|intcomma }}</td>
                         <td>{{ payment.date_created }}</td>
                         <td>{% if payment.verified %} Paid {% else %} Pending {% endif %}</td>
                         <td>{% include "partials/order_status.html" with order=payment.order %}</td>

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static humanize %}
 {% block main %}
 <script src="https://js.paystack.co/v1/inline.js"></script>
 <!-- JavaScript Bundle with Popper -->
@@ -9,13 +9,13 @@
 	<div class="container">
 		<div class="row justify-content-center">
 			<div class="col-lg-6">
-				<div class="card border rounded-5">
-					<div class="card-body p-4">
+				<div class="lot-panel">
+					<div class="p-2">
 						<div id="payment-details">
 							<h4 class="card-title">Payment Details</h4>
 							<p class="card-text">You are about to pay for all items in your cart.</p>
-							<p class="card-text">Order total: ₦{{ payment.amount }}</p>
-							<p class="card-text">Amount to be charged (incl. 2% processing fee): ₦{{ amount_naira|floatformat:2 }}</p>
+							<p class="card-text">Order total: ₦{{ payment.amount|intcomma }}</p>
+							<p class="card-text">Amount to be charged (incl. 2% processing fee): ₦{{ amount_naira|floatformat:"2g" }}</p>
 							<p class="card-text">Transaction reference: {{ payment.ref }}</p>
 						</div>
 						<button onclick="payWithPaystack()" class="btn lot-btn-primary mt-4">Pay Now</button>

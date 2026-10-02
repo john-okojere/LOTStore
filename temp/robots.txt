@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /cart/
+Disallow: /account/
+Disallow: /search
+Disallow: /filter/

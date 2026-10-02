@@ -4,24 +4,12 @@
     box-sizing: border-box;
     scroll-behavior: smooth;
 }
-@font-face {
-    font-family:Clarendon;
-    src: url(../FONT/Clarendon\ BT\ Bold.ttf);
-}
-
-@font-face {
-    font-family:Cralika;
-    src: url(../FONT/cralika-font-1707571657-0/cralika.otf);
-}
-
-@font-face {
-    font-family:Poppins;
-    src: url(../FONT/Poppins_Font_Family/Poppins\ Light\ 300.ttf);
-}
+/* Fonts, colour tokens and buttons live in brand.css (loaded first). */
 body{
-    background-color: #282a36;
-    color: white;
-    font-family: 'Poppins'
+    background-color: var(--lot-bg);
+    color: var(--lot-text);
+    font-family: var(--lot-font);
+    line-height: 1.5;
 }
 p{
     margin-bottom: 0 !important;
@@ -29,13 +17,13 @@ p{
 body > *{
     max-width: 1400px;
     margin: auto;
-    background-color: #373a48;
+    background-color: var(--lot-surface);
 }
 nav{
     max-width: 100%;
 }
-nav *{
-    font-weight: bold !important;
+nav a, nav button{
+    font-weight: 600;
 }
 img{
     width: 100%;
@@ -43,17 +31,6 @@ img{
 .logo h1{
     margin-bottom: 0;
 } 
-.btn{
-    background: #cdab4b;
-    color: #fff;
-    border:none;
-    display: inline-block;
-    width: fit-content;
-    padding: 0.5rem 1rem;
-}
-.btn:hover{
-    background: #cdab4b !important;
-}
 a{
     text-decoration: none;
     color: inherit;
@@ -71,7 +48,7 @@ ul{
 nav{
     padding:1rem 2% ;
     box-shadow: 0px 5px 10px rgba(0,0,0,0.25);
-    background-color: #282a36;
+    background-color: var(--lot-bg);
 }
 nav h1{
     display: flex;
@@ -97,7 +74,8 @@ nav > div, nav .items ul, footer > div, footer div > ul{
 nav .search{
     display: flex;
     align-items: center;
-    border: 0.5px rgba(255, 255, 255, 0.296) solid;
+    border: 1px solid var(--lot-border);
+    border-radius: var(--lot-radius);
     padding: 5px;
 }
 nav .search i{
@@ -106,11 +84,7 @@ nav .search i{
     padding:5px 10px;
 
 }
-nav .search button{
-    background: none;
-    border: none;
-    color: white;
-}
+
 /* Dropdown container */
 .dropdown {
     position: relative;
@@ -141,8 +115,7 @@ nav .search button{
   }
   
 nav .search input::placeholder{
-color: white;
-font-size: 1.2rem;
+color: var(--lot-text-muted);
 }
 nav .search input{
     height: 100%;
@@ -153,9 +126,6 @@ nav .search input{
 }
 nav .search input:focus{
     outline: none;
-}
-nav .search input[type=submit]{
-background: #cdab4b;
 }
 nav .search input[type=text]{
     min-width: 400px;
@@ -191,7 +161,9 @@ aside ul li p{
 }
 
 aside ul li p .quantity{
-    border: 1px solid white;
+    border: 1px solid var(--lot-border);
+    border-radius: 4px;
+    font-size: 0.85rem;
     height: 25px;
     width: 25px;
     text-align: center;
@@ -219,10 +191,10 @@ aside ul li p .quantity{
     height: 40px;
     background: none;
     margin: 10px 0;
-    border-style: solid;
-    color: white;
+    border: 1px solid var(--lot-border);
+    color: var(--lot-text);
     width: 100%;
-    border-radius: 10px;
+    border-radius: var(--lot-radius);
 }
 .filter button{
     width: 100%;
@@ -237,15 +209,15 @@ aside ul li p .quantity{
     margin-left: 1rem;
   }
   input[type=range]::-webkit-slider-thumb {
-    background-color: #cdab4b; /* For Chrome, Safari, and Opera */
+    background-color: var(--lot-gold); /* For Chrome, Safari, and Opera */
   }
   
   input[type=range]::-moz-range-thumb {
-    background-color: #cdab4b; /* For Firefox */
+    background-color: var(--lot-gold); /* For Firefox */
   }
   
   input[type=range]::-ms-thumb {
-    background-color: #cdab4b; /* For Internet Explorer */
+    background-color: var(--lot-gold); /* For Internet Explorer */
   }
 #price-filter{
     width: 100%;
@@ -254,10 +226,8 @@ aside ul li p .quantity{
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    border-width: 1.5px;
-    border-radius: 10px;
-    border-color: rgb(118, 118, 118);
-    border-style: solid;
+    border: 1px solid var(--lot-border);
+    border-radius: var(--lot-radius);
     padding: 10px;
     height: 40px;
     margin: 10px 0;
@@ -272,7 +242,7 @@ aside ul li p .quantity{
 }
 
 option{
-    color: black;
+    color: var(--lot-ink);
 }
 .setting ul li i{
     font-size: 1.5rem;
@@ -286,6 +256,7 @@ form .sizes > div{
 form .sizes input[type=checkbox]{
     width: 20px;
     height: 20px;
+    accent-color: var(--lot-gold);
 }
 #search-suggestions {
     max-width: 500px;
@@ -349,7 +320,7 @@ form .sizes input[type=checkbox]{
         width: 250px;
         padding: 1rem;
         height: 100%;
-        background-color: #333;
+        background-color: var(--lot-bg);
         transition: left 0.3s ease-in-out;
         overflow-y: scroll;
       }

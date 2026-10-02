@@ -1,1 +1,1 @@
-{% if not order %}Awaiting confirmation{% elif order.delivered %}<span style="color: var(--lot-green); font-weight: 600;">Delivered</span>{% elif order.sent %}<span style="color: var(--lot-gold); font-weight: 600;">On its way</span>{% elif order.packed %}Packed{% else %}Processing{% endif %}
+{% if not order %}Awaiting confirmation{% elif order.delivered %}<span style="color: #3ccf8e; font-weight: 600;">Delivered</span>{% elif order.sent %}<span style="color: var(--lot-gold); font-weight: 600;">On its way</span>{% elif order.packed %}Packed{% else %}Processing{% endif %}

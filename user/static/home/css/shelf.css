@@ -1,5 +1,7 @@
 main .item{
-    border: 1px solid white;
+    border: 1px solid var(--lot-border);
+    border-radius: var(--lot-radius);
+    overflow: hidden;
     min-height: 250px;
     width: 100%;
 } 

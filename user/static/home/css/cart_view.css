@@ -6,34 +6,35 @@ table {
 }
 
 table th, table td {
-    border: 1px solid #ddd;
+    border: 1px solid var(--lot-border);
     padding: 8px;
     text-align: left;
 }
 
 table th {
-    background-color: #f2f2f2;
-    color: black;
+    background-color: var(--lot-surface);
+    color: var(--lot-text);
+    font-weight: 600;
 }
 
 /* Style for the "Add to Order" button */
 .add-to-order-form button {
-    background-color: #4CAF50;
-    color: white;
+    background-color: var(--lot-gold);
+    color: var(--lot-ink);
     padding: 8px 16px;
     border: none;
     cursor: pointer;
 }
 
 .add-to-order-form button:hover {
-    background-color: #45a049;
+    background-color: var(--lot-gold-dark);
 }
 
 /* Alert styles */
 .alert {
     padding: 20px;
-    background-color: #f44336;
-    color: white;
+    background-color: var(--lot-danger-dark);
+    color: var(--lot-text);
     margin-bottom: 15px;
 }
 
@@ -47,24 +48,6 @@ table th {
 
 .close-btn:hover {
     color: black;
-}
-main input, button{
-    min-width: 100px;
-    height: 100%;
-    padding:0.3rem 1rem;
-    border: none;
-}
-main input{
-    width: 50px;
-}
-main button{
-    background-color: #cdab4b;
-    color: #fff;
-}
-body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
 }
 .container {
     margin: 20px auto;

@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Page not found |{% endblock title %}
+{% block main %}
+<div class="lot-panel" style="max-width: 560px; margin: 40px auto; text-align: center;">
+    <h1 style="font-size: 3rem; font-weight: 700; color: var(--lot-gold);">404</h1>
+    <h2 style="font-size: 1.4rem; font-weight: 600; margin-bottom: 12px;">We couldn't find that page</h2>
+    <p class="lot-text-muted" style="margin-bottom: 24px;">The link may be broken or the item may no longer be available.</p>
+    <a href="{% url 'merchs' %}" class="btn">Browse the store</a>
+</div>
+{% endblock main %}

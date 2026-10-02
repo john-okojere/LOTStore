@@ -1,35 +1,35 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static humanize %}
 {% block main %}
 <link rel="stylesheet" href="{% static 'home/css/cart_view.css' %}">
 <div class="container">
     <div class="row justify-content-center">
         <div class="col-lg-8 ">
-            <div class="card border-0 shadow-sm p-4">
+            <div class="lot-panel p-4">
                 <div class="text-center">
                     {% if payment.verified %}
-                    <h2 class="mt-3" style="color: var(--lot-green);">Success</h2>
+                    <h2 class="mt-3 lot-text-success">Payment successful</h2>
                     {% else %}
                     <h2 class="mt-3" style="color: var(--lot-danger);">Payment not confirmed</h2>
                     {% endif %}
                     {% if message %}
-                    <p class="mt-3" style="font-size: 1.2rem; color: var(--lot-green);">{{ message }}</p>
+                    <p class="mt-3 lot-text-success" style="font-size: 1.2rem;">{{ message }}</p>
                     {% endif %}
                     <h3 class="mt-3">Dear {{ payment.full_name }}</h3>
                     {% if payment.verified %}
-                    <p class="mt-3" style="font-size: 1.2rem; color: var(--lot-muted);">Your transaction was successful.</p>
+                    <p class="mt-3 lot-text-muted" style="font-size: 1.1rem;">Your transaction was successful.</p>
                     {% else %}
-                    <p class="mt-3" style="font-size: 1.2rem; color: var(--lot-muted);">We could not confirm this payment with Paystack. If you were charged, please contact us with the reference below.</p>
+                    <p class="mt-3 lot-text-muted" style="font-size: 1.1rem;">We could not confirm this payment with Paystack. If you were charged, please contact us with the reference below.</p>
                     {% endif %}
                 </div>
                 <hr>
-                <div class="card border-0 shadow-sm p-4">
-                    <p class="mb-3">Transaction Details:</p>
-                    <ul class="list-group mb-3">
-                        <li class="list-group-item"><strong>Amount:</strong> &#8358;{{ payment.amount }}</li>
-                        <li class="list-group-item"><strong>Date:</strong> {{ payment.date_created }}</li>
-                        <li class="list-group-item"><strong>Reference:</strong> {{ payment.ref }}</li>
-                        {% if order %}<li class="list-group-item"><strong>Delivery status:</strong> {% include "partials/order_status.html" %}</li>{% endif %}
+                <div class="p-2">
+                    <p class="mb-3" style="font-weight: 600;">Transaction Details:</p>
+                    <ul class="mb-3" style="list-style: none; padding: 0;">
+                        <li style="padding: 8px 0; border-bottom: 1px solid var(--lot-border);"><strong>Amount:</strong> &#8358;{{ payment.amount|intcomma }}</li>
+                        <li style="padding: 8px 0; border-bottom: 1px solid var(--lot-border);"><strong>Date:</strong> {{ payment.date_created }}</li>
+                        <li style="padding: 8px 0; border-bottom: 1px solid var(--lot-border);"><strong>Reference:</strong> {{ payment.ref }}</li>
+                        {% if order %}<li style="padding: 8px 0; border-bottom: 1px solid var(--lot-border);"><strong>Delivery status:</strong> {% include "partials/order_status.html" %}</li>{% endif %}
                         <!-- Add more details as needed -->
                     </ul>
                     {% if payment.verified %}<p class="mb-3">Thank you for your purchase!</p>{% endif %}
@@ -54,16 +54,16 @@
         {% for cart_item in cart_items %}
         <tr>
             <td>{{forloop.counter}}</td>
-            <td><img src="{{cart_item.product.image.url}}" style="width: 50px;" alt=""></td>
+            <td><img src="{{cart_item.product.image.url}}" style="width: 50px; border-radius: 4px;" alt="{{ cart_item.product.name }}"></td>
             <td><a href="{% url 'details' cart_item.product.uid %}">{{ cart_item.product.name }}</a></td>
             <td class="quantity">{{ cart_item.quantity }}</td>
             <td class="quantity">{{ cart_item.info }}</td>
-            <td class="subtotal">&#8358;{{ cart_item.subtotal }}</td>
+            <td class="subtotal">&#8358;{{ cart_item.subtotal|intcomma }}</td>
         </tr>
         {% endfor %}
         <tr>
             <td colspan="4"><strong>Total:</strong></td>
-            <td id="total" colspan="4">&#8358;{{ total }}</td>  <!-- Display the overall total price of the cart -->
+            <td id="total" colspan="4">&#8358;{{ total|intcomma }}</td>  <!-- Display the overall total price of the cart -->
         </tr>
     </tbody>
 </table>

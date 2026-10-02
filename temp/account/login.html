@@ -1,4 +1,5 @@
 {% extends "account/auth/base.html" %}
+{% block title %}Sign in{% endblock title %}
 {% load static %}
 {% load crispy_forms_tags %}
 {% block main %}
@@ -48,7 +49,7 @@
                             <a href="{% url 'password_reset' %}" class="text-secondary">Forgot password?</a>
                         </div>
                         <div class="col-12 text-center mt-4">
-                            <button type="submit" class="btn btn-lg btn-block btn-light lift text-uppercase" atl="signin">SIGN IN</button>
+                            <button type="submit" class="btn btn-lg btn-block btn-light lift " atl="signin">Sign in</button>
                         </div>
                         <div class="col-12 text-center mt-4">
                             <span class="text-muted">Don't have an account yet?  <a href="{% url 'register' %}" class="text-secondary">Sign up here</a></span>
