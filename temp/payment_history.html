@@ -13,6 +13,7 @@
                         <th scope="col">Amount</th>
                         <th scope="col">Date</th>
                         <th scope="col">Status</th>
+                        <th scope="col">Delivery</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -22,8 +23,11 @@
                         <td><a href="{% url 'payment_view' payment.ref %}">{{ payment.ref }}</a></td>
                         <td>&#8358;{{ payment.amount }}</td>
                         <td>{{ payment.date_created }}</td>
-                        <td>{% if payment.verified %} Verified {% else %} Pending {% endif %}</td>
+                        <td>{% if payment.verified %} Paid {% else %} Pending {% endif %}</td>
+                        <td>{% include "partials/order_status.html" with order=payment.order %}</td>
                     </tr>
+                    {% empty %}
+                    <tr><td colspan="6" style="text-align: center;">You have no orders yet. <a href="{% url 'merchs' %}">Start shopping</a></td></tr>
                     {% endfor %}
                 </tbody>
             </table>

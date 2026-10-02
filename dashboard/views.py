@@ -1,11 +1,19 @@
 import json
+import logging
 
 import requests
+from django.conf import settings
+from django.contrib import messages
 from django.contrib.admin.models import LogEntry
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ValidationError
+from django.core.mail import send_mail
+from django.core.validators import validate_email
+from django.db import IntegrityError
 from django.db.models import Count
 from django.http import HttpResponseForbidden, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
 from requests import RequestException
 
@@ -14,6 +22,8 @@ from shelf.models import Category, Product, ProductView, SearchQuery, Sizes
 from user.models import Staff, User
 
 from .forms import ProductForm
+
+logger = logging.getLogger(__name__)
 
 
 def _is_dashboard_admin(user):
@@ -136,11 +146,27 @@ def edit_user(request, user_id):
 
     user = get_object_or_404(User, id=user_id)
     if request.method == "POST":
-        data = json.loads(request.body)
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid data"}, status=400)
+
+        email = (data.get("email") or user.email).strip().lower()
+        try:
+            validate_email(email)
+        except ValidationError:
+            return JsonResponse({"error": "Enter a valid email address."}, status=400)
+        if User.objects.filter(email__iexact=email).exclude(pk=user.pk).exists():
+            return JsonResponse({"error": "That email is already used by another account."}, status=400)
+
+        gender = data.get("gender", user.gender)
+        if gender not in ("Male", "Female", None, ""):
+            return JsonResponse({"error": "Invalid gender."}, status=400)
+
         user.first_name = data.get("first_name", user.first_name)
         user.last_name = data.get("last_name", user.last_name)
-        user.email = data.get("email", user.email)
-        user.gender = data.get("gender", user.gender)
+        user.email = email
+        user.gender = gender or None
         user.save()
         return JsonResponse({"status": "success"})
 
@@ -277,13 +303,13 @@ def manage_orders(request):
     if not _is_dashboard_admin(request.user):
         return _forbidden_page()
 
-    orders = Order.objects.select_related("payment").all()
+    orders = Order.objects.select_related("payment").order_by("-date_created")
     status_filter = request.GET.get("status") or "all"
 
-    if status_filter == "packed":
+    if status_filter == "pending":
         orders = orders.filter(packed=False, sent=False, delivered=False)
-    elif status_filter == "pending":
-        orders = orders.filter(sent=False, delivered=False)
+    elif status_filter == "packed":
+        orders = orders.filter(packed=True, sent=False, delivered=False)
     elif status_filter == "sent":
         orders = orders.filter(sent=True, delivered=False)
     elif status_filter == "delivered":
@@ -300,16 +326,44 @@ def update_order_status(request, order_id, status):
     if request.method != "POST":
         return redirect("manage_orders")
 
-    order = get_object_or_404(Order, id=order_id)
+    order = get_object_or_404(Order.objects.select_related("payment"), id=order_id)
     if status == "packed":
         order.packed = True
     elif status == "sent":
-        order.sent = True
+        order.packed = order.sent = True
     elif status == "delivered":
-        order.delivered = True
+        order.packed = order.sent = order.delivered = True
+    else:
+        messages.error(request, "Unknown order status.")
+        return redirect("order_detail", order_id=order.id)
     order.save()
 
-    return redirect("manage_orders")
+    if status in ("sent", "delivered"):
+        _notify_customer_of_status(request, order, status)
+    messages.success(request, f"Order #{order.id} marked as {status}.")
+    return redirect("order_detail", order_id=order.id)
+
+
+def _notify_customer_of_status(request, order, status):
+    payment = order.payment
+    if not payment.email:
+        return
+    link = request.build_absolute_uri(reverse("payment_view", args=[payment.ref]))
+    if status == "sent":
+        subject = "Your LOT Store order is on its way"
+        body = "Good news! Your order has been sent out for delivery."
+    else:
+        subject = "Your LOT Store order has been delivered"
+        body = "Your order has been marked as delivered. We hope you enjoy it!"
+    message = (
+        f"Hello {payment.full_name or ''},\n\n{body}\n\n"
+        f"Order reference: {payment.ref}\nView your order: {link}\n\n"
+        "Thank you for shopping with LOT Store."
+    )
+    try:
+        send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [payment.email])
+    except Exception:
+        logger.exception("Failed to send order status email for order %s", order.id)
 
 
 @login_required
@@ -330,6 +384,20 @@ def order_detail(request, order_id):
 
 
 # Product =========================================================================
+def _save_named(request, obj):
+    name = (request.POST.get("name") or "").strip()
+    if not name:
+        return JsonResponse({"success": False, "error": "Name is required."}, status=400)
+    if type(obj).objects.filter(name__iexact=name).exclude(pk=obj.pk).exists():
+        return JsonResponse({"success": False, "error": f'"{name}" already exists.'}, status=400)
+    obj.name = name
+    try:
+        obj.save()
+    except IntegrityError:
+        return JsonResponse({"success": False, "error": f'"{name}" already exists.'}, status=400)
+    return JsonResponse({"success": True})
+
+
 @login_required
 def product_category(request):
     if not _is_dashboard_admin(request.user):
@@ -344,11 +412,8 @@ def add_category(request):
         return _forbidden_json()
 
     if request.method == "POST":
-        name = request.POST.get("name")
-        if name:
-            Category.objects.create(name=name)
-            return JsonResponse({"success": True})
-    return JsonResponse({"success": False})
+        return _save_named(request, Category())
+    return JsonResponse({"success": False, "error": "Invalid request"}, status=405)
 
 
 @login_required
@@ -358,9 +423,7 @@ def update_category(request, category_id):
 
     if request.method == "POST":
         category = get_object_or_404(Category, id=category_id)
-        category.name = request.POST.get("name")
-        category.save()
-        return JsonResponse({"success": True})
+        return _save_named(request, category)
     return JsonResponse({"success": False})
 
 
@@ -391,11 +454,8 @@ def add_sizes(request):
         return _forbidden_json()
 
     if request.method == "POST":
-        name = request.POST.get("name")
-        if name:
-            Sizes.objects.create(name=name)
-            return JsonResponse({"success": True})
-    return JsonResponse({"success": False})
+        return _save_named(request, Sizes())
+    return JsonResponse({"success": False, "error": "Invalid request"}, status=405)
 
 
 @login_required
@@ -405,9 +465,7 @@ def update_sizes(request, sizes_id):
 
     if request.method == "POST":
         sizes = get_object_or_404(Sizes, id=sizes_id)
-        sizes.name = request.POST.get("name")
-        sizes.save()
-        return JsonResponse({"success": True})
+        return _save_named(request, sizes)
     return JsonResponse({"success": False})
 
 
@@ -480,7 +538,8 @@ def add_product(request):
             product.user = request.user
             product.save()
             form.save_m2m()
-            return redirect("/")
+            messages.success(request, f"Product \"{product.name}\" added.")
+            return redirect("product_list")
     else:
         form = ProductForm()
 
@@ -497,9 +556,9 @@ def edit_product(request, uid):
         form = ProductForm(request.POST, request.FILES, instance=product)
         if form.is_valid():
             product_obj = form.save(commit=False)
-            product_obj.user = request.user
             product_obj.save()
             form.save_m2m()
+            messages.success(request, f"Product \"{product_obj.name}\" updated.")
             return redirect("product_list")
     else:
         form = ProductForm(instance=product)

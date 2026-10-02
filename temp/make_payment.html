@@ -18,7 +18,8 @@
 							<p class="card-text">Amount to be charged (incl. 2% processing fee): ₦{{ amount_naira|floatformat:2 }}</p>
 							<p class="card-text">Transaction reference: {{ payment.ref }}</p>
 						</div>
-						<button onclick="payWithPaystack()" class="btn mt-4">Pay Now</button>
+						<button onclick="payWithPaystack()" class="btn lot-btn-primary mt-4">Pay Now</button>
+						<p id="payment-status" role="status" class="mt-3"></p>
 					</div>
 				</div>
 			</div>
@@ -39,6 +40,9 @@
 			ref: ref,
 			callback: function (response) {
 				window.location.href = "{% url 'verify_payment' payment.ref %}";
+			},
+			onClose: function () {
+				document.getElementById("payment-status").textContent = "Payment window closed. Click Pay Now to try again.";
 			},
 		};
 		if (Boolean(currency)) {

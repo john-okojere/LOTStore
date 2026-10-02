@@ -5,69 +5,28 @@
     table th, table td{
         color: #333;
     }
+    .cart-qty-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1rem;
+        padding: 0 4px;
+    }
 </style>
 <link rel="stylesheet" href="{% static 'home/css/cart_view.css' %}">
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-<script>
-    $(document).ready(function(){
-        $('.update-quantity-form').on('submit', function(event){
-            event.preventDefault();
-            var csrfToken = $('input[name="csrfmiddlewaretoken"]').val();
-            var formData = $(this).serialize();
-            formData += 'csrfmiddlewaretoken=' + csrfToken;
-            var url = $(this).attr('action');
-            var tableRow = $(this).closest('tr');
-            $.ajax({
-                type: 'POST',
-                url: url,
-                data: formData,
-                success: function(response){
-                    alert('Quantity updated successfully!');
-                    tableRow.find('.quantity').text(response.quantity);
-                    tableRow.find('.subtotal').text('₦' + response.subtotal.toFixed(2));
-                    $('#total').text('₦' + response.total.toFixed(2));
-                },
-                error: function(response){
-                    alert('An error occurred. Please try again.');
-                }
-            });
-        });
-    });
-</script>
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        document.querySelectorAll(".update-cart").forEach(button => {
-            button.addEventListener("click", function () {
-                let cartItemUid = this.getAttribute("data-uid");
-                let action = this.getAttribute("data-action");
-
-                fetch(`/cart/update/${cartItemUid}/${action}/`, {
-                    method: "GET",
-                    headers: {
-                        "X-Requested-With": "XMLHttpRequest"
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        if (data.deleted) {
-                            document.getElementById(`cart-row-${cartItemUid}`).remove(); // Remove row if item is deleted
-                        } else {
-                            document.getElementById(`cart-item-quantity-${cartItemUid}`).innerText = data.quantity;
-                            document.getElementById(`cart-item-subtotal-${cartItemUid}`).innerText = `₦${data.subtotal}`;
-                            document.getElementById(`cart-total`).innerText = `₦${data.total}`;
-                        }
-                    }
-                })
-                .catch(error => console.error("Error updating cart:", error));
-            });
-        });
-    });
-</script>
 
 <div class="cart-container" style="max-width: 900px; margin: auto; padding: 20px; background: white; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
     <h2 style="text-align: center; color: #333; margin-bottom: 20px;">Your Shopping Cart</h2>
-    <div style="width: 100%;overflow-y: scroll;">
+
+    <p id="cart-message" role="status" style="text-align: center; font-weight: 600; color: var(--lot-danger);"></p>
+    {% if stock_problems %}
+    <ul style="color: var(--lot-danger); font-weight: 600;">
+        {% for problem in stock_problems %}<li>{{ problem }}</li>{% endfor %}
+    </ul>
+    {% endif %}
+
+    {% if cart_items %}
+    <div style="width: 100%; overflow-x: auto;">
     <table class="cart-table" style="width: 100%; border-collapse: collapse;">
         <thead>
             <tr style="background: #f5f5f5;">
@@ -75,6 +34,7 @@
                 <th>Image</th>
                 <th>Product</th>
                 <th>Price</th>
+                <th>Size</th>
                 <th>Info</th>
                 <th>Quantity</th>
                 <th>Total</th>
@@ -85,39 +45,91 @@
             {% for cart_item in cart_items %}
             <tr id="cart-row-{{ cart_item.uid }}" style="border-bottom: 1px solid #ddd; text-align: center; color: #333;">
                 <td>{{ forloop.counter }}</td>
-                <td><img src="{{ cart_item.product.image.url }}" style="width: 50px; border-radius: 5px;" alt=""></td>
+                <td>{% if cart_item.product.image %}<img src="{{ cart_item.product.image.url }}" style="width: 50px; border-radius: 5px;" alt="{{ cart_item.product.name }}">{% endif %}</td>
                 <td><a href="{% url 'details' cart_item.product.uid %}" style="text-decoration: none;">{{ cart_item.product.name }}</a></td>
                 <td>₦{{ cart_item.product.price }}</td>
-                <td class="quantity">{{ cart_item.info }}</td>
-                <td class="quantity">
-                    <div style="display: flex; gap: 20px; justify-content: center;">
-                        <a href="javascript:void(0);" class="text-danger update-cart" data-uid="{{ cart_item.uid }}" data-action="decrease">
-                            <i class="fas fa-minus"></i>
-                        </a>
+                <td>{{ cart_item.size.all|join:", "|default:"-" }}</td>
+                <td>{{ cart_item.info|default:"-" }}</td>
+                <td>
+                    <div style="display: flex; gap: 12px; justify-content: center; align-items: center;">
+                        {% if cart_item.product.productType != 'Single Buy' %}
+                        <button type="button" class="cart-qty-btn update-cart" style="color: var(--lot-danger);" data-uid="{{ cart_item.uid }}" data-action="decrease" aria-label="Decrease quantity">
+                            <i class="fa fa-minus"></i>
+                        </button>
+                        {% endif %}
                         <span id="cart-item-quantity-{{ cart_item.uid }}">{{ cart_item.quantity }}</span>
-                        <a href="javascript:void(0);" class="text-success update-cart" data-uid="{{ cart_item.uid }}" data-action="increase">
-                            <i class="fas fa-plus"></i>
-                        </a>
+                        {% if cart_item.product.productType != 'Single Buy' %}
+                        <button type="button" class="cart-qty-btn update-cart" style="color: var(--lot-green);" data-uid="{{ cart_item.uid }}" data-action="increase" aria-label="Increase quantity">
+                            <i class="fa fa-plus"></i>
+                        </button>
+                        {% endif %}
                     </div>
                 </td>
                 <td class="subtotal" id="cart-item-subtotal-{{ cart_item.uid }}">₦{{ cart_item.subtotal }}</td>
                 <td>
-                    <a href="{% url 'delete_from_cart' cart_item.uid %}" style="color: var(--lot-danger); text-decoration: none; margin-left: 10px;">Delete</a>
+                    <form method="post" action="{% url 'delete_from_cart' cart_item.uid %}" style="margin: 0;" onsubmit="return confirm('Remove this item from your cart?');">
+                        {% csrf_token %}
+                        <button type="submit" class="cart-qty-btn" style="color: var(--lot-danger);">Delete</button>
+                    </form>
                 </td>
-            </tr>            
+            </tr>
             {% endfor %}
             <tr style="font-weight: bold;">
-                <td colspan="6" style="text-align: right; padding: 10px;">Total:</td>
-                <td id="total" colspan="6"><span id="cart-total">₦{{ total }}</span></td>
+                <td colspan="7" style="text-align: right; padding: 10px;">Total:</td>
+                <td colspan="2"><span id="cart-total">₦{{ total }}</span></td>
             </tr>
         </tbody>
     </table>
     </div>
-<p style="margin-top: 10px; font-size: 14px; color: #555; text-align: center;">Note: Delivery Payment will be confirmed when the delivery person contacts you.</p>
-    {% if cart_items %}
+    <p style="margin-top: 10px; font-size: 14px; color: #555; text-align: center;">Note: Delivery Payment will be confirmed when the delivery person contacts you.</p>
     <div style="text-align: center; margin-top: 20px;">
         <a href="{% url 'initiate_payment' %}" class="btn lot-btn-primary">Proceed to Checkout</a>
     </div>
+    {% else %}
+    <p style="text-align: center; color: #555;">Your cart is empty.</p>
+    <div style="text-align: center; margin-top: 20px;">
+        <a href="{% url 'merchs' %}" class="btn lot-btn-primary">Continue Shopping</a>
+    </div>
     {% endif %}
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        var csrfToken = "{{ csrf_token }}";
+        var message = document.getElementById("cart-message");
+
+        document.querySelectorAll(".update-cart").forEach(function (button) {
+            button.addEventListener("click", function () {
+                var cartItemUid = this.getAttribute("data-uid");
+                var action = this.getAttribute("data-action");
+                message.textContent = "";
+
+                fetch("/cart/update/" + cartItemUid + "/" + action + "/", {
+                    method: "POST",
+                    headers: {"X-CSRFToken": csrfToken, "X-Requested-With": "XMLHttpRequest"}
+                })
+                .then(function (response) { return response.json(); })
+                .then(function (data) {
+                    if (!data.success) {
+                        message.textContent = data.message || "Could not update your cart.";
+                        return;
+                    }
+                    if (data.deleted) {
+                        document.getElementById("cart-row-" + cartItemUid).remove();
+                        if (data.cart_count === 0) { window.location.reload(); }
+                    } else {
+                        document.getElementById("cart-item-quantity-" + cartItemUid).innerText = data.quantity;
+                        document.getElementById("cart-item-subtotal-" + cartItemUid).innerText = "₦" + data.subtotal;
+                    }
+                    document.getElementById("cart-total").innerText = "₦" + data.total;
+                    var headerCount = document.getElementById("cart-count");
+                    if (headerCount) { headerCount.innerText = data.cart_count; }
+                })
+                .catch(function () {
+                    message.textContent = "Could not update your cart. Please try again.";
+                });
+            });
+        });
+    });
+</script>
 {% endblock main %}

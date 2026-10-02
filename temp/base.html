@@ -156,6 +156,7 @@
                <span style="display: flex;gap: 5px; align-items: center;"> {{user.full_name|title}} <a style="display: flex;gap: 0.5rem;align-items: center;"><i class="fa fa-angle-down"></i></a></span></small>
                <div class="dropdown-content" id="accountDropdownContent">
                  <a href="{% url 'profile' user.uid %}">Profile</a>
+                 <a href="{% url 'payment_history' %}">My Orders</a>
                  <a href="{% url 'logout' %}">Logout</a>
                  {% if user.is_staff or user.level >= 2 %}
                  <a href="{% url 'admin_dashboard' %}">Dashboard</a>
@@ -457,6 +458,13 @@ document.addEventListener("DOMContentLoaded", function() {
       </script>
       <main>
         <div>
+          {% if messages %}
+          <div class="lot-messages" role="status" style="max-width: 960px; margin: 0 auto 12px; padding: 0 20px;">
+            {% for message in messages %}
+            <p style="padding: 10px 14px; border-radius: 5px; color: #fff; background: {% if message.tags == 'error' %}var(--lot-danger){% else %}var(--lot-green){% endif %};">{{ message }}</p>
+            {% endfor %}
+          </div>
+          {% endif %}
           {% block main %} {% endblock main %}
         </div>
       </main>

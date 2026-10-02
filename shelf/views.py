@@ -1,20 +1,22 @@
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
 from .models import Product, Category
 from django.http import JsonResponse
 from django.db.models import Q
 from django.core.mail import send_mail
 from django.core.cache import cache
 from django.conf import settings
+from .signals import HOMEPAGE_CACHE_KEY
 
 def homepage(request):
-    products = cache.get('homepage_products')
+    products = cache.get(HOMEPAGE_CACHE_KEY)
     categories = Category.objects.all()
     images = ["home/img/6.png", "home/img/3.png", "home/img/2.png"]
     if not products:
         products = Product.objects.all().only(
             'id', 'name', 'price', 'image', 'created_date'
         ).order_by('-created_date')[:24]
-        cache.set('homepage_products', products, 300)  # Cache for 5 minutes
+        products = list(products)
+        cache.set(HOMEPAGE_CACHE_KEY, products, 300)  # Cache for 5 minutes
     return render(request, 'home/index.html', {'products': products, 'images':images, 'categories':categories})
 
 def merchs(request):
@@ -75,6 +77,13 @@ def details(request, uid):
     return render(request, 'home/details.html', {'product':product,'products':products})
 
 
+def _to_int(value):
+    try:
+        return int(str(value).strip())
+    except (TypeError, ValueError):
+        return None
+
+
 def filter_items(request):
     if request.method == 'POST':
         category_id = request.POST.get('category-filter')
@@ -82,22 +91,23 @@ def filter_items(request):
         min_price_filter = request.POST.get('min-price')
         max_price_filter = request.POST.get('max-price')
 
-        queryset = Product.objects.all()
+        queryset = Product.objects.all().order_by('-created_date')
 
-        if category_id and category_id != '0':
-            queryset = queryset.filter(categories__id=category_id)
+        category_pk = _to_int(category_id)
+        if category_pk:
+            queryset = queryset.filter(categories__id=category_pk)
 
-        if size_filter:
-            size_q_objects = Q()
-            for size in size_filter:
-                size_q_objects |= Q(size=size)
-            queryset = queryset.filter(size_q_objects)
+        size_ids = [pk for pk in (_to_int(size) for size in size_filter) if pk]
+        if size_ids:
+            queryset = queryset.filter(size__id__in=size_ids)
 
-        if min_price_filter:
-            queryset = queryset.filter(price__gte=min_price_filter)
+        min_price = _to_int(min_price_filter)
+        if min_price is not None:
+            queryset = queryset.filter(price__gte=min_price)
 
-        if max_price_filter:
-            queryset = queryset.filter(price__lte=max_price_filter)
+        max_price = _to_int(max_price_filter)
+        if max_price is not None:
+            queryset = queryset.filter(price__lte=max_price)
 
         queryset = queryset.distinct()
         info = f"Filter result: {len(queryset)}"
@@ -111,13 +121,13 @@ def filter_items(request):
             }
         return render(request, 'home/index.html', context)
 
-    return render(request, 'home/index.html')  
+    return redirect('homepage')
 
 
 from .models import SearchQuery
 
 def search(request):
-    search = request.GET.get('item')
+    search = (request.GET.get('item') or '').strip()
     if search:
         filtered_items = Product.objects.filter(
             Q(name__icontains=search) | 
@@ -129,26 +139,25 @@ def search(request):
         user = request.user if request.user.is_authenticated else None
         ip_address = request.META.get('REMOTE_ADDR')
 
-        if search:
-            SearchQuery.objects.create(user=user, query=search, ip_address=ip_address)
+        SearchQuery.objects.create(user=user, query=search[:255], ip_address=ip_address)
     else:
-        filtered_items =  Product.objects.all()
-        info = f"Search result for {search} not found"
+        filtered_items = Product.objects.all().order_by('-created_date')
+        info = "Enter a product name, size or category to search"
     return render(request, 'home/index.html', {'products':filtered_items, 'info':info}) 
 
 def search_suggestions(request):
-    if 'item' in request.GET:
-        search_term = request.GET['item']
-        suggestions = Product.objects.filter(name__icontains=search_term)[:5]
+    search_term = (request.GET.get('item') or '').strip()
+    if search_term:
+        suggestions = Product.objects.filter(name__icontains=search_term).prefetch_related('size')[:5]
         suggestions_data = []
         for product in suggestions:
             product_data = {
                 'name': product.name,
-                'size': ', '.join(product.size.values_list('name', flat=True)),
+                'size': ', '.join(s.name for s in product.size.all()),
                 'price': product.price,
-                'image': product.image.url,  # Assuming image field is a FileField or ImageField
+                'image': product.image.url if product.image else '',
                 'details_url': product.uid # Assuming you have a method to get product details URL
             }
             suggestions_data.append(product_data)
         return JsonResponse({'suggestions': suggestions_data})
-    return JsonResponse({})
+    return JsonResponse({'suggestions': []})

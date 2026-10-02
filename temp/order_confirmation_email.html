@@ -110,6 +110,7 @@
                 <th>S/N</th>
                 <th>Image</th>
                 <th>Product</th>
+                <th>Size</th>
                 <th>Quantity</th>
                 <th>Info</th>
                 <th>Total</th>
@@ -119,16 +120,17 @@
             {% for cart_item in cart_items %}
             <tr>
                 <td>{{forloop.counter}}</td>
-                <td><img src="{{cart_item.product.image.url}}" style="width: 50px;" alt=""></td>
-                <td><a href="https://store.layersoftruth.org/{% url 'details' cart_item.product.uid %}">{{ cart_item.product.name }}</a></td>
+                <td>{% if cart_item.absolute_image_url %}<img src="{{ cart_item.absolute_image_url }}" style="width: 50px;" alt="{{ cart_item.product.name }}">{% endif %}</td>
+                <td><a href="{{ cart_item.absolute_url }}">{{ cart_item.product.name }}</a></td>
+                <td>{{ cart_item.size.all|join:", "|default:"-" }}</td>
                 <td class="quantity">{{ cart_item.quantity }}</td>
                 <td class="quantity">{{ cart_item.info }}</td>
                 <td class="subtotal">&#8358;{{ cart_item.subtotal }}</td>
             </tr>
             {% endfor %}
             <tr>
-                <td colspan="4"><strong>Total:</strong></td>
-                <td id="total" colspan="4">&#8358;{{ total }}</td>  <!-- Display the overall total price of the cart -->
+                <td colspan="6"><strong>Total:</strong></td>
+                <td id="total">&#8358;{{ total }}</td>  <!-- Display the overall total price of the cart -->
             </tr>
         </tbody>
     </table>
@@ -139,6 +141,7 @@
         <li class="list-group-item"><strong>Reference:</strong> {{ payment.ref }}</li>
         <!-- Add more details as needed -->
     </ul>
+    <p><a href="{{ payment_url }}">View your order</a></p>
     <p>Thank you for shopping with us.</p>
 </body>
 </html>

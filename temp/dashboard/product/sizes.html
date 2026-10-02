@@ -135,8 +135,8 @@
                     alert("Error adding size.");
                 }
             },
-            error: function () {
-                alert("Something went wrong. Try again!");
+            error: function (xhr) {
+                alert((xhr.responseJSON && xhr.responseJSON.error) || "Something went wrong. Try again!");
             }
         });
     });
@@ -170,8 +170,8 @@
                     alert("Error updating size.");
                 }
             },
-            error: function () {
-                alert("Something went wrong. Try again!");
+            error: function (xhr) {
+                alert((xhr.responseJSON && xhr.responseJSON.error) || "Something went wrong. Try again!");
             }
         });
     });
@@ -200,8 +200,8 @@
                     alert("Error deleting size.");
                 }
             },
-            error: function () {
-                alert("Something went wrong. Try again!");
+            error: function (xhr) {
+                alert((xhr.responseJSON && xhr.responseJSON.error) || "Something went wrong. Try again!");
             }
         });
     });

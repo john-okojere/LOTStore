@@ -18,7 +18,7 @@
 
 <div class="container">
     <center>
-        <h3>Edit Profile</h3>
+        <h3>{% if form.instance.pk %}Edit{% else %}Add{% endif %} Address</h3>
     </center>
     <form action="" method="post" id="myForm">
         {% csrf_token %}
@@ -26,7 +26,7 @@
             {{form | crispy }}
         </div>
         <div class="for">
-            <input type="submit" class="btn  px-2" value="Edit Profile" style="align-self: center;color: white;padding:0 20px; background:var(--primary-color)">
+            <input type="submit" class="btn  px-2" value="Save" style="align-self: center;color: white;padding:0 20px; background:var(--primary-color)">
         </div>
     </form>
 </div>

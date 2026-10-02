@@ -3,28 +3,48 @@
 
 {% block main %}
 <div style="max-width: 960px; margin: 0 auto; padding: 20px;">
-  <h2 style="margin-bottom: 16px;">My Profile</h2>
-  <div style="display: grid; grid-template-columns: 220px 1fr; gap: 20px; background: #fff; padding: 20px; border-radius: 8px;">
-    <div style="text-align: center;">
-      {% if profile_pic %}
-      <img src="{{ profile_pic.image.url }}" alt="Profile Picture" style="width: 160px; height: 160px; border-radius: 50%; object-fit: cover;">
+  <h2 style="margin-bottom: 16px;">{% if request.user == person %}My Profile{% else %}{{ person.full_name|title }}{% endif %}</h2>
+  <div style="display: flex; flex-wrap: wrap; gap: 20px; background: #fff; color: #333; padding: 20px; border-radius: 8px;">
+    <div style="flex: 0 0 200px; text-align: center; margin: 0 auto;">
+      {% if profile_pic and profile_pic.image %}
+      <img src="{{ profile_pic.image.url }}" alt="Profile picture" style="width: 160px; height: 160px; border-radius: 50%; object-fit: cover;">
       {% else %}
-      <img src="{% static 'assets/images/lg/avatar2.jpg' %}" alt="Default Profile Picture" style="width: 160px; height: 160px; border-radius: 50%; object-fit: cover;">
+      <img src="{% static 'assets/images/lg/avatar2.jpg' %}" alt="Default profile picture" style="width: 160px; height: 160px; border-radius: 50%; object-fit: cover;">
+      {% endif %}
+      {% if request.user == person %}
+      <form method="post" action="{% url 'upload' %}" enctype="multipart/form-data" style="margin-top: 12px; display: flex; flex-direction: column; gap: 8px; align-items: center;">
+        {% csrf_token %}
+        <label for="id_image" style="font-size: 0.9rem;">Change photo</label>
+        <input type="file" name="image" id="id_image" accept="image/*" required style="max-width: 200px; font-size: 0.8rem;">
+        <button type="submit" class="btn lot-btn-primary" style="padding: 6px 14px;">Upload</button>
+      </form>
       {% endif %}
     </div>
 
-    <div>
+    <div style="flex: 1 1 300px; min-width: 0;">
       <p><strong>Name:</strong> {{ person.first_name|title }} {{ person.last_name|title }}</p>
       <p><strong>Email:</strong> {{ person.email }}</p>
       <p><strong>Phone:</strong> {{ person.phone }}</p>
       <p><strong>Gender:</strong> {{ person.gender|default:"Not set" }}</p>
       <p><strong>Date of Birth:</strong> {{ person.date_of_birth|default:"Not set" }}</p>
-      <p><strong>Joined:</strong> {{ person.date_joined }}</p>
+      <p><strong>Joined:</strong> {{ person.date_joined|date:"j M Y" }}</p>
+
+      {% if about %}
+      <hr>
+      <p><strong>Address:</strong> {{ about.address }}, {{ about.state }}, {{ about.country }}</p>
+      {% if about.about %}<p><strong>About:</strong> {{ about.about|linebreaksbr }}</p>{% endif %}
+      {% endif %}
 
       {% if request.user == person %}
       <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px;">
-        <a href="{% url 'editprofile' %}" class="btn" style="background: #323a45; color: #fff;">Edit Profile</a>
-        <a href="{% url 'payment_history' %}" class="btn" style="background: #008751; color: #fff;">Payment History</a>
+        <a href="{% url 'editprofile' %}" class="btn" style="background: var(--lot-ink); color: #fff;">Edit Profile</a>
+        {% if about %}
+        <a href="{% url 'editAbout' %}" class="btn" style="background: var(--lot-ink); color: #fff;">Edit Address</a>
+        {% else %}
+        <a href="{% url 'AddAbout' %}" class="btn" style="background: var(--lot-ink); color: #fff;">Add Address</a>
+        {% endif %}
+        <a href="{% url 'payment_history' %}" class="btn lot-btn-primary">My Orders</a>
+        <a href="{% url 'password_change' %}" class="btn" style="background: var(--lot-gold); color: var(--lot-ink);">Change Password</a>
       </div>
       {% endif %}
     </div>

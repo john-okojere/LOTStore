@@ -29,6 +29,7 @@
                         <li class="list-group-item"><strong>Amount:</strong> &#8358;{{ payment.amount }}</li>
                         <li class="list-group-item"><strong>Date:</strong> {{ payment.date_created }}</li>
                         <li class="list-group-item"><strong>Reference:</strong> {{ payment.ref }}</li>
+                        {% if order %}<li class="list-group-item"><strong>Delivery status:</strong> {% include "partials/order_status.html" %}</li>{% endif %}
                         <!-- Add more details as needed -->
                     </ul>
                     {% if payment.verified %}<p class="mb-3">Thank you for your purchase!</p>{% endif %}

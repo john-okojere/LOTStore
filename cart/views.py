@@ -1,15 +1,26 @@
+import logging
+
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mail
+from django.db import transaction
+from django.db.models import F, Sum
+from django.db.models.functions import Greatest
 from django.http import HttpResponseForbidden, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
+from django.urls import reverse
 from django.utils.html import strip_tags
+from django.views.decorators.http import require_POST
 
 from shelf.models import Product, Sizes
 
-from .forms import AddToCartForm
+from .forms import AddToCartForm, CheckoutForm
 from .models import Cart, CartItem, Order, Payment
+
+logger = logging.getLogger(__name__)
+
+SESSION_CART_KEY = 'cart_id'
 
 
 def _ensure_session(request):
@@ -20,16 +31,20 @@ def _ensure_session(request):
 
 def _get_active_cart(request, create=True):
     if request.user.is_authenticated:
-        if create:
-            cart, _ = Cart.objects.get_or_create(user=request.user, cleared=False)
-            return cart
-        return Cart.objects.filter(user=request.user, cleared=False).first()
+        cart = Cart.objects.filter(user=request.user, cleared=False).order_by('-id').first()
+        if cart is None and create:
+            cart = Cart.objects.create(user=request.user)
+        return cart
 
     session_key = _ensure_session(request)
-    if create:
-        cart, _ = Cart.objects.get_or_create(session_id=session_key, cleared=False)
-        return cart
-    return Cart.objects.filter(session_id=session_key, cleared=False).first()
+    cart = Cart.objects.filter(session_id=session_key, cleared=False).order_by('-id').first()
+    if cart is None and create:
+        cart = Cart.objects.create(session_id=session_key)
+    if cart is not None:
+        # Remembered in session data so the cart survives the session key
+        # rotation that happens on login (see cart.signals).
+        request.session[SESSION_CART_KEY] = cart.pk
+    return cart
 
 
 def _can_access_cart(request, cart):
@@ -48,6 +63,36 @@ def _can_access_payment(request, payment):
     return bool(payment.session_id and payment.session_id == session_key)
 
 
+def _cart_items(cart):
+    return cart.cartitem_set.select_related('product').prefetch_related('size')
+
+
+def _cart_total(cart):
+    return sum(item.subtotal() for item in cart.cartitem_set.select_related('product'))
+
+
+def _quantity_in_cart(cart, product, exclude_item=None):
+    items = CartItem.objects.filter(cart=cart, product=product)
+    if exclude_item is not None:
+        items = items.exclude(pk=exclude_item.pk)
+    return items.aggregate(total=Sum('quantity'))['total'] or 0
+
+
+def _stock_problems(cart_items):
+    """Return a message for every product whose cart quantity exceeds stock."""
+    wanted = {}
+    for item in cart_items:
+        entry = wanted.setdefault(item.product_id, [item.product, 0])
+        entry[1] += item.quantity
+    problems = []
+    for product, quantity in wanted.values():
+        if product.stock <= 0:
+            problems.append(f'{product.name} is out of stock.')
+        elif quantity > product.stock:
+            problems.append(f'Only {product.stock} of {product.name} left in stock (you have {quantity}).')
+    return problems
+
+
 def _get_or_create_matching_item(cart, product, info, size_ids):
     if not size_ids:
         item, _ = CartItem.objects.get_or_create(cart=cart, product=product, info=info)
@@ -64,17 +109,24 @@ def _get_or_create_matching_item(cart, product, info, size_ids):
     return item
 
 
+def _first_error(form):
+    for errors in form.errors.values():
+        if errors:
+            return errors[0]
+    return 'Please check your input and try again.'
+
+
+@require_POST
 def add_to_cart(request, product_uid):
     product = get_object_or_404(Product, uid=product_uid)
 
-    if request.method != 'POST':
-        return JsonResponse({'success': False, 'message': 'Invalid request method.'}, status=405)
-
     form = AddToCartForm(request.POST, product=product)
     if not form.is_valid():
-        return JsonResponse({'success': False, 'errors': form.errors}, status=400)
+        return JsonResponse({'success': False, 'message': _first_error(form), 'errors': form.errors}, status=400)
 
     quantity = form.cleaned_data['quantity']
+    if product.productType == 'Single Buy':
+        quantity = 1
     info = form.cleaned_data.get('info', '')
     size_ids = [
         int(key.split('_')[1])
@@ -82,16 +134,16 @@ def add_to_cart(request, product_uid):
         if key.startswith('size_') and value
     ]
 
-    if len(size_ids) > 1 and quantity == 1:
+    if product.stock <= 0:
+        return JsonResponse({'success': False, 'message': f'{product.name} is out of stock.'}, status=400)
+
+    cart = _get_active_cart(request, create=True)
+    if _quantity_in_cart(cart, product) + quantity > product.stock:
         return JsonResponse(
-            {
-                'success': False,
-                'errors': 'You cannot select more than one size if the quantity is one.',
-            },
+            {'success': False, 'message': f'Only {product.stock} of {product.name} available.'},
             status=400,
         )
 
-    cart = _get_active_cart(request, create=True)
     cart_item = _get_or_create_matching_item(cart, product, info, size_ids)
     cart_item.quantity += quantity
     cart_item.save()
@@ -108,6 +160,7 @@ def add_to_cart(request, product_uid):
     )
 
 
+@require_POST
 def delete_from_cart(request, cart_item_uid):
     cart_item = get_object_or_404(CartItem, uid=cart_item_uid)
     if not _can_access_cart(request, cart_item.cart):
@@ -118,99 +171,180 @@ def delete_from_cart(request, cart_item_uid):
 
 
 def view_cart(request):
-    cart = _get_active_cart(request, create=True)
-    cart_items = cart.cartitem_set.select_related('product').all()
+    cart = _get_active_cart(request, create=False)
+    cart_items = _cart_items(cart) if cart else []
     total = sum(item.subtotal() for item in cart_items)
-    return render(request, 'cart/view_cart.html', {'cart_items': cart_items, 'total': total, 'cart': cart})
+    return render(
+        request,
+        'cart/view_cart.html',
+        {'cart_items': cart_items, 'total': total, 'cart': cart, 'stock_problems': _stock_problems(cart_items)},
+    )
 
 
+@require_POST
 def update_cart_quantity(request, cart_item_uid, action):
-    cart_item = get_object_or_404(CartItem, uid=cart_item_uid)
+    cart_item = get_object_or_404(CartItem.objects.select_related('product'), uid=cart_item_uid)
     cart = cart_item.cart
+    product = cart_item.product
 
     if not _can_access_cart(request, cart):
         return JsonResponse({'success': False, 'message': 'Forbidden'}, status=403)
 
     if action == 'increase':
+        if product.productType == 'Single Buy':
+            return JsonResponse({'success': False, 'message': 'Only one of this item can be bought per order.'}, status=400)
+        if _quantity_in_cart(cart, product) + 1 > product.stock:
+            return JsonResponse({'success': False, 'message': f'Only {product.stock} of {product.name} available.'}, status=400)
         cart_item.quantity += 1
     elif action == 'decrease':
-        if cart_item.quantity > 1:
+        minimum = product.minBuy if product.productType == 'Min. Buy' else 1
+        if cart_item.quantity > max(minimum, 1):
             cart_item.quantity -= 1
         else:
             cart_item.delete()
-            total = sum(item.subtotal() for item in cart.cartitem_set.all())
-            return JsonResponse({'success': True, 'deleted': True, 'total': total})
+            return JsonResponse(
+                {'success': True, 'deleted': True, 'total': _cart_total(cart), 'cart_count': cart.cartitem_set.count()}
+            )
     else:
         return JsonResponse({'success': False, 'message': 'Invalid action.'}, status=400)
 
     cart_item.save()
-    total = sum(item.subtotal() for item in cart.cartitem_set.all())
     return JsonResponse(
         {
             'success': True,
             'quantity': cart_item.quantity,
             'subtotal': cart_item.subtotal(),
-            'total': total,
+            'total': _cart_total(cart),
+            'cart_count': cart.cartitem_set.count(),
         }
     )
 
 
+def _checkout_initial(request):
+    if not request.user.is_authenticated:
+        return {}
+    user = request.user
+    initial = {'email': user.email, 'full_name': user.full_name().strip(), 'phone_number': user.phone}
+    about = getattr(user, 'aboutprofile', None)
+    if about is not None:
+        initial.update({'address': about.address, 'state': about.state})
+    last_payment = Payment.objects.filter(user=user).exclude(address__isnull=True).first()
+    if last_payment is not None:
+        initial.update({
+            'address': last_payment.address,
+            'city': last_payment.city,
+            'state': last_payment.state,
+            'phone_number': last_payment.phone_number or initial['phone_number'],
+        })
+    return initial
+
+
 def initiate_payment(request):
-    cart = _get_active_cart(request, create=True)
-    cart_items = cart.cartitem_set.all()
+    cart = _get_active_cart(request, create=False)
+    cart_items = list(_cart_items(cart)) if cart else []
     total = sum(item.subtotal() for item in cart_items)
 
+    if not cart_items:
+        return redirect('view_cart')
+
+    stock_problems = _stock_problems(cart_items)
+
     if request.method == 'POST':
-        if total <= 0:
-            return JsonResponse({'success': False, 'message': 'Your cart is empty.'}, status=400)
+        form = CheckoutForm(request.POST)
+        if form.is_valid() and not stock_problems:
+            payment_payload = dict(form.cleaned_data, amount=total, cart=cart)
+            if request.user.is_authenticated:
+                payment_payload['user'] = request.user
+            else:
+                payment_payload['session_id'] = _ensure_session(request)
 
-        payment_payload = {
-            'amount': total,
-            'email': request.POST.get('email'),
-            'cart': cart,
-            'full_name': request.POST.get('full_name'),
-            'address': request.POST.get('address'),
-            'city': request.POST.get('city'),
-            'state': request.POST.get('state'),
-            'phone_number': request.POST.get('phone_number'),
-        }
+            payment = Payment.objects.create(**payment_payload)
+            context = {
+                'payment': payment,
+                'paystack_pub_key': settings.PAYSTACK_PUBLIC_KEY,
+                'amount_value': payment.amount_value(),
+                'amount_naira': payment.amount_value() / 100,
+            }
+            return render(request, 'make_payment.html', context)
+    else:
+        form = CheckoutForm(initial=_checkout_initial(request))
 
-        if request.user.is_authenticated:
-            payment_payload['user'] = request.user
-        else:
-            payment_payload['session_id'] = _ensure_session(request)
-
-        payment = Payment.objects.create(**payment_payload)
-        context = {
-            'payment': payment,
-            'field_values': request.POST,
-            'paystack_pub_key': settings.PAYSTACK_PUBLIC_KEY,
-            'amount_value': payment.amount_value(),
-            'amount_naira': payment.amount_value() / 100,
-        }
-        return render(request, 'make_payment.html', context)
-
-    return render(request, 'payment.html', {'cart': cart, 'total': total})
+    return render(
+        request,
+        'payment.html',
+        {'cart': cart, 'total': total, 'form': form, 'stock_problems': stock_problems},
+    )
 
 
 def sm(request):
     return redirect('/')
 
 
+def _payment_context(payment):
+    cart = payment.cart
+    cart_items = _cart_items(cart)
+    total = sum(item.subtotal() for item in cart_items)
+    order = Order.objects.filter(payment=payment).first()
+    return {'cart_items': cart_items, 'total': total, 'cart': cart, 'payment': payment, 'order': order}
+
+
 def viewpayment(request, ref):
     payment = get_object_or_404(Payment, ref=ref)
     if not _can_access_payment(request, payment):
         return HttpResponseForbidden('You are not allowed to view this payment.')
+    return render(request, 'success.html', _payment_context(payment))
 
-    cart = payment.cart
-    cart_items = cart.cartitem_set.all()
-    total = sum(item.subtotal() for item in cart_items)
-    order = Order.objects.filter(payment=payment).first()
-    return render(
-        request,
-        'success.html',
-        {'cart_items': cart_items, 'total': total, 'cart': cart, 'payment': payment, 'order': order},
+
+def _complete_payment(payment):
+    """Create the order exactly once for a verified payment.
+
+    Returns (order, created). Locks the payment row so a double callback or
+    page refresh can't clear the cart / reduce stock / email twice.
+    """
+    with transaction.atomic():
+        locked = Payment.objects.select_for_update().get(pk=payment.pk)
+        order = Order.objects.filter(payment=locked).first()
+        if order is not None:
+            return order, False
+
+        cart = locked.cart
+        cart.cleared = True
+        cart.save(update_fields=['cleared'])
+        for item in cart.cartitem_set.all():
+            # The customer has already paid, so never block here; clamp at 0.
+            Product.objects.filter(pk=item.product_id).update(
+                stock=Greatest(F('stock') - item.quantity, 0)
+            )
+        order = Order.objects.create(payment=locked)
+        return order, True
+
+
+def _absolute(request, url):
+    return request.build_absolute_uri(url)
+
+
+def _send_order_emails(request, context):
+    payment, order = context['payment'], context['order']
+    for item in context['cart_items']:
+        item.absolute_image_url = _absolute(request, item.product.image.url) if item.product.image else ''
+        item.absolute_url = _absolute(request, reverse('details', args=[item.product.uid]))
+    context = dict(
+        context,
+        payment_url=_absolute(request, reverse('payment_view', args=[payment.ref])),
+        order_url=_absolute(request, reverse('order_detail', args=[order.id])),
     )
+    sender = settings.DEFAULT_FROM_EMAIL
+    messages_to_send = [
+        ('Order Confirmation - LOT Store', 'order_confirmation_email.html', [payment.email]),
+        (f'New Order Received ({payment.ref})', 'new_order_email.html', [sender]),
+    ]
+    for subject, template, recipients in messages_to_send:
+        try:
+            html = render_to_string(template, context)
+            send_mail(subject, strip_tags(html), sender, recipients, html_message=html)
+        except Exception:
+            # The customer has paid; a mail outage must not turn this into an error page.
+            logger.exception('Failed to send "%s" for payment %s', subject, payment.ref)
 
 
 def verify_payment(request, ref):
@@ -218,90 +352,49 @@ def verify_payment(request, ref):
     if not _can_access_payment(request, payment):
         return HttpResponseForbidden('You are not allowed to verify this payment.')
 
-    cart = payment.cart
-    cart_items = cart.cartitem_set.all()
-    total = sum(item.subtotal() for item in cart_items)
-    verified = payment.amount == total and payment.verify_payment()
+    if not payment.verified:
+        total = _cart_total(payment.cart)
+        if payment.amount == total:
+            payment.verify_payment()
 
-    if verified:
-        cart.cleared = True
-        cart.save()
-        order, _ = Order.objects.get_or_create(payment=payment)
-        sender = settings.DEFAULT_FROM_EMAIL
+    if payment.verified:
+        order, created = _complete_payment(payment)
+        context = _payment_context(payment)
+        if created:
+            _send_order_emails(request, context)
+        return render(request, 'success.html', context)
 
-        buyer_message = render_to_string(
-            'order_confirmation_email.html',
-            {'cart_items': cart_items, 'total': total, 'cart': cart, 'payment': payment, 'order': order},
-        )
-        send_mail(
-            'Order Confirmation',
-            strip_tags(buyer_message),
-            sender,
-            [payment.email],
-            html_message=buyer_message,
-        )
-
-        seller_message = render_to_string(
-            'new_order_email.html',
-            {'cart_items': cart_items, 'total': total, 'cart': cart, 'payment': payment, 'order': order},
-        )
-        send_mail(
-            'New Order Received',
-            strip_tags(seller_message),
-            sender,
-            [sender],
-            html_message=seller_message,
-        )
-
-        return render(
-            request,
-            'success.html',
-            {'cart_items': cart_items, 'total': total, 'cart': cart, 'payment': payment, 'order': order},
-        )
-
-    return render(request, 'success.html', {'cart_items': cart_items, 'total': total, 'cart': cart, 'payment': payment})
+    return render(request, 'success.html', _payment_context(payment))
 
 
 @login_required
 def payment_history(request):
     if request.user.is_staff:
-        payment = Payment.objects.filter(verified=True)
+        payments = Payment.objects.filter(verified=True)
     else:
-        payment = Payment.objects.filter(verified=True, user=request.user)
-    return render(request, 'payment_history.html', {'payments': payment})
+        payments = Payment.objects.filter(verified=True, user=request.user)
+    payments = payments.select_related('order')
+    return render(request, 'payment_history.html', {'payments': payments})
+
+
+def _staff_set_order_flag(request, ref, field):
+    if not request.user.is_staff:
+        return HttpResponseForbidden('Only staff can update delivery status.')
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Invalid request method.'}, status=405)
+
+    payment = get_object_or_404(Payment, ref=ref, verified=True)
+    order, _ = Order.objects.get_or_create(payment=payment)
+    setattr(order, field, True)
+    order.save(update_fields=[field])
+    return render(request, 'success.html', _payment_context(payment))
 
 
 @login_required
 def sent_order(request, ref):
-    if not request.user.is_staff:
-        return HttpResponseForbidden('Only staff can update delivery status.')
-    if request.method != 'POST':
-        return JsonResponse({'success': False, 'message': 'Invalid request method.'}, status=405)
-
-    payment = get_object_or_404(Payment, ref=ref)
-    order, _ = Order.objects.get_or_create(payment=payment)
-    order.sent = True
-    order.save(update_fields=['sent'])
-
-    cart_items = payment.cart.cartitem_set.all()
-    total = sum(item.subtotal() for item in cart_items)
-    cart = payment.cart
-    return render(request, 'success.html', {'cart_items': cart_items, 'total': total, 'cart': cart, 'payment': payment, 'order': order})
+    return _staff_set_order_flag(request, ref, 'sent')
 
 
 @login_required
 def order_delivered(request, ref):
-    if not request.user.is_staff:
-        return HttpResponseForbidden('Only staff can update delivery status.')
-    if request.method != 'POST':
-        return JsonResponse({'success': False, 'message': 'Invalid request method.'}, status=405)
-
-    payment = get_object_or_404(Payment, ref=ref)
-    order, _ = Order.objects.get_or_create(payment=payment)
-    order.delivered = True
-    order.save(update_fields=['delivered'])
-
-    cart_items = payment.cart.cartitem_set.all()
-    total = sum(item.subtotal() for item in cart_items)
-    cart = payment.cart
-    return render(request, 'success.html', {'cart_items': cart_items, 'total': total, 'cart': cart, 'payment': payment, 'order': order})
+    return _staff_set_order_flag(request, ref, 'delivered')

@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, authenticate, logout
 from .models import User, ProfilePic
-from .forms import RegisterForm, EditRegisterForm
+from .forms import RegisterForm, EditRegisterForm, ProfileForm
 
 from django.conf import settings
 from django.contrib import messages
@@ -26,7 +26,7 @@ def signup(request):
             rform.save()
             email = form.cleaned_data.get('email')
             raw_password = form.cleaned_data.get('password1')
-            user = authenticate(email=email, password=raw_password)
+            user = authenticate(request, email=email, password=raw_password)
             
             # Create default profile picture
             image = "default/lg/avatar2.jpg"
@@ -62,7 +62,13 @@ def profile(request, uid):
     if request.user != person and not request.user.is_staff:
         return redirect('profile', uid=request.user.uid)
     profile_pic = getattr(person, 'profilepic', None)
-    return render(request, 'account/index.html', {'person': person, 'profile_pic': profile_pic})
+    about = getattr(person, 'aboutprofile', None)
+    return render(request, 'account/index.html', {
+        'person': person,
+        'profile_pic': profile_pic,
+        'about': about,
+        'profile_form': ProfileForm(),
+    })
 
 @login_required
 def editprofile(request):
@@ -70,13 +76,13 @@ def editprofile(request):
         form = EditRegisterForm(request.POST, instance = request.user)
         if form.is_valid():
             form.save()
+            messages.success(request, "Profile updated.")
             return redirect('profile', uid=request.user.uid)
     else:
         form = EditRegisterForm( instance = request.user)
-    return render(request, 'account/edit.html', {'form': form})
+    return render(request, 'account/Edit.html', {'form': form})
 
 
-from .forms import ProfileForm
 @login_required
 def add_profilepic(request):
     profile_pic, _ = ProfilePic.objects.get_or_create(
@@ -90,6 +96,9 @@ def add_profilepic(request):
             c_form = form.save(commit=False)
             c_form.user = request.user
             c_form.save()
+            messages.success(request, "Profile picture updated.")
+        else:
+            messages.error(request, "Please upload a valid image (JPG or PNG, max 5MB).")
 
     return redirect('profile', uid=request.user.uid)
 
@@ -99,6 +108,8 @@ from .models import About
 
 @login_required
 def addAbout(request):
+    if About.objects.filter(user=request.user).exists():
+        return redirect('editAbout')
     if request.method == "POST":
         form = BioForm(request.POST)
         if form.is_valid():

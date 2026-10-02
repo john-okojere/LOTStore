@@ -12,9 +12,9 @@
     <meta property="og:title" content="{{product.name | title}} - LOT Store">
     <meta property="og:description" content="{{product.description | truncatechars:200}}">
     <meta property="og:image" content="{{product.image.url}}">
-    <meta property="og:url" content="{% url 'details' product.uid %}">
+    <meta property="og:url" content="{{ request.build_absolute_uri }}">
     <meta property="og:type" content="product">
-    <meta name="twitter:card" content="{{product.image.url}}">
+    <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{{product.name | title}} - LOT Store">
     <meta name="twitter:description" content="{{product.description | truncatechars:200}}">
     <meta name="twitter:image" content="{{product.image.url}}">
@@ -31,11 +31,11 @@
         <table style="width: 100%; border-collapse: collapse;">
             <tbody>
                 <tr><th>Price:</th> <td style="color: var(--lot-gold); font-size: 18px; font-weight: bold;">&#8358; {{ product.price }}</td></tr>
-                <tr><th>Sizes:</th> <td>{% for size in product.size.all %} {{ size }}, {% endfor %}</td></tr>
+                <tr><th>Sizes:</th> <td>{{ product.size.all|join:", " }}</td></tr>
                 <tr><th>Delivery:</th> <td>{{ product.delivery | title }}</td></tr>
                 <tr><th>Type:</th> <td>{{ product.productType | title }}</td></tr>
                 <tr><th>Min. Buy:</th> <td>{{ product.minBuy | title }}</td></tr>
-                <tr><th>Stock:</th> <td>{{ product.stock }}</td></tr>
+                <tr><th>Stock:</th> <td>{% if product.stock > 0 %}{{ product.stock }} available{% else %}Out of stock{% endif %}</td></tr>
                 <tr><th>Payment:</th> <td>{{ product.pay | title }}</td></tr>
                 <tr>
                     <th>Categories:</th>
@@ -47,16 +47,43 @@
                 </tr>
             </tbody>
         </table>
-        <form id="add-to-cart-form" method="post" style="margin-top: 20px;">
+        {% if product.stock > 0 %}
+        <form id="add-to-cart-form" method="post" action="{% url 'add_to_cart' product.uid %}" style="margin-top: 20px;">
             {% csrf_token %}
-            <div style="display: flex; gap: 10px; align-items: center;">
-                
-                <input type="number" id="id_quantity" name="quantity" min="1" value="1" required style="{% if product.productType == 'Single Buy' %} display: none; {% endif %} width: 60px; padding: 5px; border: 1px solid #ddd; border-radius: 5px;">
-                <input type="text" id="info" placeholder="Extra information" name="info" style="flex: 1; padding: 5px; border: 1px solid #ddd; border-radius: 5px;">
-                    <input type="submit" class="btn lot-btn-primary" value="Add to Cart">
-               
+            {% with sizes=product.size.all %}
+            {% if sizes %}
+            <fieldset style="border: none; padding: 0; margin: 0 0 12px;">
+                <legend style="font-weight: bold; margin-bottom: 6px;">Select size{% if product.productType != 'Single Buy' %} (choose more than one if buying several){% endif %}</legend>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                    {% for size in sizes %}
+                    <label style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1px solid var(--lot-border); border-radius: 5px; cursor: pointer;">
+                        <input type="checkbox" name="size_{{ size.id }}" value="on" class="size-option">
+                        {{ size.name }}
+                    </label>
+                    {% endfor %}
+                </div>
+            </fieldset>
+            {% endif %}
+            {% endwith %}
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                {% if product.productType == 'Single Buy' %}
+                <input type="hidden" id="id_quantity" name="quantity" value="1">
+                {% else %}
+                <label for="id_quantity" style="font-weight: bold;">Qty</label>
+                <input type="number" id="id_quantity" name="quantity"
+                       min="{% if product.productType == 'Min. Buy' %}{{ product.minBuy }}{% else %}1{% endif %}"
+                       max="{{ product.stock }}"
+                       value="{% if product.productType == 'Min. Buy' %}{{ product.minBuy }}{% else %}1{% endif %}"
+                       required style="width: 70px; padding: 5px; border: 1px solid var(--lot-border); border-radius: 5px;">
+                {% endif %}
+                <input type="text" id="info" maxlength="255" placeholder="Extra information (optional)" name="info" style="flex: 1; min-width: 160px; padding: 5px; border: 1px solid var(--lot-border); border-radius: 5px;">
+                <button type="submit" class="btn lot-btn-primary" id="add-to-cart-btn">Add to Cart</button>
             </div>
+            <p id="add-to-cart-message" role="status" style="margin-top: 10px; font-weight: 600;"></p>
         </form>
+        {% else %}
+        <p style="margin-top: 20px; font-weight: bold; color: var(--lot-danger);">Out of stock</p>
+        {% endif %}
     </div>
 </section>
 
@@ -108,43 +135,30 @@
 </section>
 <script>
     $(document).ready(function(){
-        $('#add-to-cart-form').on('submit', function(event){
-            
+        var $form = $('#add-to-cart-form');
+        var $message = $('#add-to-cart-message');
+        $form.on('submit', function(event){
             event.preventDefault();
-            var csrfToken = $('input[name="csrfmiddlewaretoken"]').val();
-            var selectedSizes = [];
-            $('input[name="size"]:checked').each(function(){
-                selectedSizes.push($(this).val());
-            });
-            console.log($('#info').val())
-            console.log(selectedSizes)
-            var formData = {
-                    'quantity': $('#id_quantity').val(),
-                    'size': selectedSizes,
-                    'info': $('#info').val(),
-                    'csrfmiddlewaretoken': csrfToken
-                };
+            var $button = $('#add-to-cart-btn').prop('disabled', true);
+            $message.text('');
             $.ajax({
                 type: 'POST',
-                url: "{% url 'add_to_cart' product.uid %}",
-                data: formData,
+                url: $form.attr('action'),
+                data: $form.serialize(),
                 success: function(response){
-                    alert('Product added to cart successfully!');
-                    $('#cart-count').text(response.cart_count);
+                    $message.css('color', 'var(--lot-green)').html('Added to cart. <a href="{% url 'view_cart' %}">View cart</a>');
+                    $('#cart-count').text(response.cart_count).css('color', 'var(--lot-gold)');
                     fetch("{% url 'track_add_to_cart' %}", {
                         method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                            "X-CSRFToken": "{{ csrf_token }}"
-                        },
-                        body: JSON.stringify({
-                            product_uid: "{{ product.uid }}"
-                        })
+                        headers: {"Content-Type": "application/json"},
+                        body: JSON.stringify({product_uid: "{{ product.uid }}"})
                     });
                 },
-                error: function(response){
-                    alert('An error occurred. Please try again.');
-                }
+                error: function(xhr){
+                    var msg = (xhr.responseJSON && xhr.responseJSON.message) || 'Something went wrong. Please try again.';
+                    $message.css('color', 'var(--lot-danger)').text(msg);
+                },
+                complete: function(){ $button.prop('disabled', false); }
             });
         });
     });
@@ -163,8 +177,5 @@
         }));
     });
 
-    document.getElementById("addToCartBtn").addEventListener("click", function () {
-        
-    });
 </script>
 {% endblock main %}
