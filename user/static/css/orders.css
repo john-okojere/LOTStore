@@ -1,0 +1,88 @@
+.container {
+    margin: auto;
+    background: white;
+    padding: 20px;
+    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+}
+
+/* Filter Buttons */
+.filters {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.filter-btn {
+    background: #007bff;
+    color: white;
+    padding: 10px 15px;
+    margin: 5px;
+    text-decoration: none;
+    border-radius: 5px;
+    transition: 0.3s;
+}
+
+.filter-btn:hover {
+    background: #0056b3;
+}
+
+/* Orders Table */
+.orders-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.orders-table th, .orders-table td {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+    text-align: center;
+}
+
+.orders-table th {
+    background: #444;
+    color: white;
+}
+
+/* Status Badges */
+.badge {
+    padding: 5px 10px;
+    border-radius: 5px;
+    color: white;
+}
+
+.badge.pending {
+    background: #ffa500;
+}
+
+.badge.sent {
+    background: #007bff;
+}
+
+.badge.delivered {
+    background: #28a745;
+}
+
+/* Action Buttons */
+.btn {
+    padding: 8px 12px;
+    text-decoration: none;
+    color: white;
+    border-radius: 5px;
+    margin: 2px;
+    display: inline-block;
+    transition: 0.3s;
+}
+
+.btn.send {
+    background: #007bff;
+}
+
+.btn.deliver {
+    background: #28a745;
+}
+
+.btn:hover {
+    opacity: 0.8;
+}

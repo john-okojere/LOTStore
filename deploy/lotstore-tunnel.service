@@ -1,0 +1,14 @@
+[Unit]
+Description=Cloudflare Tunnel for Layers of Truth Store
+After=lotstore.service network-online.target
+Requires=lotstore.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/cloudflared tunnel --no-autoupdate --config /home/digihosting/Documents/Apzs/LotStore/LOTStore/deploy/lotstore-tunnel.yml run
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target

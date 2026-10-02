@@ -14,7 +14,8 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
+from django.views.static import serve
 
 from django.conf import settings
 from django.conf.urls.static import static
@@ -31,4 +32,10 @@ urlpatterns = [
 
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=getattr(settings, 'STATIC_ROOT', None))
-    urlpatterns += static(settings.MEDIA_URL, document_root=getattr(settings, 'MEDIA_ROOT', None))
+
+# Uploaded product/profile images use local storage on this single-node deployment.
+# Static assets are handled by WhiteNoise; this explicit route keeps media available
+# when Django is running with DEBUG=False behind the private Cloudflare Tunnel origin.
+urlpatterns += [
+    re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
+]

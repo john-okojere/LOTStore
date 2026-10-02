@@ -1,0 +1,81 @@
+@media screen and (min-width:960px) {
+    #main_box .grid_ {
+        display: grid;
+        grid-template-columns:49% 49%;
+        grid-gap: 2%;
+    }
+}
+img{
+    border-radius: 15px;
+}
+.time{
+    padding: 5%;
+}
+.user_profile, .time{
+    background-color: rgba(128, 128, 128, 0.072);
+    padding: 5%;
+    border-radius: 20px;
+    
+}
+@media screen and (max-width:960px) {
+    .user_profile{
+        background: none !important;
+    }
+    .time{
+        margin: 5%;
+        margin-top: 0;
+    width: fit-content; 
+    max-width: 90%;
+    }
+}
+input{
+    border: 1px solid;
+    padding: 10px;
+}
+h3{
+    padding:10px 0;
+}
+.flex{
+    display: flex;
+}
+input[type="file"]{
+border-top-left-radius:10px ;
+border-bottom-left-radius:10px ;
+}
+    input[type="submit"]{
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    border: 1px solid black;
+}
+.qrcode{
+    width: 200px;
+    align-items: center;
+}
+.qrcode_box{
+    text-align: center;
+}
+.modal-img{
+
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.8);
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+.modal-img > div{
+    display: flex;
+}
+    .modal-img-close{
+    color: white;
+    font-size: 1rem;
+}
+.modal-img-close i{
+    border: 2px solid white;
+    color: white;
+    padding: 6px;
+    margin:0 10px;
+    border-radius: 15px;
+}

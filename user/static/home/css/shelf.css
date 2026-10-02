@@ -1,0 +1,24 @@
+main .item{
+    border: 1px solid white;
+    min-height: 250px;
+    width: 100%;
+} 
+main section.items{
+    display: grid;
+    grid-template-columns: 24% 24% 24% 24%;
+    gap:1rem ;
+}
+main .item .info{
+    display: flex;
+    justify-content: space-between;
+    padding: 1rem 0.6rem;
+}
+main .item .info p{
+    display:flex;
+    align-items: start;
+    justify-content: center;
+    flex-direction: column;
+}
+main .item .info p i{
+    font-size: 1.5rem;
+}

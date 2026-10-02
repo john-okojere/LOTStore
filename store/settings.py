@@ -177,7 +177,7 @@ if USE_S3:
 else:
     STATIC_URL = '/static/'
     STATIC_ROOT = BASE_DIR / 'staticfiles'
-    STATICFILES_DIRS = [d for d in [BASE_DIR / 'user' / 'static'] if d.exists()]
+    # App static directories are discovered automatically by django.contrib.staticfiles.
     MEDIA_URL = '/media/'
     MEDIA_ROOT = BASE_DIR / 'media'
     STORAGES = {
@@ -185,8 +185,9 @@ else:
             'BACKEND': 'django.core.files.storage.FileSystemStorage',
         },
         'staticfiles': {
+            # Missing legacy assets should return 404 rather than breaking page rendering.
             # Hashed filenames + gzip/brotli so browsers can cache CSS/JS long-term.
-            'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+            'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage',
         },
     }
 
@@ -238,3 +239,5 @@ SERVER_EMAIL = config('SERVER_EMAIL', default='store@layersoftruth.org')
 
 PAYSTACK_SECRET_KEY = config('PAYSTACK_SECRET_KEY', default='')
 PAYSTACK_PUBLIC_KEY = config('PAYSTACK_PUBLIC_KEY', default='')
+
+WHITENOISE_MANIFEST_STRICT = False

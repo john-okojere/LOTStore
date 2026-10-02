@@ -1,0 +1,133 @@
+/* Style for the cart table */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+table th, table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+table th {
+    background-color: #f2f2f2;
+    color: black;
+}
+
+/* Style for the "Add to Order" button */
+.add-to-order-form button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    cursor: pointer;
+}
+
+.add-to-order-form button:hover {
+    background-color: #45a049;
+}
+
+/* Alert styles */
+.alert {
+    padding: 20px;
+    background-color: #f44336;
+    color: white;
+    margin-bottom: 15px;
+}
+
+/* Close button for the alert */
+.close-btn {
+    cursor: pointer;
+    float: right;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.close-btn:hover {
+    color: black;
+}
+main input, button{
+    min-width: 100px;
+    height: 100%;
+    padding:0.3rem 1rem;
+    border: none;
+}
+main input{
+    width: 50px;
+}
+main button{
+    background-color: #cdab4b;
+    color: #fff;
+}
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+.container {
+    margin: 20px auto;
+    padding: 20px;
+    border-radius: 5px;
+}
+.receipt-info {
+    margin-bottom: 20px;
+}
+.instruction {
+    background-color: #f9f9f9;
+    padding: 10px;
+    color: black;
+    border-radius: 5px;
+}
+.instruction p {
+    margin: 5px 0;
+}
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1000; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+    color: black;
+}
+  
+  /* Modal Content/Box */
+  .modal-content {
+    background-color: #fefefe;
+    margin: 15% auto; /* 15% from the top and centered */
+    padding: 20px;
+    border: 1px solid #888;
+    max-width: 600px;
+    width: 80%; /* Could be more or less, depending on screen size */
+  }
+  
+  /* Close Button */
+  .close {
+    color: #aaa;
+    text-align: right;
+    float: left;
+    font-size: 28px;
+    font-weight: bold;
+  }
+  
+  .close:hover,
+  .close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+  }
+.bank-details{
+    color: black;    
+}
+@media screen and (max-width:1000px) {
+    .table{
+        overflow: scroll;
+        width: 100%;
+    }
+}

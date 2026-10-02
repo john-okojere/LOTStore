@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 111 11.99">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #231f20;
+        font-family: Poppins-Regular, Poppins;
+        font-size: 8.44px;
+        letter-spacing: -.05em;
+      }
+
+      .cls-2 {
+        fill: #662f90;
+      }
+    </style>
+  </defs>
+  <g id="Layer_1-2" data-name="Layer 1">
+    <text class="cls-1" transform="translate(40.05 7.16) scale(1.03 1)"><tspan x="0" y="0">PASTOR</tspan></text>
+    <g>
+      <rect class="cls-2" y="2.09" width="37" height="4.8" rx="1.13" ry="1.13"/>
+      <rect class="cls-2" x="74" y="2.09" width="37" height="4.8" rx="1.13" ry="1.13"/>
+    </g>
+  </g>
+</svg>

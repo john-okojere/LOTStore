@@ -1,0 +1,10 @@
+tunnel: 861e69ff-6875-43f5-89cb-b7a7535b1cbf
+credentials-file: /home/digihosting/.cloudflared/861e69ff-6875-43f5-89cb-b7a7535b1cbf.json
+protocol: http2
+
+ingress:
+  - hostname: store.layersoftruth.org
+    service: http://127.0.0.1:8065
+    originRequest:
+      connectTimeout: 10s
+  - service: http_status:404

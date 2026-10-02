@@ -1,0 +1,41 @@
+section.details{
+    display: flex;
+    gap: 2rem;
+}
+section.details h1{ 
+    text-transform: uppercase;
+    font-size: 2em;
+}
+section .img{
+    width: 100%;
+    max-width: 500px;
+}
+section.details .img{
+    width: 100%;
+    max-width: 500px;
+    min-width: 500px;
+}
+section.details input{
+    height: 40px;
+    padding: 10px;
+}
+section.details form{
+    display: flex;
+    gap: 1rem;
+}
+section.details .info{
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+td{
+    padding: 5px;
+}
+@media screen and (max-width:1000px) {
+    section.details{
+        flex-direction: column;
+    }
+    section.details .img{
+        min-width: 100%;
+    }
+}
