@@ -15,12 +15,39 @@
     <meta property="og:image" content="{% static 'home/img/logo/4.png' %}">
     <meta property="og:url" content="https://store.layersoftruth.org">
     <meta property="og:type" content="website">
-    <meta name="twitter:card" content="{% static 'home/img/logo/4.png' %}">
+    <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="LOT Store - Layers of Truth Church">
     <meta name="twitter:description" content="Explore a wide range of products at LOT Store, the official online store of Layers of Truth Church. Shop for books, merchandise, and more.">
     <meta name="twitter:image" content="{% static 'home/img/logo/4.png' %}">
     {% endblock meta %}
     <style>
+      /* LOT Store brand tokens: use these instead of hard-coded colors. */
+      :root {
+        --lot-gold: #cdab4b;
+        --lot-gold-dark: #b08f33;
+        --lot-green: #008751;
+        --lot-green-dark: #006b40;
+        --lot-ink: #323a45;
+        --lot-muted: #5c5c5c;
+        --lot-border: #dddddd;
+        --lot-surface: #ffffff;
+        --lot-danger: #c62828;
+      }
+      .lot-btn-primary {
+        background-color: var(--lot-green);
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        padding: 10px 20px;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+      }
+      .lot-btn-primary:hover,
+      .lot-btn-primary:focus {
+        background-color: var(--lot-green-dark);
+        color: #fff;
+      }
       nav .search i{
         font-weight: bold !important;
       }
@@ -65,8 +92,8 @@
       margin: auto;
        ">
       <div style="display: flex;column-gap: 1rem;flex-wrap: wrap;font-weight: bold;">
-        <div><i class="fa fa-whatsapp"></i> +234(0) 816 940 4088</div> 
-        <div><i class="fa fa-envelope"></i> store@layersoftruth.org</div> 
+        <div><a href="https://wa.me/2348169404088" target="_blank" rel="noopener" style="color: inherit;"><i class="fa fa-whatsapp"></i> +234(0) 816 940 4088</a></div>
+        <div><a href="mailto:store@layersoftruth.org" style="color: inherit;"><i class="fa fa-envelope"></i> store@layersoftruth.org</a></div>
       </div>
       <div>
         <ul style="display: flex;list-style: none;gap: 1rem;align-items: center;justify-content: center;font-weight: bold;">
@@ -90,15 +117,15 @@
       ">
            <!-- Logo Section -->
            <div class="logo logo-side" style="padding: 0;min-width: 180px;">
-         <a href="/"><img src="{% static 'home/img/logo/3.png' %}" alt="" style="width: 100px;"></a>
+         <a href="/"><img src="{% static 'home/img/logo/3.png' %}" alt="LOT Store" style="width: 100px;"></a>
        </div>
        
        <!-- Search Section -->
        <div class="search" style="text-align: center;">
          <form action="{% url 'search' %}" method="get" style="display: flex;align-items: center;justify-content: center;gap: 10px;">
            <i class="fa fa-search"></i>
-           <input type="text" name="item" id="search_item" placeholder="Search T-Shirt, Sizes, Text" style="min-width: 400px;"/>
-           <button type="submit" class="btn" style="background-color: #cdab4b;" id="search_submit">
+           <input type="text" name="item" id="search_item" placeholder="Search T-Shirt, Sizes, Text" aria-label="Search products" style="width: 400px; max-width: 100%;"/>
+           <button type="submit" class="btn" style="background-color: var(--lot-gold); color: var(--lot-ink);" id="search_submit">
              Search
            </button>
            <ul id="search-suggestions"></ul>
@@ -108,7 +135,7 @@
        <!-- Menu Bar Section -->
        <div class="menus_bar" style="width: 100px;">
         <div style="display: flex;gap: 20px;align-items: center;">
-          <a href="{% url 'view_cart' %}" style=""> <i style="font-size: 1rem;" class="fa fa-shopping-cart"></i> ( <span style="font-family: fantasy; {% if cart.cartitem_set.all.count > 0 %}color: orangered;{% endif %}" id="cart-count">{{cart.cartitem_set.all.count}}</span> )</a>
+          <a href="{% url 'view_cart' %}" style=""> <i style="font-size: 1rem;" class="fa fa-shopping-cart"></i> ( <span style="font-weight: bold; {% if cart_items %}color: var(--lot-gold);{% endif %}" id="cart-count">{{ cart_items|length }}</span> )</a>
          <a class="menu-toggle" style="position: initial;">
            <i class="fa fa-bars" style="font-size: 24px;"></i>
            <i class="fa fa-times" style="font-size: 24px; display: none;"></i>
@@ -163,18 +190,20 @@
  
     <script>
       document.addEventListener("DOMContentLoaded", () => {
-  const dropdown = document.querySelector(".dropdown");
-  const dropdownContent = document.querySelector(".dropdown-content");
+  document.querySelectorAll(".dropdown").forEach((dropdown) => {
+    const dropdownContent = dropdown.querySelector(".dropdown-content");
+    if (!dropdownContent) return;
 
-  dropdown.addEventListener("click", () => {
-    const isVisible = dropdownContent.style.display === "block";
-    dropdownContent.style.display = isVisible ? "none" : "block";
-  });
+    dropdown.addEventListener("click", () => {
+      const isVisible = dropdownContent.style.display === "block";
+      dropdownContent.style.display = isVisible ? "none" : "block";
+    });
 
-  document.addEventListener("click", (event) => {
-    if (!dropdown.contains(event.target)) {
-      dropdownContent.style.display = "none";
-    }
+    document.addEventListener("click", (event) => {
+      if (!dropdown.contains(event.target)) {
+        dropdownContent.style.display = "none";
+      }
+    });
   });
 });
 
@@ -182,6 +211,7 @@
 document.addEventListener("DOMContentLoaded", function() {
   var accountDropdown = document.getElementById("accountDropdown");
   var accountDropdownContent = document.getElementById("accountDropdownContent");
+  if (!accountDropdown || !accountDropdownContent) return;
 
   // Show dropdown content when hovering over the dropdown
   accountDropdown.addEventListener("mouseenter", function() {
@@ -212,15 +242,16 @@ document.addEventListener("DOMContentLoaded", function() {
                         var suggestions = data.suggestions;
                         var suggestionList = $('#search-suggestions');
                         suggestionList.empty();
+                        var esc = function (v) { return $('<div>').text(v == null ? '' : String(v)).html(); };
                         suggestions.forEach(function (product) {
                             var html = '<li style="display: flex;justify-content: space-between;align-items: center;">';
-                            html += '<img src="' + product.image + '" style="width: 70px;" alt="">';
+                            html += '<img src="' + esc(product.image) + '" style="width: 70px;" alt="">';
                             html += '<div class="search-info">';
-                            html += '<h5>' + product.name + '</h5>';
-                            html += '<p>' + product.size + ' - &#8358;' + product.price + '</p>';
+                            html += '<h5>' + esc(product.name) + '</h5>';
+                            html += '<p>' + esc(product.size) + ' - &#8358;' + esc(product.price) + '</p>';
                             html += '</div>';
                             html += '<div>';
-                            html += '<a href="/details/' + product.details_url + '"><i class="fa fa-eye"></i></a>';
+                            html += '<a href="/details/' + encodeURIComponent(product.details_url) + '/" aria-label="View product"><i class="fa fa-eye"></i></a>';
                             html += '</div>';
                             html += '</li>';
                             // Append the HTML to the suggestion list
@@ -304,10 +335,9 @@ document.addEventListener("DOMContentLoaded", function() {
             <div>
               <span>&#8358;</span>
               <input
-                type="price"
+                type="number"
                 id="min-price-filter"
                 min="0"
-                max="100"
                 value="{% if min_price_filter %}{{min_price_filter}}{% else %}0{% endif %}"
                 name="min-price"
               /> 
@@ -316,11 +346,11 @@ document.addEventListener("DOMContentLoaded", function() {
             <div>
               <span>&#8358;</span>
               <input
-                type="price"
+                type="number"
                 id="max-price-filter"
                 min="0"
-                max="100"
-                value="{% if max_price_filter %}{{ max_price_filter }}{% else %}10000{% endif %}"
+                placeholder="Any"
+                value="{% if max_price_filter %}{{ max_price_filter }}{% endif %}"
                 name="max-price"
               />
             </div>
@@ -438,7 +468,7 @@ document.addEventListener("DOMContentLoaded", function() {
   position: fixed;
   bottom: 20px;
   right: 20px;
-  background-color: #008751;
+  background-color: var(--lot-green);
   color: white;
   padding: 10px 20px;
   border-radius: 50%;
@@ -502,7 +532,7 @@ footer > div{
       <div>
         <div style="display: flex;flex-direction: row;flex-wrap: wrap;justify-content: space-between;gap: 2rem;align-items: center;">
           <div>
-        <a href="/"><img src="{% static 'home/img/logo/3.png' %}" alt="" style="width: 200px;"></a><br>
+        <a href="/"><img src="{% static 'home/img/logo/3.png' %}" alt="LOT Store" style="width: 200px;"></a><br>
             <sub>Embrace Your Faith, Wear Your Belief.</sub>
           </div>
           <div>

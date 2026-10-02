@@ -7,12 +7,20 @@
         <div class="col-lg-8 ">
             <div class="card border-0 shadow-sm p-4">
                 <div class="text-center">
-                    <h2 class="mt-3" style="color: #0fad00;">Success</h2>
+                    {% if payment.verified %}
+                    <h2 class="mt-3" style="color: var(--lot-green);">Success</h2>
+                    {% else %}
+                    <h2 class="mt-3" style="color: var(--lot-danger);">Payment not confirmed</h2>
+                    {% endif %}
                     {% if message %}
-                    <p class="mt-3" style="font-size: 1.2rem; color: #0fad00;">{{ message }}</p>
+                    <p class="mt-3" style="font-size: 1.2rem; color: var(--lot-green);">{{ message }}</p>
                     {% endif %}
                     <h3 class="mt-3">Dear {{ payment.full_name }}</h3>
-                    <p class="mt-3" style="font-size: 1.2rem; color: #5C5C5C;">Your transaction was successful.</p>
+                    {% if payment.verified %}
+                    <p class="mt-3" style="font-size: 1.2rem; color: var(--lot-muted);">Your transaction was successful.</p>
+                    {% else %}
+                    <p class="mt-3" style="font-size: 1.2rem; color: var(--lot-muted);">We could not confirm this payment with Paystack. If you were charged, please contact us with the reference below.</p>
+                    {% endif %}
                 </div>
                 <hr>
                 <div class="card border-0 shadow-sm p-4">
@@ -23,8 +31,8 @@
                         <li class="list-group-item"><strong>Reference:</strong> {{ payment.ref }}</li>
                         <!-- Add more details as needed -->
                     </ul>
-                    <p class="mb-3">Thank you for your purchase!</p>
-                    <a href="{% url 'homepage' %}" class="btn btn-primary">Go to Home</a>
+                    {% if payment.verified %}<p class="mb-3">Thank you for your purchase!</p>{% endif %}
+                    <a href="{% url 'homepage' %}" class="btn lot-btn-primary">Go to Home</a>
                 </div>
             </div>
         </div>

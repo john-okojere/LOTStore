@@ -5,10 +5,11 @@ from django.utils import timezone
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.core.validators import RegexValidator
 from .manager import UserManager
-from qrcode import *
+import qrcode
+import base64
+import io
 import uuid
 from django.urls import reverse
-import os
 
 GENDER_CATEGORY=(
     ('Male','Male'),
@@ -61,18 +62,10 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.first_name + " " + self.last_name
 
     def qr_code(self):
-        qr_code = make(self.uid)
-        basename = str(self.uid) + '_QR_CODE.png'
-        directory = "media/users/QRCODE/"
-        if not os.path.exists(directory):
-            os.makedirs(directory)
-        qr_code.save('media/users/QRCODE/{}'.format(basename))
-        return '/media/users/QRCODE/{}'.format(basename)
-    
-
-    def save(self, *args, **kwargs):
-        self.qr_code()
-        return super().save(*args, **kwargs)
+        # Inline data URI: works with S3/local storage alike and avoids disk writes.
+        buffer = io.BytesIO()
+        qrcode.make(str(self.uid)).save(buffer, format='PNG')
+        return 'data:image/png;base64,' + base64.b64encode(buffer.getvalue()).decode()
     
     def get_absolute_url(self):
         return reverse("profile", kwargs={"uid": self.uid})

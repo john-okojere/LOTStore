@@ -186,6 +186,7 @@ def initiate_payment(request):
             'field_values': request.POST,
             'paystack_pub_key': settings.PAYSTACK_PUBLIC_KEY,
             'amount_value': payment.amount_value(),
+            'amount_naira': payment.amount_value() / 100,
         }
         return render(request, 'make_payment.html', context)
 
@@ -274,6 +275,8 @@ def payment_history(request):
 def sent_order(request, ref):
     if not request.user.is_staff:
         return HttpResponseForbidden('Only staff can update delivery status.')
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Invalid request method.'}, status=405)
 
     payment = get_object_or_404(Payment, ref=ref)
     order, _ = Order.objects.get_or_create(payment=payment)
@@ -290,6 +293,8 @@ def sent_order(request, ref):
 def order_delivered(request, ref):
     if not request.user.is_staff:
         return HttpResponseForbidden('Only staff can update delivery status.')
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Invalid request method.'}, status=405)
 
     payment = get_object_or_404(Payment, ref=ref)
     order, _ = Order.objects.get_or_create(payment=payment)

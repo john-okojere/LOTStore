@@ -14,7 +14,8 @@
 						<div id="payment-details">
 							<h4 class="card-title">Payment Details</h4>
 							<p class="card-text">You are about to pay for all items in your cart.</p>
-							<p class="card-text">Total amount: ₦{{ payment.amount }}</p>
+							<p class="card-text">Order total: ₦{{ payment.amount }}</p>
+							<p class="card-text">Amount to be charged (incl. 2% processing fee): ₦{{ amount_naira|floatformat:2 }}</p>
 							<p class="card-text">Transaction reference: {{ payment.ref }}</p>
 						</div>
 						<button onclick="payWithPaystack()" class="btn mt-4">Pay Now</button>
@@ -44,7 +45,7 @@
 			obj.currency = currency.toUpperCase();
 		}
 		if (Boolean(plan)) {
-			obj.plan - plan;
+			obj.plan = plan;
 		}
 
 		var handler = PaystackPop.setup(obj);

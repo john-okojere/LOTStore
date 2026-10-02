@@ -91,7 +91,13 @@ class Payment(models.Model):
         paystack = Paystack()
         status, result = paystack.verify_payment(self.ref, self.amount)
         if status and isinstance(result, dict):
-            if result.get('amount', 0) / 102 == self.amount:
+            # Paystack returns status=True for any transaction it can find,
+            # including abandoned/failed ones; only a 'success' charge counts.
+            if (
+                result.get('status') == 'success'
+                and result.get('reference') == self.ref
+                and result.get('amount', 0) == self.amount_value()
+            ):
                 self.verified = True
             self.save()
         if self.verified:

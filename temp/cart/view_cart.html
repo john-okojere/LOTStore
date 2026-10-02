@@ -102,7 +102,7 @@
                 </td>
                 <td class="subtotal" id="cart-item-subtotal-{{ cart_item.uid }}">₦{{ cart_item.subtotal }}</td>
                 <td>
-                    <a href="{% url 'delete_from_cart' cart_item.uid %}" style="color: red; text-decoration: none; margin-left: 10px;">Delete</a>
+                    <a href="{% url 'delete_from_cart' cart_item.uid %}" style="color: var(--lot-danger); text-decoration: none; margin-left: 10px;">Delete</a>
                 </td>
             </tr>            
             {% endfor %}
@@ -116,7 +116,7 @@
 <p style="margin-top: 10px; font-size: 14px; color: #555; text-align: center;">Note: Delivery Payment will be confirmed when the delivery person contacts you.</p>
     {% if cart_items %}
     <div style="text-align: center; margin-top: 20px;">
-        <a href="{% url 'initiate_payment' %}" class="btn" style="background: #007bff; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none;">Proceed to Checkout</a>
+        <a href="{% url 'initiate_payment' %}" class="btn lot-btn-primary">Proceed to Checkout</a>
     </div>
     {% endif %}
 </div>

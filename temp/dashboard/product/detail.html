@@ -22,7 +22,7 @@
                 <h4 class="text-dark">{{ product.name }}</h4>
                 <p><strong>Categories:</strong> {{ product.categories.all|join:", " }}</p>
                 <p><strong>Sizes:</strong> {{ product.size.all|join:", " }}</p>
-                <p><strong>Price:</strong> ${{ product.price }}</p>
+                <p><strong>Price:</strong> &#8358;{{ product.price }}</p>
                 <p><strong>Stock:</strong> {{ product.stock }}</p>
                 <p><strong>Payment Type:</strong> {{ product.pay }}</p>
                 <p><strong>Delivery Method:</strong> {{ product.delivery }}</p>
@@ -34,7 +34,10 @@
         <p><strong>Description:</strong> {{ product.description | safe }}</p>
 
         <a href="{% url 'edit-product' product.uid %}" class="btn btn-warning"><i class="fas fa-edit"></i> Edit</a>
-        <a href="{% url 'delete_product' product.uid %}" class="btn btn-danger"><i class="fas fa-trash"></i> Delete</a>
+        <form method="post" action="{% url 'delete_product' product.uid %}" style="display: inline;" onsubmit="return confirm('Delete this product?');">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger"><i class="fas fa-trash"></i> Delete</button>
+        </form>
     
     </div>
     <h2>📊 Product Analytics: {{ product.name }}</h2>

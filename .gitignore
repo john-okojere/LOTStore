@@ -6,9 +6,8 @@ __pycache__/
 *.pyc
 *.py.class
 
-# Django Migrations
-**/migrations/
-!**/migrations/__init__.py
+# Django migrations ARE committed: production must apply the same
+# migration history that was used to build its schema.
 
 # Virtual Environments
 env/
@@ -37,10 +36,10 @@ db.sqlite3
 # MySQL dumps
 *.sql
 
-# Media & Static (Optional if generated dynamically)
+# Media (user uploads) & collected static output.
+# Source static files (user/static/) ARE committed.
 media/
 staticfiles/
-static/
 
 # Secrets & Configs
 .env

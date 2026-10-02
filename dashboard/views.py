@@ -119,7 +119,12 @@ def delete_user(request, user_id):
     if not _is_dashboard_admin(request.user):
         return _forbidden_json()
 
+    if request.method not in ("POST", "DELETE"):
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+
     user = get_object_or_404(User, id=user_id)
+    if user.is_superuser or user == request.user:
+        return JsonResponse({"error": "This account cannot be deleted here."}, status=403)
     user.delete()
     return JsonResponse({"status": "success"})
 
@@ -292,6 +297,9 @@ def update_order_status(request, order_id, status):
     if not _is_dashboard_admin(request.user):
         return _forbidden_page()
 
+    if request.method != "POST":
+        return redirect("manage_orders")
+
     order = get_object_or_404(Order, id=order_id)
     if status == "packed":
         order.packed = True
@@ -450,8 +458,13 @@ def delete_product(request, uid):
     if not _is_dashboard_admin(request.user):
         return _forbidden_json()
 
+    if request.method not in ("POST", "DELETE"):
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+
     product = get_object_or_404(Product, uid=uid)
     product.delete()
+    if request.method == "POST":
+        return redirect("product_list")
     return JsonResponse({"message": "Product deleted successfully"})
 
 
@@ -519,7 +532,7 @@ def get_location(ip_address):
         return {"city": None, "region": None, "country": None}
 
     try:
-        response = requests.get(f"https://ipinfo.io/{ip_address}/json", timeout=10)
+        response = requests.get(f"https://ipinfo.io/{ip_address}/json", timeout=3)
         data = response.json()
         return {
             "city": data.get("city"),

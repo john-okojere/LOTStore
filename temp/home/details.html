@@ -30,7 +30,7 @@
         <h1 style="font-size: 28px; font-weight: bold; color: #fff;">{{ product.name | upper }}</h1>
         <table style="width: 100%; border-collapse: collapse;">
             <tbody>
-                <tr><th>Price:</th> <td style="color: #e60000; font-size: 18px; font-weight: bold;">&#8358; {{ product.price }}</td></tr>
+                <tr><th>Price:</th> <td style="color: var(--lot-gold); font-size: 18px; font-weight: bold;">&#8358; {{ product.price }}</td></tr>
                 <tr><th>Sizes:</th> <td>{% for size in product.size.all %} {{ size }}, {% endfor %}</td></tr>
                 <tr><th>Delivery:</th> <td>{{ product.delivery | title }}</td></tr>
                 <tr><th>Type:</th> <td>{{ product.productType | title }}</td></tr>
@@ -53,7 +53,7 @@
                 
                 <input type="number" id="id_quantity" name="quantity" min="1" value="1" required style="{% if product.productType == 'Single Buy' %} display: none; {% endif %} width: 60px; padding: 5px; border: 1px solid #ddd; border-radius: 5px;">
                 <input type="text" id="info" placeholder="Extra information" name="info" style="flex: 1; padding: 5px; border: 1px solid #ddd; border-radius: 5px;">
-                    <input type="submit" class="btn" value="Add to Cart" style="background-color: #e60000; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">
+                    <input type="submit" class="btn lot-btn-primary" value="Add to Cart">
                
             </div>
         </form>

@@ -4,6 +4,7 @@ from django.contrib.auth import login, authenticate, logout
 from .models import User, ProfilePic
 from .forms import RegisterForm, EditRegisterForm
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 User = get_user_model()
@@ -40,7 +41,7 @@ def signup(request):
             subject = "Welcome to LOTStore!"
             html_message = render_to_string('emails/welcome_email.html', {'user': user})
             plain_message = strip_tags(html_message)
-            from_email = 'store@layersoftruth.org'
+            from_email = settings.DEFAULT_FROM_EMAIL
             to_email = email
             
             try:
@@ -112,7 +113,9 @@ def addAbout(request):
 
 @login_required
 def EditAbout(request):
-    about = About.objects.get(user=request.user)
+    about = About.objects.filter(user=request.user).first()
+    if about is None:
+        return redirect('AddAbout')
     if request.method == "POST":
         form = BioForm(request.POST, instance=about)
         if form.is_valid():

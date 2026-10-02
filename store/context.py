@@ -6,20 +6,20 @@ def Context(request):
     category = Category.objects.annotate(count=Count('product', distinct=True))
     sizes = Sizes.objects.all()
 
-    # Get the cart for logged-in users or anonymous users
+    # Look up the active cart without creating one: creating a session and a
+    # Cart row on every page view (including bots/crawlers) bloats the database.
+    # Carts are created on demand when an item is added (see cart.views).
     if request.user.is_authenticated:
-        cart, _ = Cart.objects.get_or_create(user=request.user, cleared=False)
+        cart = Cart.objects.filter(user=request.user, cleared=False).first()
+    elif request.session.session_key:
+        cart = Cart.objects.filter(session_id=request.session.session_key, cleared=False).first()
     else:
-        # Use session-based cart for anonymous users
-        session_key = request.session.session_key
-        if not session_key:
-            request.session.create()
-        cart, _ = Cart.objects.get_or_create(session_id=request.session.session_key, cleared=False)
+        cart = None
 
     context = {
         'category': category,
         'all_sizes': sizes,
         'cart': cart,
-        'cart_items': cart.cartitem_set.select_related('product').all()
+        'cart_items': cart.cartitem_set.select_related('product').all() if cart else [],
     }
     return context

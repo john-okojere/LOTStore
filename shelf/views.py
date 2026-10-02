@@ -84,7 +84,7 @@ def filter_items(request):
 
         queryset = Product.objects.all()
 
-        if category_id != '0':
+        if category_id and category_id != '0':
             queryset = queryset.filter(categories__id=category_id)
 
         if size_filter:
@@ -95,14 +95,11 @@ def filter_items(request):
 
         if min_price_filter:
             queryset = queryset.filter(price__gte=min_price_filter)
-        else:
-            queryset = queryset.filter(price__gte=0)
 
         if max_price_filter:
             queryset = queryset.filter(price__lte=max_price_filter)
-        else:
-            queryset = queryset.filter(price__lte=10000)
 
+        queryset = queryset.distinct()
         info = f"Filter result: {len(queryset)}"
         context ={
                 'products': queryset, 

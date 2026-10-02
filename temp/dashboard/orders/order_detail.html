@@ -82,13 +82,13 @@
             </div>
             <div>
                 {% if not order.packed %}
-                    <a href="{% url 'update_order_status' order.id 'packed' %}" class="btn btn-warning">Mark as Packed</a>
+                    <form method="post" action="{% url 'update_order_status' order.id 'packed' %}" style="display: inline;">{% csrf_token %}<button type="submit" class="btn btn-warning">Mark as Packed</button></form>
                 {% endif %}
                 {% if not order.sent %}
-                    <a href="{% url 'update_order_status' order.id 'sent' %}" class="btn send">Mark as Sent</a>
+                    <form method="post" action="{% url 'update_order_status' order.id 'sent' %}" style="display: inline;">{% csrf_token %}<button type="submit" class="btn send">Mark as Sent</button></form>
                 {% endif %}
                 {% if not order.delivered %}
-                    <a href="{% url 'update_order_status' order.id 'delivered' %}" class="btn deliver">Mark as Delivered</a>
+                    <form method="post" action="{% url 'update_order_status' order.id 'delivered' %}" style="display: inline;">{% csrf_token %}<button type="submit" class="btn deliver">Mark as Delivered</button></form>
                 {% endif %}
             </div>
     
