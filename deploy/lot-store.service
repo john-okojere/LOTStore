@@ -1,0 +1,15 @@
+[Unit]
+Description=LOT Store Django app (store.layersoftruth.org)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=digihosting
+Group=digihosting
+WorkingDirectory=/home/digihosting/Documents/Apzs/LotStore/LOTStore
+ExecStart=/home/digihosting/Documents/Apzs/LotStore/LOTStore/venv/bin/gunicorn --workers 3 --timeout 60 --bind 127.0.0.1:8067 store.wsgi:application
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

@@ -18,16 +18,4 @@ class AboutAdmin(ImportExportMixin, admin.ModelAdmin):
     list_filter = ('country','state','address',)
     search_fields = ('user', 'country','state','address')
     ordering = ('user',)
-admin.site.register(About, AboutAdmin)
-
-
-
-class ProfileAdmin(ImportExportMixin, admin.ModelAdmin):
-    list_display = ('user', 'image')
-    list_filter = ('user', 'image')
-    search_fields = ('user', 'image')
-    ordering = ('user',)
-admin.site.register(ProfilePic, ProfileAdmin)
-
-
-admin.site.register(Staff)
+admin.site.register(About, AboutAdmin)  

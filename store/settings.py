@@ -110,7 +110,11 @@ else:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
+            'NAME': Path(config('SQLITE_PATH', default=str(BASE_DIR / 'db.sqlite3'))),
+            'OPTIONS': {
+                # Wait for locks instead of failing under concurrent gunicorn workers.
+                'timeout': 20,
+            },
         }
     }
 
@@ -176,10 +180,10 @@ if USE_S3:
     }
 else:
     STATIC_URL = '/static/'
-    STATIC_ROOT = BASE_DIR / 'staticfiles'
+    STATIC_ROOT = Path(config('STATIC_ROOT', default=str(BASE_DIR / 'staticfiles')))
     # App static directories are discovered automatically by django.contrib.staticfiles.
     MEDIA_URL = '/media/'
-    MEDIA_ROOT = BASE_DIR / 'media'
+    MEDIA_ROOT = Path(config('MEDIA_ROOT', default=str(BASE_DIR / 'media')))
     STORAGES = {
         'default': {
             'BACKEND': 'django.core.files.storage.FileSystemStorage',
@@ -213,6 +217,13 @@ LOGGING = {
         'handlers': ['console'],
         'level': config('LOG_LEVEL', default='WARNING'),
     },
+    'loggers': {
+        # Bots constantly probe with bogus Host headers; don't email admins about it.
+        'django.security.DisallowedHost': {
+            'handlers': [],
+            'propagate': False,
+        },
+    },
 }
 
 ADMINS = [('LOT Store', config('ADMIN_EMAIL', default='store@layersoftruth.org'))]
@@ -227,8 +238,13 @@ LOGOUT_REDIRECT_URL = '/account/login/'
 LOGOUT_URL = '/account/logout/'
 
 # Email Config
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = config('EMAIL_HOST', default='')
+# Without SMTP settings, print emails to the log instead of failing requests.
+EMAIL_BACKEND = (
+    'django.core.mail.backends.smtp.EmailBackend' if EMAIL_HOST
+    else 'django.core.mail.backends.console.EmailBackend'
+)
+EMAIL_TIMEOUT = 15
 EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
 EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
