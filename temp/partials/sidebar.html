@@ -1,0 +1,165 @@
+{% load static %}
+<aside class="side-menu lot-side" id="aside" aria-label="Shop menu">
+  <div class="lot-side__inner">
+
+    {# Phone drawer header: logo and close button #}
+    <div class="lot-side__head lot-side__mobile">
+      <a href="/"><img src="{% static 'home/img/logo/3.png' %}" alt="LOT Store" style="width: 96px;"></a>
+      <button type="button" class="lot-side__close" data-close-menu aria-label="Close menu"><i class="fa fa-times"></i></button>
+    </div>
+
+    {# Phone drawer search (the header search is hidden on small screens) #}
+    <form class="lot-side__search lot-side__mobile lot-side__item" action="{% url 'search' %}" method="get" role="search">
+      <i class="fa fa-search"></i>
+      <input type="search" name="item" placeholder="Search tees, hoodies, sizes..." aria-label="Search products">
+    </form>
+
+    {# Welcome card #}
+    <div class="lot-side__card lot-side__user lot-side__item">
+      {% if user.is_authenticated %}
+      <a href="{% url 'profile' user.uid %}" class="lot-side__avatar">
+        {% if user.profilepic.image %}<img src="{{ user.profilepic.image.url }}" alt="">{% else %}<span>{{ user.first_name|first|upper }}</span>{% endif %}
+      </a>
+      <div style="min-width: 0;">
+        <small class="lot-text-muted">Welcome back,</small>
+        <strong class="lot-side__name">{{ user.first_name|default:"friend"|title }}</strong>
+        <div class="lot-side__userlinks">
+          <a href="{% url 'payment_history' %}">My orders</a>
+          <a href="{% url 'profile' user.uid %}">Profile</a>
+        </div>
+      </div>
+      {% else %}
+      <div class="lot-side__avatar"><span><i class="fa fa-user"></i></span></div>
+      <div>
+        <strong class="lot-side__name">Welcome to LOT Store</strong>
+        <small class="lot-text-muted">Sign in to track your orders.</small>
+        <div class="lot-side__userlinks">
+          <a href="{% url 'login' %}" class="btn btn-sm">Login</a>
+          <a href="{% url 'register' %}" class="btn btn-sm lot-btn-secondary">Sign up</a>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    {# Main pages (the header links are hidden on small screens) #}
+    <div class="lot-side__card lot-side__mobile lot-side__item" role="navigation" aria-label="Main">
+      <ul class="lot-side__links">
+        <li><a href="/" class="{% if request.path == '/' %}is-active{% endif %}"><i class="fa fa-home"></i><span>Home</span></a></li>
+        <li><a href="{% url 'merchs' %}" class="{% if request.path == '/merchs/' %}is-active{% endif %}"><i class="fa fa-th-large"></i><span>All merch</span></a></li>
+        <li><a href="{% url 'faq' %}"><i class="fa fa-question-circle"></i><span>FAQs</span></a></li>
+        <li><a href="{% url 'contact' %}"><i class="fa fa-envelope"></i><span>Contact us</span></a></li>
+      </ul>
+    </div>
+
+    {# Filters #}
+    <section class="lot-side__card lot-side__item" data-collapsible="filters">
+      <button type="button" class="lot-side__title" aria-expanded="true">
+        <span><i class="fa fa-sliders"></i> Filter products</span>
+        <span class="lot-side__badge" data-filter-count hidden></span>
+        <i class="fa fa-chevron-down lot-side__chev"></i>
+      </button>
+      <div class="lot-side__body"><div>
+        <form class="lot-filter" method="POST" action="{% url 'filter_items' %}" id="lot-filter-form">
+          {% csrf_token %}
+          <label class="lot-filter__label" for="category-filter">Category</label>
+          <div class="lot-select">
+            <select id="category-filter" name="category-filter">
+              <option value="0" {% if category_id == 0 or category_id == "0" %}selected{% endif %}>All categories</option>
+              {% for cat in category %}
+              <option value="{{ cat.id }}" {% if category_id == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.name }}</option>
+              {% endfor %}
+            </select>
+            <i class="fa fa-chevron-down"></i>
+          </div>
+
+          {% if all_sizes %}
+          <span class="lot-filter__label">Sizes</span>
+          <div class="lot-sizes lot-sizes--sm">
+            {% for size in all_sizes %}
+            <label class="lot-size">
+              <input type="checkbox" name="size" value="{{ size.id }}" {% if size.id|stringformat:"s" in size_filter %}checked{% endif %}>
+              <span>{{ size.name|upper }}</span>
+            </label>
+            {% endfor %}
+          </div>
+          {% endif %}
+
+          <span class="lot-filter__label">Price range</span>
+          <div class="lot-price">
+            <label class="lot-price__field"><span>&#8358;</span><input type="number" id="min-price-filter" name="min-price" min="0" placeholder="Min" inputmode="numeric" value="{% if min_price_filter and min_price_filter != '0' %}{{ min_price_filter }}{% endif %}" aria-label="Minimum price"></label>
+            <span class="lot-price__dash"></span>
+            <label class="lot-price__field"><span>&#8358;</span><input type="number" id="max-price-filter" name="max-price" min="0" placeholder="Max" inputmode="numeric" value="{% if max_price_filter %}{{ max_price_filter }}{% endif %}" aria-label="Maximum price"></label>
+          </div>
+
+          <div class="lot-filter__actions">
+            <button type="submit" class="btn"><i class="fa fa-filter"></i> Apply</button>
+            <a href="{% url 'merchs' %}" class="lot-filter__clear" data-filter-clear>Clear</a>
+          </div>
+        </form>
+      </div></div>
+    </section>
+
+    {# Categories #}
+    <section class="lot-side__card lot-side__item" data-collapsible="categories">
+      <button type="button" class="lot-side__title" aria-expanded="true">
+        <span><i class="fa fa-tags"></i> Categories</span>
+        <i class="fa fa-chevron-down lot-side__chev"></i>
+      </button>
+      <div class="lot-side__body"><div>
+        <ul class="lot-side__links">
+          <li><a href="{% url 'merchs' %}" class="{% if request.path == '/merchs/' %}is-active{% endif %}"><i class="fa fa-th-large"></i><span>All merch</span></a></li>
+          {% for cat in category %}
+          {% url 'category' cat.name as cat_url %}
+          <li>
+            <a href="{{ cat_url }}" class="{% if request.path|urlencode == cat_url %}is-active{% endif %}">
+              <i class="fa fa-tag"></i><span>{{ cat.name }}</span>
+              <em class="lot-side__count">{{ cat.count }}</em>
+            </a>
+          </li>
+          {% endfor %}
+        </ul>
+      </div></div>
+    </section>
+
+    {# Promo #}
+    <a href="{% url 'merchs' %}" class="lot-side__promo lot-side__item">
+      <img src="{% static '1x1/1.png' %}" alt="LOT Store: express your faith, wear your belief" loading="lazy">
+      <span class="lot-side__promo-cta">Shop the collection <i class="fa fa-arrow-right"></i></span>
+    </a>
+
+    {# Account #}
+    <section class="lot-side__card lot-side__item" data-collapsible="account">
+      <button type="button" class="lot-side__title" aria-expanded="true">
+        <span><i class="fa fa-user-circle"></i> My account</span>
+        <i class="fa fa-chevron-down lot-side__chev"></i>
+      </button>
+      <div class="lot-side__body"><div>
+        <ul class="lot-side__links">
+          <li>
+            <a href="{% url 'view_cart' %}" class="{% if request.path == '/cart/view-cart/' %}is-active{% endif %}">
+              <i class="fa fa-shopping-cart"></i><span>Cart</span>
+              {% if cart_items %}<em class="lot-side__count lot-side__count--gold" data-side-cart-count>{{ cart_items|length }}</em>{% endif %}
+            </a>
+          </li>
+          {% if user.is_authenticated %}
+          <li><a href="{% url 'payment_history' %}"><i class="fa fa-shopping-bag"></i><span>My orders</span></a></li>
+          <li><a href="{% url 'profile' user.uid %}"><i class="fa fa-user"></i><span>Profile</span></a></li>
+          {% if user.is_staff or user.level >= 2 %}
+          <li><a href="{% url 'admin_dashboard' %}"><i class="fa fa-tachometer"></i><span>Dashboard</span></a></li>
+          {% endif %}
+          <li><a href="{% url 'logout' %}"><i class="fa fa-sign-out"></i><span>Logout</span></a></li>
+          {% else %}
+          <li><a href="{% url 'login' %}"><i class="fa fa-sign-in"></i><span>Login</span></a></li>
+          <li><a href="{% url 'register' %}"><i class="fa fa-user-plus"></i><span>Create account</span></a></li>
+          {% endif %}
+        </ul>
+      </div></div>
+    </section>
+
+    {# Help #}
+    <a href="https://wa.me/2347044448932" target="_blank" rel="noopener" class="lot-side__help lot-side__item">
+      <span class="lot-side__help-icon"><i class="fa fa-whatsapp"></i></span>
+      <span><strong>Need help choosing?</strong><small>Chat with us on WhatsApp</small></span>
+    </a>
+  </div>
+</aside>

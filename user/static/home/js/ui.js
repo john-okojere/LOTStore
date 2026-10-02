@@ -188,6 +188,8 @@
             counter.textContent = count;
             counter.style.color = 'var(--lot-gold)';
         }
+        var sideCount = document.querySelector('[data-side-cart-count]');
+        if (sideCount && typeof count !== 'undefined') { sideCount.textContent = count; }
         var link = document.querySelector('.lot-cart-link');
         if (!link || reduceMotion) { return; }
         link.classList.remove('is-bumping');
@@ -246,6 +248,54 @@
                 header.setAttribute('aria-expanded', open ? 'true' : 'false');
             });
         });
+    }
+
+    /* ---------- Sidebar ---------- */
+    function initSidebar() {
+        var side = document.querySelector('.lot-side');
+        if (!side) { return; }
+
+        // Entrance order for the staggered slide-in.
+        side.querySelectorAll('.lot-side__item').forEach(function (item, i) {
+            item.style.setProperty('--i', i);
+        });
+
+        // Collapsible sections remember whether the visitor closed them.
+        side.querySelectorAll('[data-collapsible]').forEach(function (card) {
+            var key = 'lot-side-' + card.getAttribute('data-collapsible');
+            var button = card.querySelector('.lot-side__title');
+            function set(collapsed, save) {
+                card.classList.toggle('is-collapsed', collapsed);
+                button.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+                if (save) { try { window.localStorage.setItem(key, collapsed ? '1' : '0'); } catch (e) {} }
+            }
+            try { if (window.localStorage.getItem(key) === '1') { set(true, false); } } catch (e) {}
+            button.addEventListener('click', function () { set(!card.classList.contains('is-collapsed'), true); });
+        });
+
+        // Live count of active filters on the "Filter products" header.
+        var form = document.getElementById('lot-filter-form');
+        var badge = side.querySelector('[data-filter-count]');
+        if (form && badge) {
+            var update = function () {
+                var count = form.querySelectorAll('input[name="size"]:checked').length;
+                var cat = form.querySelector('select[name="category-filter"]');
+                if (cat && cat.value && cat.value !== '0') { count += 1; }
+                ['min-price', 'max-price'].forEach(function (name) {
+                    var input = form.querySelector('input[name="' + name + '"]');
+                    if (input && input.value.trim() !== '') { count += 1; }
+                });
+                var text = count ? count + ' active' : '';
+                if (badge.textContent !== text) {
+                    badge.textContent = text;
+                    badge.hidden = !count;
+                    badge.style.animation = 'none'; void badge.offsetWidth; badge.style.animation = '';
+                }
+            };
+            form.addEventListener('change', update);
+            form.addEventListener('input', update);
+            update();
+        }
     }
 
     /* ---------- Back to top ---------- */
@@ -313,6 +363,7 @@
         document.querySelectorAll('[data-carousel]').forEach(initCarousel);
         initSteppers();
         initAccordion();
+        initSidebar();
         initBackToTop();
     });
 })();

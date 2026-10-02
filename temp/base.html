@@ -69,7 +69,7 @@
       margin: auto;
        ">
       <div style="display: flex;column-gap: 1rem;flex-wrap: wrap;font-weight: 600;">
-        <div><a href="https://wa.me/2348169404088" target="_blank" rel="noopener" style="color: inherit;"><i class="fa fa-whatsapp"></i> +234(0) 816 940 4088</a></div>
+        <div><a href="https://wa.me/2347044448932" target="_blank" rel="noopener" style="color: inherit;"><i class="fa fa-whatsapp"></i> Pastor Oshoma: +234 704 444 8932</a></div>
         <div><a href="mailto:store@layersoftruth.org" style="color: inherit;"><i class="fa fa-envelope"></i> store@layersoftruth.org</a></div>
       </div>
       <div>
@@ -126,7 +126,7 @@
            <li><a href="{% url 'merchs' %}">Merchs</a></li>
            {% if user.is_authenticated %}
            <li class="dropdown" id="accountDropdown" style="display: flex;gap: 10px;align-items: center;">
-             <img style="width: 30px; height: 30px; border-radius: 50%;" src="{{user.profilepic.image.url}}" alt="">
+             {% if user.profilepic.image %}<img style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover;" src="{{ user.profilepic.image.url }}" alt="">{% else %}<span style="display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--lot-gold); color: var(--lot-ink); font-weight: 700;">{% if user.first_name %}{{ user.first_name|first|upper }}{% else %}<i class="fa fa-user"></i>{% endif %}</span>{% endif %}
              <div>
                <small><div style="font-weight: 300;margin: 0;">Hello,</div>
                <span style="display: flex;gap: 5px; align-items: center;"> {{user.full_name|title}} <a style="display: flex;gap: 0.5rem;align-items: center;"><i class="fa fa-angle-down"></i></a></span></small>
@@ -155,7 +155,7 @@
               <div class="dropdown-content">
                 <a href="{% url 'faq' %}">FAQs</a>
                 <a href="{% url 'contact' %}">Contact Us</a>
-                <a href="https://w.app/LOTSTORE" target="_blank" rel="noopener">Chat Us on WhatsApp</a>
+                <a href="https://wa.me/2347044448932" target="_blank" rel="noopener">Chat Us on WhatsApp</a>
               </div>
             </div>
           </li>
@@ -268,142 +268,7 @@ document.addEventListener("DOMContentLoaded", function() {
       }
     </style>
     <div class="main-body" id="main-body">
-      <aside class="side-menu" id="aside" >
-    <div>
-      <div>
-        <form
-          class="filter filter-options"
-          method="POST"
-          action="{% url 'filter_items' %}"
-        >
-          {% csrf_token %}
-          <select id="category-filter" name="category-filter">
-            <option value="0" {% if category_id == 0 or category_id == "0" %} selected {% endif %}>Category</option>
-            {% for cat in category %}
-            <option value="{{ cat.id }}" {% if category_id == cat.id|stringformat:"s" %} selected {% endif %}>{{ cat.name }}</option>
-            {% endfor %}
-        </select>
-          <div class="sizes">
-            <h6>Sizes</h6>
-            {% for size in all_sizes %}
-                <div>
-                  <input type="checkbox" name="size" id="{{size.name}}" value="{{size.id}}" 
-                  {% if size.id|stringformat:"s" in size_filter %} checked {% endif %}
-                  />
-                  <label for="{{size.name}}"> {{ size.name | title }} </label>
-                </div>
-            {% endfor %}
-          </div>
-          <div class="filter-option">
-            <div>
-              <span>&#8358;</span>
-              <input
-                type="number"
-                id="min-price-filter"
-                min="0"
-                value="{% if min_price_filter %}{{min_price_filter}}{% else %}0{% endif %}"
-                name="min-price"
-              /> 
-            </div>
-            -
-            <div>
-              <span>&#8358;</span>
-              <input
-                type="number"
-                id="max-price-filter"
-                min="0"
-                placeholder="Any"
-                value="{% if max_price_filter %}{{ max_price_filter }}{% endif %}"
-                name="max-price"
-              />
-            </div>
-          </div>
-          <button type="submit" class="btn">Filter</button>
-        </form>
-      </div>
-      <br>
-      <div>
-        <img src="{% static '1x1/1.png' %}" alt="">
-      </div>
-      <br>
-      <div>
-        <h3>Categories</h3>
-        <hr />
-        <ul>
-          {% for cat in category %}
-          <li>
-            <a href="{% url 'category' cat.name %}">
-              <p>
-                <span class="name">{{cat.name}}</span>
-                <span class="quantity">{{cat.count}}</span>
-              </p>
-            </a>
-          </li>
-          {% endfor %}
-        </ul>
-      </div>
-      <br>
-      <div class="setting">
-        <h3>Settings</h3>
-        <hr />
-        <ul>
-          {% if user.is_staff or user.level >= 2 %}
-          <li>
-            <a href="{% url 'admin_dashboard' %}">
-              <p>
-                <span>Dashboard</span>
-                <span><i class="fa fa-history"></i></span>
-              </p>
-            </a>
-          </li>
-          {% endif %}
-          <li>
-            <a href="{% url 'view_cart' %}">
-              <p>
-                <span>Cart</span>
-                <span><i class="fa fa-shopping-cart"></i></span>
-              </p>
-            </a>
-          </li>
-         {% if user.is_authenticated %}
-          <li>
-            <a href="{% url 'profile' user.uid %}">
-              <p>
-                <span>Profile</span>
-                <span><i class="fa fa-user-circle-o"></i></span>
-              </p>
-            </a>
-          </li>
-          <li>
-            <a href="{% url 'logout' %}">
-              <p>
-                <span>Logout</span>
-                <span><i class="fa fa-sign-out"></i></span>
-              </p>
-            </a>
-          </li>
-          {% else %}
-          <li>
-            <a href="{% url 'login' %}">
-              <p>
-              <span>Login</span>
-              <span><i class="fa fa-sign-in"></i></span>
-            </p>
-          </a>
-          </li>
-          <li>
-            <a href="{% url 'register' %}">
-              <p>
-              <span>Register</span>
-              <span><i class="fa fa-pencil"></i></span>
-            </p>
-            </a>
-          </li>
-          {% endif %}
-        </ul>
-      </div>
-    </div>
-      </aside>
+      {% include "partials/sidebar.html" %}
       <div class="overlay"></div>
       <script>
          document.addEventListener("DOMContentLoaded", function() {
@@ -425,6 +290,9 @@ document.addEventListener("DOMContentLoaded", function() {
             if (e.key === "Enter" || e.key === " ") { e.preventDefault(); menuToggle.click(); }
           });
           overlay.addEventListener("click", function() { setMenu(false); });
+          document.querySelectorAll("[data-close-menu]").forEach(function(btn) {
+            btn.addEventListener("click", function() { setMenu(false); menuToggle.focus(); });
+          });
           document.addEventListener("keydown", function(e) {
             if (e.key === "Escape" && sideMenu.classList.contains("open")) { setMenu(false); }
           });
@@ -521,7 +389,7 @@ footer > div{
             <h6>JOIN OUR COMMUNITY</h6>
           <ul class="items" style="font-size: 1.5rem; justify-content: flex-start; gap: 1.25rem;">
             <li><a href="https://www.facebook.com/people/Lotstore/61558265454027/" target="_blank" rel="noopener" aria-label="LOT Store on Facebook"><i class="fa fa-facebook-official"></i></a></li>
-            <li><a href="https://wa.me/2348169404088" target="_blank" rel="noopener" aria-label="Chat with LOT Store on WhatsApp"><i class="fa fa-whatsapp"></i></a></li>
+            <li><a href="https://wa.me/2347044448932" target="_blank" rel="noopener" aria-label="Chat with LOT Store on WhatsApp"><i class="fa fa-whatsapp"></i></a></li>
           </ul>
           </div>
         </div>
@@ -543,7 +411,7 @@ footer > div{
             <ul>
               <li><a href="{% url 'faq' %}">FAQs</a></li>
               <li><a href="{% url 'contact' %}">Contact Us</a></li>
-              <li><a href="https://w.app/LOTSTORE" target="_blank" rel="noopener">Chat Us on WhatsApp</a></li>
+              <li><a href="https://wa.me/2347044448932" target="_blank" rel="noopener">Chat Us on WhatsApp</a></li>
             </ul>
           </li>
           <li class="items">
@@ -570,7 +438,7 @@ footer > div{
      
     
     </footer>
-    <a href="https://wa.me/2348169404088" target="_blank" rel="noopener" class="lot-fab lot-fab--whatsapp" aria-label="Chat with LOT Store on WhatsApp"><i class="fa fa-whatsapp"></i></a>
+    <a href="https://wa.me/2347044448932" target="_blank" rel="noopener" class="lot-fab lot-fab--whatsapp" aria-label="Chat with LOT Store on WhatsApp"><i class="fa fa-whatsapp"></i></a>
     <button type="button" class="lot-fab lot-fab--top" aria-label="Back to top"><i class="fa fa-arrow-up"></i></button>
     <script src="{% static 'home/js/ui.js' %}"></script>
   </body>

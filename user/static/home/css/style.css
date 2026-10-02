@@ -331,13 +331,6 @@ form .sizes input[type=checkbox]{
         display: block;
       }
       
-      /* Add styling for links, icons, etc. within the menu */
-      .side-menu a {
-        color: white;
-        text-decoration: none;
-        display: block;
-        padding: 10px;
-      }
       .overlay {
         position: fixed;
         top: 0;
@@ -377,7 +370,8 @@ form .sizes input[type=checkbox]{
 @media screen and (min-width:1000px) {
     .side-menu{
         padding-top: 0 !important;
-        width: 420px !important;
+        width: 300px !important;
+        flex: none;
         
     }
 }
