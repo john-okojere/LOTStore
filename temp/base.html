@@ -2,6 +2,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <script>document.documentElement.classList.add('js');</script>
     {% block meta %}
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -44,6 +45,7 @@
     <link rel="stylesheet" href="{% static 'home/css/brand.css' %}" />
     <link rel="stylesheet" href="{% static 'home/css/style.css' %}" />
     <link rel="stylesheet" href="{% static 'home/css/shelf.css' %}" />
+    <link rel="stylesheet" href="{% static 'home/css/ui.css' %}" />
     <link rel="stylesheet" href="{% static 'fontawesomefree/css/fontawesome.min.css' %}" />
     <link rel="stylesheet" href="{% static 'fontawesomefree/css/solid.min.css' %}" />
     <link rel="stylesheet" href="{% static 'fontawesomefree/css/brands.min.css' %}" />
@@ -109,7 +111,7 @@
        <!-- Menu Bar Section -->
        <div class="menus_bar" style="width: 100px;">
         <div style="display: flex;gap: 20px;align-items: center;">
-          <a href="{% url 'view_cart' %}" aria-label="View cart"> <i style="font-size: 1rem;" class="fa fa-shopping-cart"></i> ( <span style="font-weight: 600; {% if cart_items %}color: var(--lot-gold);{% endif %}" id="cart-count">{{ cart_items|length }}</span> )</a>
+          <a href="{% url 'view_cart' %}" aria-label="View cart" class="lot-cart-link"> <i style="font-size: 1rem;" class="fa fa-shopping-cart"></i> ( <span style="font-weight: 600; {% if cart_items %}color: var(--lot-gold);{% endif %}" id="cart-count">{{ cart_items|length }}</span> )</a>
          <a class="menu-toggle" style="position: initial;" role="button" aria-label="Open menu" tabindex="0">
            <i class="fa fa-bars" style="font-size: 24px;"></i>
            <i class="fa fa-times" style="font-size: 24px; display: none;"></i>
@@ -204,9 +206,12 @@ document.addEventListener("DOMContentLoaded", function() {
     <script src="{% static 'js/jquery-3.5.1.min.js' %}"></script>
       <script>
         $(document).ready(function () {
+            var searchTimer = null;
             $('#search_item').on('input', function () {
                 var inputText = $(this).val();
+                window.clearTimeout(searchTimer);
                 if (inputText.length > 0) {
+                  searchTimer = window.setTimeout(function () {
                   $.ajax({
                     url: "{% url 'search_suggestions' %}",
                     data: {
@@ -234,51 +239,34 @@ document.addEventListener("DOMContentLoaded", function() {
                         });
                     }
                 });
+                  }, 200);
                 }else{
                   $('#search-suggestions').empty();
                 }
             });
         });
 
-    function adjustNavMargin() {
-      const  mainbody = document.getElementById("main-body")
-      const  main = document.querySelector("main")
-      var  aside = document.querySelector("#aside")
-      var navHeight = document.querySelector('.header').offsetHeight;
-      mainbody.style.paddingTop = navHeight + 'px';
-      aside.style.paddingTop = navHeight + 'px';
-
-      if (window.innerWidth > 1020) {
-        main.style.height = aside.offsetHeight + 'px';
-        main.style.overflow = 'hidden';
-        main.style.overflowY = 'scroll';
-      }
-  }
-      
-  window.addEventListener('load', adjustNavMargin);
-  window.addEventListener('resize', adjustNavMargin);
     </script>
 
     <style>
       /* Custom scrollbar styles */
       ::-webkit-scrollbar {
-        width: 3px;
+        width: 8px;
       }
 
       ::-webkit-scrollbar-track {
-        background: #f1f1f1;
+        background: var(--lot-bg);
       }
 
       ::-webkit-scrollbar-thumb {
-        background: #888;
+        background: #5a5f73;
         border-radius: 10px;
       }
 
       ::-webkit-scrollbar-thumb:hover {
-        background: #555;
+        background: var(--lot-gold);
       }
     </style>
-    <br />
     <div class="main-body" id="main-body">
       <aside class="side-menu" id="aside" >
     <div>
@@ -423,10 +411,22 @@ document.addEventListener("DOMContentLoaded", function() {
           var menuToggle = document.querySelector(".menu-toggle");
           var overlay = document.querySelector(".overlay");
 
+          function setMenu(open) {
+            sideMenu.classList.toggle("open", open);
+            overlay.classList.toggle("show", open);
+            menuToggle.classList.toggle("open", open);
+            menuToggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+            document.body.style.overflow = open ? "hidden" : "";
+          }
           menuToggle.addEventListener("click", function() {
-            sideMenu.classList.toggle("open");
-            overlay.classList.toggle("show");
-            menuToggle.classList.toggle("open");
+            setMenu(!sideMenu.classList.contains("open"));
+          });
+          menuToggle.addEventListener("keydown", function(e) {
+            if (e.key === "Enter" || e.key === " ") { e.preventDefault(); menuToggle.click(); }
+          });
+          overlay.addEventListener("click", function() { setMenu(false); });
+          document.addEventListener("keydown", function(e) {
+            if (e.key === "Escape" && sideMenu.classList.contains("open")) { setMenu(false); }
           });
         });
       </script>
@@ -519,7 +519,7 @@ footer > div{
           </div>
           <div>
             <h6>JOIN OUR COMMUNITY</h6>
-          <ul class="items" style="font-size: 1.5rem;">
+          <ul class="items" style="font-size: 1.5rem; justify-content: flex-start; gap: 1.25rem;">
             <li><a href="https://www.facebook.com/people/Lotstore/61558265454027/" target="_blank" rel="noopener" aria-label="LOT Store on Facebook"><i class="fa fa-facebook-official"></i></a></li>
             <li><a href="https://wa.me/2348169404088" target="_blank" rel="noopener" aria-label="Chat with LOT Store on WhatsApp"><i class="fa fa-whatsapp"></i></a></li>
           </ul>
@@ -570,6 +570,8 @@ footer > div{
      
     
     </footer>
-    <script src="{% static 'home/js/script.js' %}"></script>
+    <a href="https://wa.me/2348169404088" target="_blank" rel="noopener" class="lot-fab lot-fab--whatsapp" aria-label="Chat with LOT Store on WhatsApp"><i class="fa fa-whatsapp"></i></a>
+    <button type="button" class="lot-fab lot-fab--top" aria-label="Back to top"><i class="fa fa-arrow-up"></i></button>
+    <script src="{% static 'home/js/ui.js' %}"></script>
   </body>
 </html>

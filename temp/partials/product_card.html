@@ -1,0 +1,29 @@
+{% load humanize %}
+<article class="lot-card reveal">
+    <a href="{% url 'details' product.uid %}" class="lot-card__media" aria-label="View {{ product.name }}">
+        <img src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy" decoding="async">
+        {% if product.delivery == "Free Delivery" %}
+        <span class="lot-badge">Free Delivery</span>
+        {% elif product.productType == "Gift on Buy" %}
+        <span class="lot-badge lot-badge--green">Gift On Buy</span>
+        {% elif product.productType == "Single Buy" %}
+        <span class="lot-badge lot-badge--gold">Single Buy</span>
+        {% endif %}
+        {% if product.stock <= 0 %}
+        <span class="lot-card__stock lot-card__stock--out">Sold out</span>
+        {% elif product.stock <= 5 %}
+        <span class="lot-card__stock">Only {{ product.stock }} left</span>
+        {% endif %}
+        <span class="lot-card__cta">View details <i class="fa fa-arrow-right"></i></span>
+    </a>
+    <div class="lot-card__body">
+        <h3 class="lot-card__title"><a href="{% url 'details' product.uid %}">{{ product.name|title }}</a></h3>
+        <div class="lot-card__foot">
+            <div>
+                <span class="lot-card__price">&#8358;{{ product.price|intcomma }}</span>
+                {% if product.productType == "Min. Buy" %}<span class="lot-card__min">Min. {{ product.minBuy }} pcs</span>{% endif %}
+            </div>
+            <a href="{% url 'details' product.uid %}" class="btn btn-sm" tabindex="-1" aria-hidden="true">Buy</a>
+        </div>
+    </div>
+</article>

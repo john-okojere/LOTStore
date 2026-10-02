@@ -12,8 +12,10 @@ def homepage(request):
     categories = Category.objects.all()
     images = ["home/img/6.png", "home/img/3.png", "home/img/2.png"]
     if not products:
+        # Every field the product card reads must be listed, or each card
+        # triggers extra queries for the deferred fields.
         products = Product.objects.all().only(
-            'id', 'name', 'price', 'image', 'created_date'
+            'id', 'uid', 'name', 'price', 'image', 'stock', 'delivery', 'productType', 'minBuy', 'created_date'
         ).order_by('-created_date')[:24]
         products = list(products)
         cache.set(HOMEPAGE_CACHE_KEY, products, 300)  # Cache for 5 minutes

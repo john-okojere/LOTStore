@@ -21,132 +21,182 @@
     {% endblock meta %}
 
 {% block main %}
-<link rel="stylesheet" href="{% static 'home/css/details.css' %}">
-<section class="details" style="display: flex; gap: 30px; align-items: start; padding: 20px;">
-    <div class="img" style="flex: 1; text-align: center;">
-        <img src="{{product.image.url}}" alt="{{product.name}}" style="max-width: 100%; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+<div class="lot-crumbs reveal" role="navigation" aria-label="Breadcrumb">
+    <a href="{% url 'homepage' %}">Home</a>
+    <i class="fa fa-angle-right"></i>
+    <a href="{% url 'merchs' %}">Merch</a>
+    {% with cat=product.categories.first %}{% if cat %}
+    <i class="fa fa-angle-right"></i>
+    <a href="{% url 'category' cat.name %}">{{ cat.name }}</a>
+    {% endif %}{% endwith %}
+</div>
+
+<section class="lot-pdp">
+    <div class="lot-pdp__media reveal">
+        <div class="lot-zoom" id="product-zoom">
+            <img src="{{ product.image.url }}" alt="{{ product.name }}" id="product-image">
+        </div>
     </div>
-    <div class="info" style="flex: 1;">
-        <h1 style="font-size: 1.75rem; font-weight: 600; color: var(--lot-text);">{{ product.name }}</h1>
-        <table style="width: 100%; border-collapse: collapse;">
-            <tbody>
-                <tr><th>Price:</th> <td style="color: var(--lot-gold); font-size: 1.25rem; font-weight: 600;">&#8358;{{ product.price|intcomma }}</td></tr>
-                <tr><th>Sizes:</th> <td>{{ product.size.all|join:", " }}</td></tr>
-                <tr><th>Delivery:</th> <td>{{ product.delivery | title }}</td></tr>
-                <tr><th>Type:</th> <td>{{ product.productType | title }}</td></tr>
-                <tr><th>Min. Buy:</th> <td>{{ product.minBuy | title }}</td></tr>
-                <tr><th>Stock:</th> <td>{% if product.stock > 0 %}{{ product.stock }} available{% else %}Out of stock{% endif %}</td></tr>
-                <tr><th>Payment:</th> <td>{{ product.pay | title }}</td></tr>
-                <tr>
-                    <th>Categories:</th>
-                    <td>
-                        {% for cat in product.categories.all %}
-                            <a href="{% url 'category' cat.name %}" class="lot-chip" style="padding: 3px 12px; font-size: 0.85rem;">{{ cat }}</a>
-                        {% endfor %}
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+
+    <div class="lot-pdp__info reveal">
+        <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px;">
+            {% for cat in product.categories.all %}
+            <a href="{% url 'category' cat.name %}" class="lot-chip" style="padding: 2px 12px; font-size: 0.8rem;">{{ cat }}</a>
+            {% endfor %}
+            {% if product.delivery == "Free Delivery" %}<span class="lot-chip" style="padding: 2px 12px; font-size: 0.8rem; border-color: var(--lot-green);"><i class="fa fa-truck"></i> Free delivery</span>{% endif %}
+            {% if product.productType == "Gift on Buy" %}<span class="lot-chip" style="padding: 2px 12px; font-size: 0.8rem; border-color: var(--lot-green);"><i class="fa fa-gift"></i> Gift on buy</span>{% endif %}
+        </div>
+        <h1 class="lot-pdp__title">{{ product.name }}</h1>
+        <p class="lot-pdp__price">&#8358;{{ product.price|intcomma }}</p>
+        <p class="lot-pdp__stock">
+            {% if product.stock <= 0 %}<span class="lot-text-danger" style="font-weight: 600;">Out of stock</span>
+            {% elif product.stock <= 5 %}<span class="lot-stock-low">Only {{ product.stock }} left, order soon</span>
+            {% else %}<span class="lot-text-success" style="font-weight: 500;"><i class="fa fa-check-circle"></i> In stock</span>{% endif %}
+        </p>
+
+        <dl class="lot-pdp__facts">
+            <div><dt>Delivery</dt><dd>{{ product.delivery }}</dd></div>
+            <div><dt>Payment</dt><dd>{{ product.pay }}</dd></div>
+            <div><dt>Type</dt><dd>{{ product.productType }}</dd></div>
+            {% if product.productType == 'Min. Buy' %}<div><dt>Minimum order</dt><dd>{{ product.minBuy }} pcs</dd></div>{% endif %}
+        </dl>
+
         {% if product.stock > 0 %}
-        <form id="add-to-cart-form" method="post" action="{% url 'add_to_cart' product.uid %}" style="margin-top: 20px;">
+        <form id="add-to-cart-form" method="post" action="{% url 'add_to_cart' product.uid %}" novalidate>
             {% csrf_token %}
             {% with sizes=product.size.all %}
             {% if sizes %}
-            <fieldset style="border: none; padding: 0; margin: 0 0 12px;">
-                <legend style="font-weight: 600; font-size: 1rem; margin-bottom: 6px;">Select size{% if product.productType != 'Single Buy' %} (choose more than one if buying several){% endif %}</legend>
-                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+            <fieldset class="lot-pdp__group" id="size-group" style="border: none; padding: 0;">
+                <legend class="lot-pdp__label">
+                    Size
+                    <small class="lot-text-muted">{% if product.productType == 'Single Buy' %}choose one{% else %}choose one or more{% endif %}</small>
+                </legend>
+                <div class="lot-sizes">
                     {% for size in sizes %}
-                    <label style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1px solid var(--lot-border); border-radius: 5px; cursor: pointer;">
+                    <label class="lot-size">
                         <input type="checkbox" name="size_{{ size.id }}" value="on" class="size-option">
-                        {{ size.name }}
+                        <span>{{ size.name }}</span>
                     </label>
                     {% endfor %}
                 </div>
             </fieldset>
             {% endif %}
             {% endwith %}
-            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                {% if product.productType == 'Single Buy' %}
-                <input type="hidden" id="id_quantity" name="quantity" value="1">
-                {% else %}
-                <label for="id_quantity" style="font-weight: 600;">Qty</label>
-                <input type="number" id="id_quantity" name="quantity"
-                       min="{% if product.productType == 'Min. Buy' %}{{ product.minBuy }}{% else %}1{% endif %}"
-                       max="{{ product.stock }}"
-                       value="{% if product.productType == 'Min. Buy' %}{{ product.minBuy }}{% else %}1{% endif %}"
-                       required style="width: 70px; padding: 5px; border: 1px solid var(--lot-border); border-radius: var(--lot-radius); background: var(--lot-bg); color: var(--lot-text);">
-                {% endif %}
-                <input type="text" id="info" maxlength="255" placeholder="Extra information (optional)" name="info" style="flex: 1; min-width: 160px; padding: 5px; border: 1px solid var(--lot-border); border-radius: var(--lot-radius); background: var(--lot-bg); color: var(--lot-text);">
-                <button type="submit" class="btn lot-btn-primary" id="add-to-cart-btn">Add to Cart</button>
+
+            {% if product.productType == 'Single Buy' %}
+            <input type="hidden" id="id_quantity" name="quantity" value="1">
+            {% else %}
+            <div class="lot-pdp__group">
+                <label for="id_quantity" class="lot-pdp__label">Quantity</label>
+                <div class="lot-stepper">
+                    <button type="button" data-step="-1" aria-label="Decrease quantity"><i class="fa fa-minus"></i></button>
+                    <input type="number" id="id_quantity" name="quantity"
+                           min="{% if product.productType == 'Min. Buy' %}{{ product.minBuy }}{% else %}1{% endif %}"
+                           max="{{ product.stock }}"
+                           value="{% if product.productType == 'Min. Buy' %}{{ product.minBuy }}{% else %}1{% endif %}"
+                           inputmode="numeric" required>
+                    <button type="button" data-step="1" aria-label="Increase quantity"><i class="fa fa-plus"></i></button>
+                </div>
             </div>
-            <p id="add-to-cart-message" role="status" style="margin-top: 10px; font-weight: 600;"></p>
+            {% endif %}
+
+            <div class="lot-pdp__group">
+                <label for="info" class="lot-pdp__label">Note for this item <small class="lot-text-muted">optional</small></label>
+                <input type="text" id="info" maxlength="255" name="info" class="lot-input" placeholder="e.g. name to print, colour preference">
+            </div>
+
+            <button type="submit" class="btn lot-pdp__cta" id="add-to-cart-btn"><i class="fa fa-shopping-cart"></i> Add to cart</button>
+            <p id="add-to-cart-message" role="status" style="margin-top: 10px; font-weight: 500;"></p>
         </form>
-        {% else %}
-        <p style="margin-top: 20px; font-weight: 600; color: var(--lot-danger);">Out of stock</p>
         {% endif %}
+
+        <ul class="lot-perks">
+            <li><i class="fa fa-lock"></i> Secure payment with Paystack</li>
+            <li><i class="fa fa-bolt"></i> Production starts 12 hours after you order</li>
+            <li><i class="fa fa-truck"></i> Delivered to your doorstep. <a href="{% url 'delivery-policy' %}">Delivery policy</a></li>
+            <li><i class="fa fa-undo"></i> <a href="{% url 'return-policy' %}">Return policy</a></li>
+        </ul>
     </div>
 </section>
 
-<section style="padding: 20px;">
-    <fieldset class="lot-panel">
-        <legend style="font-size: 1.25rem; font-weight: 600; width: auto; padding: 0 8px; float: none;">Description</legend>
-        <div style="line-height: 1.6;">{{ product.description|linebreaks }}</div>
-    </fieldset>
-</section>
-{% if user.is_authenticated and user.is_staff %}
-    <div style="text-align: center; margin: 20px 0;">
-        <a href="{% url 'edit-product' product.uid %}" class="btn lot-btn-secondary">Edit Product</a>
+<section class="lot-section reveal">
+    <div class="lot-panel">
+        <h2 class="lot-section__title" style="margin-bottom: 14px;">Description</h2>
+        <div style="line-height: 1.7;" class="lot-text-muted">{{ product.description|linebreaks }}</div>
     </div>
+</section>
+
+{% if user.is_authenticated and user.is_staff %}
+<div style="text-align: center; margin: 20px 0;">
+    <a href="{% url 'edit-product' product.uid %}" class="btn lot-btn-secondary"><i class="fa fa-pencil"></i> Edit Product</a>
+</div>
 {% endif %}
 
-<section style="padding: 20px;">
-    
-<section class="items">
-    {% for product in products %}
-    <div class="item">
-        <div class="rect">
-            <a href="{% url 'details' product.uid %}">
-                <div style="min-height: 250px;width: 100%;height: 100%;position: relative;;background: url({{product.image.url}});background-position: center;background-repeat: no-repeat;background-size: cover;">
-                {% if product.delivery == "Free Delivery" %}
-                <span class="lot-badge">{{product.delivery | title}}</span>
-                {% elif product.productType == "Gift on Buy" %}
-                <span class="lot-badge lot-badge--green">{{product.productType | title}}</span>
-                {% elif product.productType == "Single Buy" %}
-                <span class="lot-badge lot-badge--gold">{{product.productType | title}}</span>
-                {% endif %}
-                </div>
-            </a>
-        </div>
-        <div class="info" style="gap:5px;flex-direction: column;">
-            {{product.name | title | truncatechars:25}} 
-            <div style="display: flex;justify-content: space-between;gap: 10px;align-items: center;">
-                <div>
-                <p class="title">
-                <span class="price">&#8358;{{product.price|intcomma}}</span>{% if product.productType == "Min. Buy" %} <small class="lot-text-muted">· min. {{product.minBuy}} pcs</small>{% endif %}  </p>
-
-                </div>                    
-                <span class="price"><a href="{% url 'details' product.uid %}" class="btn btn-sm">Buy</a></span>
-            </div>
-        </div>
+{% if products %}
+<section class="lot-section">
+    <div class="lot-section__head reveal">
+        <h2 class="lot-section__title">You may also like</h2>
+        <a href="{% url 'merchs' %}" class="lot-section__link">View all <i class="fa fa-arrow-right"></i></a>
     </div>
-        {% endfor %}  
-    </section>
+    <div class="lot-grid">
+        {% for product in products|slice:":8" %}{% include "partials/product_card.html" %}{% endfor %}
+    </div>
 </section>
+{% endif %}
+
 <script>
     $(document).ready(function(){
         var $form = $('#add-to-cart-form');
         var $message = $('#add-to-cart-message');
+        var singleBuy = {% if product.productType == 'Single Buy' %}true{% else %}false{% endif %};
+
+        // Single Buy items take exactly one size: behave like radio buttons.
+        if (singleBuy) {
+            $form.on('change', '.size-option', function(){
+                if (this.checked) { $form.find('.size-option').not(this).prop('checked', false); }
+            });
+        }
+
+        // Image zoom follows the cursor.
+        var zoom = document.getElementById('product-zoom');
+        var zoomImg = document.getElementById('product-image');
+        if (zoom && zoomImg) {
+            zoom.addEventListener('mousemove', function(e){
+                var r = zoom.getBoundingClientRect();
+                zoomImg.style.transformOrigin = ((e.clientX - r.left) / r.width * 100) + '% ' + ((e.clientY - r.top) / r.height * 100) + '%';
+            });
+        }
+
+        function shake(el) {
+            if (!el) { return; }
+            el.classList.remove('lot-shake'); void el.offsetWidth; el.classList.add('lot-shake');
+        }
+
         $form.on('submit', function(event){
             event.preventDefault();
-            var $button = $('#add-to-cart-btn').prop('disabled', true);
+            var sizeGroup = document.getElementById('size-group');
+            var checked = $form.find('.size-option:checked').length;
+            var qty = parseInt($('#id_quantity').val(), 10) || 1;
+            if (sizeGroup && !checked) {
+                shake(sizeGroup);
+                $message.css('color', 'var(--lot-danger)').text('Please pick a size.');
+                return;
+            }
+            if (checked > qty) {
+                shake(sizeGroup);
+                $message.css('color', 'var(--lot-danger)').text('You picked ' + checked + ' sizes. Increase the quantity to at least ' + checked + ' or pick fewer sizes.');
+                return;
+            }
+            var $button = $('#add-to-cart-btn').prop('disabled', true).addClass('is-loading');
             $message.text('');
             $.ajax({
                 type: 'POST',
                 url: $form.attr('action'),
                 data: $form.serialize(),
                 success: function(response){
-                    $message.css('color', '#3ccf8e').html('Added to cart. <a href="{% url 'view_cart' %}">View cart</a>');
-                    $('#cart-count').text(response.cart_count).css('color', 'var(--lot-gold)');
+                    LOT.flyToCart(zoomImg, function(){ LOT.bumpCart(response.cart_count); });
+                    LOT.toast('Added to your cart', {action: {href: "{% url 'view_cart' %}", label: 'View cart'}});
+                    $message.html('<a href="{% url 'view_cart' %}" style="color: var(--lot-gold);">Go to cart and check out <i class="fa fa-arrow-right"></i></a>');
                     fetch("{% url 'track_add_to_cart' %}", {
                         method: "POST",
                         headers: {"Content-Type": "application/json"},
@@ -156,8 +206,9 @@
                 error: function(xhr){
                     var msg = (xhr.responseJSON && xhr.responseJSON.message) || 'Something went wrong. Please try again.';
                     $message.css('color', 'var(--lot-danger)').text(msg);
+                    LOT.toast(msg, {type: 'error'});
                 },
-                complete: function(){ $button.prop('disabled', false); }
+                complete: function(){ $button.prop('disabled', false).removeClass('is-loading'); }
             });
         });
     });

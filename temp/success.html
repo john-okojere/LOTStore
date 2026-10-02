@@ -8,6 +8,7 @@
             <div class="lot-panel p-4">
                 <div class="text-center">
                     {% if payment.verified %}
+                    <svg class="lot-check" viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="24"/><path d="M15 27l7 7 15-15"/></svg>
                     <h2 class="mt-3 lot-text-success">Payment successful</h2>
                     {% else %}
                     <h2 class="mt-3" style="color: var(--lot-danger);">Payment not confirmed</h2>
@@ -93,4 +94,14 @@
     </tbody>
 </table>
 
+{% if payment.verified and order %}
+<script>
+    // Celebrate once per order, not on every revisit of this page.
+    (function () {
+        var key = "lot-celebrated-{{ payment.ref|escapejs }}";
+        try { if (localStorage.getItem(key)) { return; } localStorage.setItem(key, "1"); } catch (e) {}
+        window.addEventListener("load", function () { if (window.LOT) { LOT.confetti(); } });
+    })();
+</script>
+{% endif %}
 {% endblock main %}

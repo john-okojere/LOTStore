@@ -1,378 +1,57 @@
 {% extends "base.html" %}
-{% load static humanize %}
+{% load static %}
+{% block title %}{% if info %}{{ info }}{% else %}All Merch{% endif %} |{% endblock title %}
 {% block main %}
-<style>
-   .carousel {
-    position: relative;
-    width: 100%;
-    overflow: hidden;
-}
+<div class="lot-results reveal">
+    <h1>{% if info %}{{ info }}{% else %}All merch{% endif %}</h1>
+    {% if products %}<span class="lot-text-muted">{{ products|length }} item{{ products|length|pluralize }}</span>{% endif %}
+</div>
 
-.slides {
-    display: flex;
-}
-
-.slide {
-    flex: 0 0 auto;
-    display: none;
-}
-
-.slide img {
-    width: 100%;
-}
-
-.active {
-    display: block;
-}
-
-.indicators {
-    position: absolute;
-    bottom: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-}
-
-.indicator {
-    width: 10px;
-    height: 10px;
-    background-color: #ccc;
-    border-radius: 50%;
-    margin: 0 5px;
-    cursor: pointer;
-}
-
-.active-indicator {
-    background-color: #555;
-}
-
-</style>
-
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-    var slides = document.querySelectorAll(".one .slide");
-    var indicatorsContainer = document.querySelector(".indicators.one");
-    var currentSlide = 0;
-
-    // Show the first slide initially
-    slides[currentSlide].classList.add("active");
-
-    // Function to move to the next slide
-    function nextSlide() {
-        slides[currentSlide].classList.remove("active");
-        indicators[currentSlide].classList.remove("active-indicator");
-        currentSlide = (currentSlide + 1) % slides.length;
-        slides[currentSlide].classList.add("active");
-        indicators[currentSlide].classList.add("active-indicator");
-    }
-
-    // Automatically move to the next slide every 5 seconds
-    setInterval(nextSlide, 5000);
-
-    // Create indicators
-    var indicators = [];
-    for (var i = 0; i < slides.length; i++) {
-        var indicator = document.createElement("div");
-        indicator.classList.add("indicator");
-        if (i === currentSlide) {
-            indicator.classList.add("active-indicator");
-        }
-        indicators.push(indicator);
-        indicatorsContainer.appendChild(indicator);
-    }
-
-    // Add click event listeners to indicators
-    indicators.forEach(function(indicator, index) {
-        indicator.addEventListener("click", function() {
-            slides[currentSlide].classList.remove("active");
-            indicators[currentSlide].classList.remove("active-indicator");
-            currentSlide = index;
-            slides[currentSlide].classList.add("active");
-            indicators[currentSlide].classList.add("active-indicator");
-        });
-    });
-});
-</script>
-{% if info %}
-    <div style="padding-top:1rem">
-        <h5>{{info}}</h5>
-    </div>
-{% endif %}
-<br>
-<div class="categories" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; padding: 20px;">
+{% if categories %}
+<div class="categories reveal" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 22px;">
     {% for category in categories %}
     <a href="{% url 'category' category.name %}" class="lot-chip">{{ category.name }} <small class="lot-text-muted">({{ category.product.count }})</small></a>
     {% endfor %}
 </div>
-
-{% if not products %}
-<div class="lot-panel" style="text-align: center; margin-bottom: 1rem;">
-    No products are available right now. Please check back shortly.
+{% else %}
+<div class="reveal" style="margin-bottom: 22px;">
+    <a href="{% url 'merchs' %}" class="lot-chip"><i class="fa fa-arrow-left"></i> All merch</a>
 </div>
 {% endif %}
 
-<section class="items">
-    {% for product in products|slice:":8" %}
-    <div class="item">
-        <div class="rect">
-            <a href="{% url 'details' product.uid %}">
-                <div style="min-height: 250px;width: 100%;height: 100%;position: relative;;background: url({{product.image.url}});background-position: center;background-repeat: no-repeat;background-size: cover;">
-                {% if product.delivery == "Free Delivery" %}
-                <span class="lot-badge">{{product.delivery | title}}</span>
-                {% elif product.productType == "Gift on Buy" %}
-                <span class="lot-badge lot-badge--green">{{product.productType | title}}</span>
-                {% elif product.productType == "Single Buy" %}
-                <span class="lot-badge lot-badge--gold">{{product.productType | title}}</span>
-                {% endif %}
-                </div>
-            </a>
-        </div>
-        <div class="info" style="gap:5px;flex-direction: column;">
-            {{product.name | title | truncatechars:25}} 
-            <div style="display: flex;justify-content: space-between;gap: 10px;align-items: center;">
-                <div>
-                <p class="title">
-                <span class="price">&#8358;{{product.price|intcomma}}</span>{% if product.productType == "Min. Buy" %} <small class="lot-text-muted">· min. {{product.minBuy}} pcs</small>{% endif %}  </p>
-
-                </div>                    
-                <span class="price"><a href="{% url 'details' product.uid %}" class="btn btn-sm">Buy</a></span>
-            </div>
-        </div>
-    </div>
-    {% endfor %}  
-</section>
-<br>
-
-<div class="carousel">
-    <div class="slides three">
-        <div class="slide">
-            <img src="{% static 'gif/4.gif' %}" alt="Banner 1">
-        </div>
-        <div class="slide">
-            <img src="{% static 'gif/5.gif' %}" alt="Banner 1">
-        </div>
-        <div class="slide">
-            <img src="{% static 'gif/6.gif' %}" alt="Banner 1">
-        </div>
-    </div>
-    <div class="indicators three"></div>
-</div>
-<br>
-<section class="items">
+{% if products %}
+<section class="lot-grid">
     {% for product in products %}
-    {% if forloop.counter >= 9 and forloop.counter <= 20 %}
-    <div class="item">
-        <div class="rect">
-            <a href="{% url 'details' product.uid %}">
-                <div style="min-height: 250px;width: 100%;height: 100%;position: relative;;background: url({{product.image.url}});background-position: center;background-repeat: no-repeat;background-size: cover;">
-                {% if product.delivery == "Free Delivery" %}
-                <span class="lot-badge">{{product.delivery | title}}</span>
-                {% elif product.productType == "Gift on Buy" %}
-                <span class="lot-badge lot-badge--green">{{product.productType | title}}</span>
-                {% elif product.productType == "Single Buy" %}
-                <span class="lot-badge lot-badge--gold">{{product.productType | title}}</span>
-                {% endif %}
-                </div>
-            </a>
+    {% include "partials/product_card.html" %}
+    {% if forloop.counter == 8 and not forloop.last %}
+    <div class="lot-grid__wide lot-carousel reveal" data-carousel data-interval="5000" aria-roledescription="carousel" aria-label="Featured designs">
+        <div class="lot-carousel__track">
+            <div class="lot-carousel__slide"><img src="{% static 'gif/4.gif' %}" alt="LOT Store design showcase" loading="lazy"></div>
+            <div class="lot-carousel__slide"><img src="{% static 'gif/5.gif' %}" alt="LOT Store design showcase" loading="lazy"></div>
+            <div class="lot-carousel__slide"><img src="{% static 'gif/6.gif' %}" alt="LOT Store design showcase" loading="lazy"></div>
         </div>
-        <div class="info" style="gap:5px;flex-direction: column;">
-            {{product.name | title | truncatechars:25}} 
-            <div style="display: flex;justify-content: space-between;gap: 10px;align-items: center;">
-                <div>
-                <p class="title">
-                <span class="price">&#8358;{{product.price|intcomma}}</span>{% if product.productType == "Min. Buy" %} <small class="lot-text-muted">· min. {{product.minBuy}} pcs</small>{% endif %}  </p>
-
-                </div>                    
-                <span class="price"><a href="{% url 'details' product.uid %}" class="btn btn-sm">Buy</a></span>
-            </div>
+        <div class="lot-carousel__dots"></div>
+    </div>
+    {% elif forloop.counter == 20 and not forloop.last %}
+    <div class="lot-grid__wide lot-carousel reveal" data-carousel data-interval="7000" aria-roledescription="carousel" aria-label="Promotions">
+        <div class="lot-carousel__track">
+            <div class="lot-carousel__slide"><img src="{% static '3x1/1.png' %}" alt="LOT Store promotion" loading="lazy"></div>
+            <div class="lot-carousel__slide"><img src="{% static '3x1/2.png' %}" alt="LOT Store promotion" loading="lazy"></div>
+            <div class="lot-carousel__slide"><img src="{% static '3x1/3.png' %}" alt="LOT Store promotion" loading="lazy"></div>
         </div>
+        <button type="button" class="lot-carousel__nav lot-carousel__nav--prev" aria-label="Previous slide"><i class="fa fa-chevron-left"></i></button>
+        <button type="button" class="lot-carousel__nav lot-carousel__nav--next" aria-label="Next slide"><i class="fa fa-chevron-right"></i></button>
+        <div class="lot-carousel__dots"></div>
     </div>
     {% endif %}
-    {% endfor %}  
+    {% endfor %}
 </section>
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-    var slides2 = document.querySelectorAll(".slides.two .slide");
-    var indicatorsContainer2 = document.querySelector(".indicators.two");
-    var currentSlide2 = 0;
-
-    // Show the first slide initially
-    slides2[currentSlide2].classList.add("active");
-
-    // Function to move to the next slide
-    function nextSlide2() {
-        slides2[currentSlide2].classList.remove("active");
-        indicators2[currentSlide2].classList.remove("active-indicator");
-        currentSlide2 = (currentSlide2 + 1) % slides2.length;
-        slides2[currentSlide2].classList.add("active");
-        indicators2[currentSlide2].classList.add("active-indicator");
-    }
-
-    // Automatically move to the next slide every 5 seconds
-    setInterval(nextSlide2, 7000);
-
-    // Create indicators
-    var indicators2 = [];
-    for (var i = 0; i < slides2.length; i++) {
-        var indicator2 = document.createElement("div");
-        indicator2.classList.add("indicator");
-        if (i === currentSlide2) {
-            indicator2.classList.add("active-indicator");
-        }
-        indicators2.push(indicator2);
-        indicatorsContainer2.appendChild(indicator2);
-    }
-
-    // Add click event listeners to indicators
-    indicators2.forEach(function(indicator, index) {
-        indicator.addEventListener("click", function() {
-            slides2[currentSlide2].classList.remove("active");
-            indicators2[currentSlide2].classList.remove("active-indicator");
-            currentSlide2 = index;
-            slides2[currentSlide2].classList.add("active");
-            indicators2[currentSlide2].classList.add("active-indicator");
-        });
-    });
-});
-</script>
-<br>
-
-<div class="carousel">
-    <div class="slides one">
-        <div class="slide">
-            <img src="{% static 'home/img/6.png' %}" alt="Banner 1">
-        </div>
-        <div class="slide">
-            <img src="{% static 'home/img/3.png' %}" alt="Banner 1">
-        </div>
-        <div class="slide">
-            <img src="{% static 'home/img/2.png' %}" alt="Banner 1">
-        </div>
-    </div>
-    <div class="indicators one"></div>
+{% else %}
+<div class="lot-panel lot-empty reveal">
+    <div class="lot-empty__icon"><i class="fa fa-shopping-bag"></i></div>
+    <h2 style="font-size: 1.2rem; font-weight: 600;">Nothing here yet</h2>
+    <p class="lot-text-muted" style="margin-bottom: 18px;">New designs are on the way. Check back shortly.</p>
+    <a href="{% url 'homepage' %}" class="btn">Back to home</a>
 </div>
-<br>
-<section class="items">
-    {% for product in products %}
-    {% if forloop.counter >= 22 and forloop.counter <= 29 %}
-    <div class="item">
-        <div class="rect">
-            <a href="{% url 'details' product.uid %}">
-                <div style="min-height: 250px;width: 100%;height: 100%;position: relative;;background: url({{product.image.url}});background-position: center;background-repeat: no-repeat;background-size: cover;">
-                {% if product.delivery == "Free Delivery" %}
-                <span class="lot-badge">{{product.delivery | title}}</span>
-                {% elif product.productType == "Gift on Buy" %}
-                <span class="lot-badge lot-badge--green">{{product.productType | title}}</span>
-                {% elif product.productType == "Single Buy" %}
-                <span class="lot-badge lot-badge--gold">{{product.productType | title}}</span>
-                {% endif %}
-                </div>
-            </a>
-        </div>
-        <div class="info" style="gap:5px;flex-direction: column;">
-            {{product.name | title | truncatechars:25}} 
-            <div style="display: flex;justify-content: space-between;gap: 10px;align-items: center;">
-                <div>
-                <p class="title">
-                <span class="price">&#8358;{{product.price|intcomma}}</span>{% if product.productType == "Min. Buy" %} <small class="lot-text-muted">· min. {{product.minBuy}} pcs</small>{% endif %}  </p>
-
-                </div>                    
-                <span class="price"><a href="{% url 'details' product.uid %}" class="btn btn-sm">Buy</a></span>
-            </div>
-        </div>
-    </div>
-    {% endif %}
-    {% endfor %}  
-</section>
-<div class="carousel">
-    <div class="slides two">
-        <div class="slide">
-            <img src="{% static '3x1/1.png' %}" alt="Banner 1">
-        </div>
-        <div class="slide">
-            <img src="{% static '3x1/2.png' %}" alt="Banner 1">
-        </div>
-        <div class="slide">
-            <img src="{% static '3x1/3.png' %}" alt="Banner 1">
-        </div>
-    </div>
-    <div class="indicators two"></div>
-</div>
-<section class="items">
-    {% for product in products %}
-    {% if forloop.counter >= 31 %}
-    <div class="item">
-        <div class="rect">
-            <a href="{% url 'details' product.uid %}">
-                <div style="min-height: 250px;width: 100%;height: 100%;position: relative;;background: url({{product.image.url}});background-position: center;background-repeat: no-repeat;background-size: cover;">
-                {% if product.delivery == "Free Delivery" %}
-                <span class="lot-badge">{{product.delivery | title}}</span>
-                {% elif product.productType == "Gift on Buy" %}
-                <span class="lot-badge lot-badge--green">{{product.productType | title}}</span>
-                {% elif product.productType == "Single Buy" %}
-                <span class="lot-badge lot-badge--gold">{{product.productType | title}}</span>
-                {% endif %}
-                </div>
-            </a>
-        </div>
-        <div class="info" style="gap:5px;flex-direction: column;">
-            {{product.name | title | truncatechars:25}} 
-            <div style="display: flex;justify-content: space-between;gap: 10px;align-items: center;">
-                <div>
-                <p class="title">
-                <span class="price">&#8358;{{product.price|intcomma}}</span>{% if product.productType == "Min. Buy" %} <small class="lot-text-muted">· min. {{product.minBuy}} pcs</small>{% endif %}  </p>
-
-                </div>                    
-                <span class="price"><a href="{% url 'details' product.uid %}" class="btn btn-sm">Buy</a></span>
-            </div>
-        </div>
-    </div>
-    {% endif %}
-    {% endfor %}  
-</section>
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-    var slides3 = document.querySelectorAll(".slides.three .slide");
-    var indicatorsContainer3 = document.querySelector(".indicators.three");
-    var currentSlide3 = 0;
-
-    // Show the first slide initially
-    slides3[currentSlide3].classList.add("active");
-
-    // Function to move to the next slide
-    function nextSlide3() {
-        slides3[currentSlide3].classList.remove("active");
-        indicators3[currentSlide3].classList.remove("active-indicator");
-        currentSlide3 = (currentSlide3 + 1) % slides3.length;
-        slides3[currentSlide3].classList.add("active");
-        indicators3[currentSlide3].classList.add("active-indicator");
-    }
-
-    // Automatically move to the next slide every 5 seconds
-    setInterval(nextSlide3, 5000);
-
-    // Create indicators
-    var indicators3 = [];
-    for (var i = 0; i < slides3.length; i++) {
-        var indicator3 = document.createElement("div");
-        indicator3.classList.add("indicator");
-        if (i === currentSlide3) {
-            indicator3.classList.add("active-indicator");
-        }
-        indicators3.push(indicator3);
-        indicatorsContainer3.appendChild(indicator3);
-    }
-
-    // Add click event listeners to indicators
-    indicators3.forEach(function(indicator, index) {
-        indicator.addEventListener("click", function() {
-            slides3[currentSlide3].classList.remove("active");
-            indicators3[currentSlide3].classList.remove("active-indicator");
-            currentSlide3 = index;
-            slides3[currentSlide3].classList.add("active");
-            indicators3[currentSlide3].classList.add("active-indicator");
-        });
-    });
-});
-</script>
+{% endif %}
 {% endblock main %}
