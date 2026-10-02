@@ -29,6 +29,8 @@ urlpatterns = [
     path('', include('shelf.urls')),
     path('account/', include('user.urls')),
     path('dashboard/', include('dashboard.urls')),
+    path('designs/', include('designer.urls')),
+    path('dashboard/designs/', include('designer.staff_urls')),
     
 ]
 

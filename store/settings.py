@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'shelf.apps.ShelfConfig',
     'cart.apps.CartConfig',
     'dashboard.apps.DashboardConfig',
+    'designer.apps.DesignerConfig',
     'rest_framework',
     'crispy_forms',
     'crispy_bootstrap5',

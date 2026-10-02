@@ -56,6 +56,8 @@ class Product(models.Model):
     delivery = models.CharField(choices=delivery, max_length=25, default='Delivery Fee')
     productType = models.CharField(choices=productType, max_length=25, default='Single Buy')
     minBuy = models.IntegerField(verbose_name="minBuy", default=1)
+    customizable = models.BooleanField(default=False)
+    is_public = models.BooleanField(default=True, db_index=True)
     updated_date = models.DateTimeField(auto_now=True, null=True)
     created_date = models.DateTimeField(auto_now_add=True, null=True)
 

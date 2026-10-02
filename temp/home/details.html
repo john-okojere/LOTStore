@@ -61,6 +61,9 @@
             {% if product.productType == 'Min. Buy' %}<div><dt>Minimum order</dt><dd>{{ product.minBuy }} pcs</dd></div>{% endif %}
         </dl>
 
+        {% if product.customizable %}
+        <a href="{% url 'designer:start' product.uid %}" class="btn lot-pdp__cta" style="display:block;text-align:center;margin-bottom:12px;"><i class="fa fa-paint-brush"></i> Customize this product</a>
+        {% endif %}
         {% if product.stock > 0 %}
         <form id="add-to-cart-form" method="post" action="{% url 'add_to_cart' product.uid %}" novalidate>
             {% csrf_token %}

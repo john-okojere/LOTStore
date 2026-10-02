@@ -486,7 +486,7 @@ def product_list_api(request):
     if not _is_dashboard_admin(request.user):
         return _forbidden_json()
 
-    products = Product.objects.prefetch_related("categories").all()
+    products = Product.objects.filter(is_public=True).prefetch_related("categories")
     data = []
     for product in products:
         data.append(

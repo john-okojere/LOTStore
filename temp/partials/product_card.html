@@ -23,7 +23,7 @@
                 <span class="lot-card__price">&#8358;{{ product.price|intcomma }}</span>
                 {% if product.productType == "Min. Buy" %}<span class="lot-card__min">Min. {{ product.minBuy }} pcs</span>{% endif %}
             </div>
-            <a href="{% url 'details' product.uid %}" class="btn btn-sm" tabindex="-1" aria-hidden="true">Buy</a>
+            {% if product.customizable %}<a href="{% url 'designer:start' product.uid %}" class="btn btn-sm">Customize</a>{% else %}<a href="{% url 'details' product.uid %}" class="btn btn-sm" tabindex="-1" aria-hidden="true">Buy</a>{% endif %}
         </div>
     </div>
 </article>

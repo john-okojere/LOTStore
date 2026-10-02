@@ -1,0 +1,6 @@
+{% extends "base.html" %}{% load humanize static %}
+{% block main %}
+<link rel="stylesheet" href="{% static 'designer/designer.css' %}">
+<section class="lot-section design-page"><div class="design-heading"><div><p class="eyebrow">CUSTOM STUDIO</p><h1>My designs</h1><p>Draft, submit and track your custom product requests.</p></div><a class="btn" href="{% url 'merchs' %}">Choose a product</a></div>
+<div class="design-grid">{% for item in designs %}<a class="design-card" href="{% if item.status == 'draft' or item.status == 'changes_requested' %}{% url 'designer:editor' item.uid %}{% else %}{% url 'designer:detail' item.uid %}{% endif %}">{% if item.preview %}<img src="{{ item.preview.url }}" alt="{{ item.product.name }} preview">{% else %}<img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">{% endif %}<div><span class="status status--{{ item.status }}">{{ item.get_status_display }}</span><h2>{{ item.product.name }}</h2><small>Updated {{ item.updated_at|naturaltime }}</small></div></a>{% empty %}<div class="empty-state"><h2>No designs yet</h2><p>Choose a customizable product to begin.</p><a class="btn" href="{% url 'merchs' %}">Browse products</a></div>{% endfor %}</div></section>
+{% endblock %}

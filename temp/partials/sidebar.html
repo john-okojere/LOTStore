@@ -142,6 +142,7 @@
             </a>
           </li>
           {% if user.is_authenticated %}
+          <li><a href="{% url 'designer:list' %}"><i class="fa fa-paint-brush"></i><span>My designs</span></a></li>
           <li><a href="{% url 'payment_history' %}"><i class="fa fa-shopping-bag"></i><span>My orders</span></a></li>
           <li><a href="{% url 'profile' user.uid %}"><i class="fa fa-user"></i><span>Profile</span></a></li>
           {% if user.is_staff or user.level >= 2 %}

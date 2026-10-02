@@ -118,7 +118,7 @@ def _first_error(form):
 
 @require_POST
 def add_to_cart(request, product_uid):
-    product = get_object_or_404(Product, uid=product_uid)
+    product = get_object_or_404(Product, uid=product_uid, is_public=True)
 
     form = AddToCartForm(request.POST, product=product)
     if not form.is_valid():
@@ -316,6 +316,12 @@ def _complete_payment(payment):
                 stock=Greatest(F('stock') - item.quantity, 0)
             )
         order = Order.objects.create(payment=locked)
+        # Custom quotes become paid exactly once alongside their idempotent order.
+        from designer.models import DesignRequest
+        DesignRequest.objects.filter(
+            quote__quote_product__cartitem__cart=cart,
+            status="quote_accepted",
+        ).update(status="paid")
         return order, True
 
 

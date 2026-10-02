@@ -14,15 +14,15 @@ def homepage(request):
     if not products:
         # Every field the product card reads must be listed, or each card
         # triggers extra queries for the deferred fields.
-        products = Product.objects.all().only(
-            'id', 'uid', 'name', 'price', 'image', 'stock', 'delivery', 'productType', 'minBuy', 'created_date'
+        products = Product.objects.filter(is_public=True).only(
+            'id', 'uid', 'name', 'price', 'image', 'stock', 'delivery', 'productType', 'minBuy', 'customizable', 'created_date'
         ).order_by('-created_date')[:24]
         products = list(products)
         cache.set(HOMEPAGE_CACHE_KEY, products, 300)  # Cache for 5 minutes
     return render(request, 'home/index.html', {'products': products, 'images':images, 'categories':categories})
 
 def merchs(request):
-    products = Product.objects.all().order_by('-created_date')
+    products = Product.objects.filter(is_public=True).order_by('-created_date')
     categories = Category.objects.all()
     return render(request, 'home/merchs.html', {'products':products, 'categories':categories})
 
@@ -68,14 +68,14 @@ def contact(request):
 
 def category_view(request, cat):
     cate = get_object_or_404(Category, name=cat)
-    products = Product.objects.filter(categories=cate).order_by('-created_date')
+    products = Product.objects.filter(is_public=True, categories=cate).order_by('-created_date')
     info = f'Result for {cate.name} items'
     return render(request, 'home/merchs.html', {'products':products, 'info':info})
 
 
 def details(request, uid):
-    product = get_object_or_404(Product, uid=uid)
-    products = Product.objects.filter(categories__in=product.categories.all()).exclude(uid=uid).distinct().order_by('-created_date')
+    product = get_object_or_404(Product, uid=uid, is_public=True)
+    products = Product.objects.filter(is_public=True, categories__in=product.categories.all()).exclude(uid=uid).distinct().order_by('-created_date')
     return render(request, 'home/details.html', {'product':product,'products':products})
 
 
@@ -93,7 +93,7 @@ def filter_items(request):
         min_price_filter = request.POST.get('min-price')
         max_price_filter = request.POST.get('max-price')
 
-        queryset = Product.objects.all().order_by('-created_date')
+        queryset = Product.objects.filter(is_public=True).order_by('-created_date')
 
         category_pk = _to_int(category_id)
         if category_pk:
@@ -131,7 +131,7 @@ from .models import SearchQuery
 def search(request):
     search = (request.GET.get('item') or '').strip()
     if search:
-        filtered_items = Product.objects.filter(
+        filtered_items = Product.objects.filter(is_public=True).filter(
             Q(name__icontains=search) | 
             Q(categories__name__icontains=search) | 
             Q(size__name__icontains=search) | 
@@ -143,14 +143,14 @@ def search(request):
 
         SearchQuery.objects.create(user=user, query=search[:255], ip_address=ip_address)
     else:
-        filtered_items = Product.objects.all().order_by('-created_date')
+        filtered_items = Product.objects.filter(is_public=True).order_by('-created_date')
         info = "Enter a product name, size or category to search"
     return render(request, 'home/index.html', {'products':filtered_items, 'info':info}) 
 
 def search_suggestions(request):
     search_term = (request.GET.get('item') or '').strip()
     if search_term:
-        suggestions = Product.objects.filter(name__icontains=search_term).prefetch_related('size')[:5]
+        suggestions = Product.objects.filter(is_public=True, name__icontains=search_term).prefetch_related('size')[:5]
         suggestions_data = []
         for product in suggestions:
             product_data = {
