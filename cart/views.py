@@ -118,7 +118,9 @@ def _first_error(form):
 
 @require_POST
 def add_to_cart(request, product_uid):
-    product = get_object_or_404(Product, uid=product_uid, is_public=True)
+    # Customizable base products must go through design review and quoting.
+    # Approved quotes create a separate private, normally purchasable product.
+    product = get_object_or_404(Product, uid=product_uid, is_public=True, customizable=False)
 
     form = AddToCartForm(request.POST, product=product)
     if not form.is_valid():
