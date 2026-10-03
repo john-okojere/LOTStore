@@ -52,7 +52,7 @@
                             <button type="submit" class="btn btn-lg btn-block btn-light lift " atl="signin">Sign in</button>
                         </div>
                         <div class="col-12 text-center mt-4">
-                            <span class="text-muted">Don't have an account yet?  <a href="{% url 'register' %}" class="text-secondary">Sign up here</a></span>
+                            <span class="text-muted">Don't have an account yet?  <a href="{% url 'register' %}{% if next %}?next={{ next|urlencode }}{% endif %}" class="text-secondary">Sign up here</a></span>
                         </div>
                     </form>
                     <!-- End Form -->

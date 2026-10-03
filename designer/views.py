@@ -2,7 +2,9 @@ import base64
 import binascii
 import json
 import logging
+import secrets
 from pathlib import Path
+from urllib.parse import urlencode
 
 from django.conf import settings
 from django.contrib import messages
@@ -10,7 +12,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.files.base import ContentFile
 from django.core.mail import send_mail
 from django.db import transaction
-from django.db.models import Max
+from django.db.models import Max, Q
 from django.http import HttpResponseForbidden, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -27,6 +29,8 @@ MAX_ASSET_BYTES = 8 * 1024 * 1024
 MAX_JSON_BYTES = 2 * 1024 * 1024
 ALLOWED_FORMATS = {"PNG", "JPEG", "WEBP"}
 EDITABLE = {"draft", "changes_requested"}
+MAX_ASSETS_PER_DESIGN = 30
+GUEST_SESSION_KEY = "designer_guest_key"
 
 
 def _staff(user):
@@ -40,8 +44,38 @@ def _mail(customer, subject, body):
         logger.exception("Design notification failed for %s", customer.email)
 
 
-def _owned(uid, user):
-    return get_object_or_404(DesignRequest.objects.select_related("product", "customer"), uid=uid, customer=user)
+def guest_key(request, create=False):
+    """Per-browser key that owns a guest's drafts. It lives in session data,
+    so it survives the session-key rotation that happens on login."""
+    key = request.session.get(GUEST_SESSION_KEY)
+    if not key and create:
+        key = secrets.token_urlsafe(24)
+        request.session[GUEST_SESSION_KEY] = key
+    return key
+
+
+def claim_guest_designs(request, user):
+    key = request.session.get(GUEST_SESSION_KEY)
+    if key:
+        DesignRequest.objects.filter(customer__isnull=True, guest_key=key).update(customer=user, guest_key="")
+
+
+def _owner_filter(request):
+    key = guest_key(request)
+    guest = Q(customer__isnull=True, guest_key=key) if key else Q(pk__in=[])
+    if request.user.is_authenticated:
+        return Q(customer=request.user) | guest
+    return guest
+
+
+def _owned(request, uid):
+    design = get_object_or_404(
+        DesignRequest.objects.select_related("product", "customer").filter(_owner_filter(request)), uid=uid
+    )
+    if request.user.is_authenticated and design.customer_id is None:
+        claim_guest_designs(request, request.user)
+        design.refresh_from_db()
+    return design
 
 
 def _save_preview(obj, data_url, prefix):
@@ -54,16 +88,16 @@ def _save_preview(obj, data_url, prefix):
         raw = base64.b64decode(encoded, validate=True)
         if len(raw) > MAX_ASSET_BYTES:
             return
-        obj.preview.save(f"{prefix}.png", ContentFile(raw), save=False)
+        ext = "png" if header == "data:image/png;base64" else "jpg"
+        obj.preview.save(f"{prefix}.{ext}", ContentFile(raw), save=False)
     except (ValueError, binascii.Error):
         return
 
 
 def design_list(request):
-    designs = (
-        DesignRequest.objects.filter(customer=request.user).select_related("product")
-        if request.user.is_authenticated else DesignRequest.objects.none()
-    )
+    if request.user.is_authenticated:
+        claim_guest_designs(request, request.user)
+    designs = DesignRequest.objects.filter(_owner_filter(request)).select_related("product")
     products = (
         Product.objects.filter(customizable=True, is_public=True, mockup_views__isnull=False)
         .prefetch_related("categories")
@@ -73,29 +107,42 @@ def design_list(request):
     return render(request, "designer/list.html", {"designs": designs, "customizable_products": products})
 
 
-@login_required
 def start_design(request, product_uid):
     product = get_object_or_404(Product, uid=product_uid, customizable=True, is_public=True)
     if not product.mockup_views.exists():
         messages.error(request, "This product is not ready for customization yet.")
         return redirect("details", uid=product.uid)
-    design = DesignRequest.objects.create(customer=request.user, product=product)
+    if request.user.is_authenticated:
+        owner = {"customer": request.user}
+    else:
+        owner = {"customer": None, "guest_key": guest_key(request, create=True)}
+    # Re-opening "Customize" continues an untouched draft instead of piling up empty ones.
+    blank = next(
+        (d for d in DesignRequest.objects.filter(product=product, status="draft", **owner).order_by("-updated_at")[:5]
+         if d.object_count == 0),
+        None,
+    )
+    design = blank or DesignRequest.objects.create(product=product, **owner)
     return redirect("designer:editor", uid=design.uid)
 
 
-@login_required
 def editor(request, uid):
-    design = _owned(uid, request.user)
+    design = _owned(request, uid)
     if design.status not in EDITABLE:
         return redirect("designer:detail", uid=uid)
     mockups = list(design.product.mockup_views.all())
-    return render(request, "designer/editor.html", {"design": design, "mockups": mockups, "sizes": design.product.size.all()})
+    assets = design.assets.order_by("-created_at")[:24]
+    login_next = f"{reverse('login')}?{urlencode({'next': reverse('designer:editor', args=[design.uid])})}"
+    register_next = f"{reverse('register')}?{urlencode({'next': reverse('designer:editor', args=[design.uid])})}"
+    return render(request, "designer/editor.html", {
+        "design": design, "mockups": mockups, "sizes": design.product.size.all(), "assets": assets,
+        "login_next": login_next, "register_next": register_next,
+    })
 
 
-@login_required
 @require_POST
 def save_design(request, uid):
-    design = _owned(uid, request.user)
+    design = _owned(request, uid)
     if design.status not in EDITABLE:
         return JsonResponse({"error": "This design is locked."}, status=409)
     if len(request.body) > MAX_JSON_BYTES:
@@ -111,7 +158,8 @@ def save_design(request, uid):
     if not set(canvas["views"]).issubset(valid_view_ids):
         return JsonResponse({"error": "Unknown product view."}, status=400)
     quantities = data.get("size_quantities", {})
-    valid_sizes = {str(pk) for pk in design.product.size.values_list("pk", flat=True)}
+    # Products without sizes send a single quantity under the key "0".
+    valid_sizes = {str(pk) for pk in design.product.size.values_list("pk", flat=True)} or {"0"}
     cleaned = {}
     for key, value in quantities.items():
         if str(key) in valid_sizes:
@@ -127,12 +175,13 @@ def save_design(request, uid):
     return JsonResponse({"ok": True, "updated": design.updated_at.isoformat()})
 
 
-@login_required
 @require_POST
 def upload_asset(request, uid):
-    design = _owned(uid, request.user)
+    design = _owned(request, uid)
     if design.status not in EDITABLE:
         return JsonResponse({"error": "This design is locked."}, status=409)
+    if design.assets.count() >= MAX_ASSETS_PER_DESIGN:
+        return JsonResponse({"error": f"You can upload up to {MAX_ASSETS_PER_DESIGN} images per design."}, status=400)
     upload = request.FILES.get("image")
     if not upload or upload.size > MAX_ASSET_BYTES:
         return JsonResponse({"error": "Choose an image smaller than 8 MB."}, status=400)
@@ -148,10 +197,13 @@ def upload_asset(request, uid):
     return JsonResponse({"id": asset.pk, "url": asset.image.url})
 
 
-@login_required
 @require_POST
 def submit_design(request, uid):
-    design = _owned(uid, request.user)
+    design = _owned(request, uid)
+    if not request.user.is_authenticated:
+        # The quote is emailed and paid from an account; the draft is claimed on sign-in.
+        messages.info(request, "Sign in or create a free account to get your quote. Your design is saved and waiting.")
+        return redirect(f"{reverse('login')}?{urlencode({'next': reverse('designer:editor', args=[design.uid])})}")
     if design.status not in EDITABLE:
         messages.error(request, "This design cannot be submitted in its current state.")
         return redirect("designer:detail", uid=uid)
@@ -171,16 +223,29 @@ def submit_design(request, uid):
     return redirect("designer:detail", uid=uid)
 
 
+TRACK = [
+    ("submitted", "Submitted for review"), ("quoted", "Quote ready"), ("quote_accepted", "Quote accepted"),
+    ("paid", "Paid"), ("in_production", "In production"), ("sent", "On its way"), ("delivered", "Delivered"),
+]
+TRACK_POSITION = {"draft": -1, "submitted": 0, "resubmitted": 0, "changes_requested": 0, "quoted": 1,
+                  "quote_accepted": 2, "paid": 3, "in_production": 4, "sent": 5, "delivered": 6}
+
+
 @login_required
 def design_detail(request, uid):
-    design = _owned(uid, request.user)
-    return render(request, "designer/detail.html", {"design": design})
+    design = _owned(request, uid)
+    position = TRACK_POSITION.get(design.status, -1)
+    track = [
+        {"label": label, "state": "done" if i < position or design.status == "delivered" else "current" if i == position else ""}
+        for i, (_, label) in enumerate(TRACK)
+    ]
+    return render(request, "designer/detail.html", {"design": design, "track": track})
 
 
 @login_required
 @require_POST
 def quote_decision(request, uid, decision):
-    design = _owned(uid, request.user)
+    design = _owned(request, uid)
     quote = get_object_or_404(DesignQuote, request=design)
     if design.status != "quoted" or quote.is_expired or quote.version_id != design.versions.first().id:
         messages.error(request, "This quote is no longer available.")

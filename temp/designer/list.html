@@ -1,51 +1,80 @@
 {% extends "base.html" %}
 {% load humanize static %}
-
+{% block title %}Design Studio |{% endblock title %}
 {% block main %}
-<link rel="stylesheet" href="{% static 'designer/designer.css' %}?v=20261003-picker">
-<section class="lot-section design-page">
-  <div class="design-heading">
-    <div>
-      <p class="eyebrow">CUSTOM STUDIO</p>
-      <h1>Choose what you want to customize</h1>
-      <p>Select a blank product, add your artwork or text, and submit it for a custom quote.</p>
+<link rel="stylesheet" href="{% static 'designer/designer.css' %}?v=20261003-studio">
+<div class="lot-page">
+  <section class="lot-hero reveal">
+    <span class="lot-hero__cross" aria-hidden="true"></span>
+    <span class="lot-eyebrow"><i class="fa fa-paint-brush"></i> Design studio</span>
+    <h1>Design your own. <em>Wear your faith.</em></h1>
+    <p class="lot-hero__lead">Put your church name, a verse, a logo or your own artwork on tees, hoodies, caps and more. No account or design skills needed to start.</p>
+    <div class="lot-hero__actions">
+      <a href="#pick" class="btn">Choose a product <i class="fa fa-arrow-down"></i></a>
+      {% if designs %}<a href="#my-designs" class="btn lot-btn-secondary">Continue my designs</a>{% endif %}
     </div>
+  </section>
+
+  <div class="dsl-steps">
+    <div class="dsl-step reveal"><span class="dsl-step__num">1</span><div><h3>Pick a product</h3><p>Choose a blank tee, hoodie, cap, mug or more below.</p></div></div>
+    <div class="dsl-step reveal"><span class="dsl-step__num">2</span><div><h3>Make it yours</h3><p>Upload artwork or add text, shapes and faith symbols. Drag to place it.</p></div></div>
+    <div class="dsl-step reveal"><span class="dsl-step__num">3</span><div><h3>Get a quote</h3><p>We review your design and email a price. Nothing is charged until you accept.</p></div></div>
   </div>
 
-  <div class="custom-product-grid">
-    {% for product in customizable_products %}
-    <article class="custom-product-card">
-      <a href="{% url 'designer:start' product.uid %}" class="custom-product-card__image">
-        <img src="{{ product.image.url }}" alt="Customize {{ product.name }}" loading="lazy">
-      </a>
-      <div class="custom-product-card__body">
-        <div class="custom-product-card__categories">
-          {% for category in product.categories.all %}<span>{{ category.name }}</span>{% endfor %}
+  <section class="lot-section" id="pick">
+    <div class="lot-section__head reveal">
+      <h2 class="lot-section__title">What would you like to customize?</h2>
+    </div>
+    <div class="dsl-products">
+      {% for product in customizable_products %}
+      <article class="dsl-product reveal">
+        <a href="{% url 'designer:start' product.uid %}" class="dsl-product__media" aria-label="Customize {{ product.name }}">
+          <img src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy">
+          <span class="dsl-product__badge"><i class="fa fa-paint-brush"></i> Customizable</span>
+        </a>
+        <div class="dsl-product__body">
+          {% if product.categories.all %}<div class="dsl-product__cats">{% for category in product.categories.all %}<span>{{ category.name }}</span>{% endfor %}</div>{% endif %}
+          <h3>{{ product.name }}</h3>
+          <p>{{ product.description|truncatewords:16 }}</p>
+          <a class="btn" href="{% url 'designer:start' product.uid %}"><i class="fa fa-magic"></i> Start designing</a>
         </div>
-        <h2>{{ product.name }}</h2>
-        <p>{{ product.description|truncatewords:18 }}</p>
-        <a class="btn" href="{% url 'designer:start' product.uid %}"><i class="fa fa-paint-brush"></i> Start designing</a>
+      </article>
+      {% empty %}
+      <div class="lot-panel lot-empty reveal" style="grid-column: 1 / -1;">
+        <div class="lot-empty__icon"><i class="fa fa-paint-brush"></i></div>
+        <h2 style="font-size: 1.2rem; font-weight: 600;">Custom products are coming soon</h2>
+        <p class="lot-text-muted">Check back shortly, or <a href="https://wa.me/2347044448932" target="_blank" rel="noopener" style="color: var(--lot-gold);">ask Pastor Oshoma on WhatsApp</a> about a custom order.</p>
       </div>
-    </article>
-    {% empty %}
-    <div class="empty-state"><h2>Custom products are coming soon</h2></div>
-    {% endfor %}
-  </div>
+      {% endfor %}
+    </div>
+  </section>
 
-  {% if user.is_authenticated %}
-  <div class="design-history-heading">
-    <div><p class="eyebrow">YOUR WORK</p><h2>My designs</h2><p>Continue drafts and track submitted requests.</p></div>
-  </div>
-  <div class="design-grid">
-    {% for item in designs %}
-    <a class="design-card" href="{% if item.status == 'draft' or item.status == 'changes_requested' %}{% url 'designer:editor' item.uid %}{% else %}{% url 'designer:detail' item.uid %}{% endif %}">
-      {% if item.preview %}<img src="{{ item.preview.url }}" alt="{{ item.product.name }} preview">{% else %}<img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">{% endif %}
-      <div><span class="status status--{{ item.status }}">{{ item.get_status_display }}</span><h2>{{ item.product.name }}</h2><small>Updated {{ item.updated_at|naturaltime }}</small></div>
-    </a>
-    {% empty %}
-    <div class="empty-state"><h2>No designs yet</h2><p>Choose one of the customizable products above to begin.</p></div>
-    {% endfor %}
-  </div>
+  {% if designs %}
+  <section class="lot-section" id="my-designs">
+    <div class="lot-section__head reveal">
+      <h2 class="lot-section__title">My designs</h2>
+      <span class="lot-text-muted" style="font-size: 0.85rem;">{{ designs|length }} design{{ designs|length|pluralize }}</span>
+    </div>
+    {% if not user.is_authenticated %}
+    <div class="lot-legal__note reveal" style="margin-bottom: 16px;">
+      <i class="fa fa-info-circle"></i>
+      <div>These designs are saved on this device only. <a href="{% url 'login' %}?next={% url 'designer:list' %}" style="color: var(--lot-gold); font-weight: 600;">Sign in</a> or <a href="{% url 'register' %}?next={% url 'designer:list' %}" style="color: var(--lot-gold); font-weight: 600;">create a free account</a> to keep them safe and get quotes.</div>
+    </div>
+    {% endif %}
+    <div class="dsl-designs">
+      {% for item in designs %}
+      <a class="dsl-design reveal" href="{% if item.status == 'draft' or item.status == 'changes_requested' %}{% url 'designer:editor' item.uid %}{% else %}{% url 'designer:detail' item.uid %}{% endif %}">
+        {% if item.preview %}<img src="{{ item.preview.url }}" alt="{{ item.product.name }} design preview" loading="lazy">{% else %}<img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" loading="lazy">{% endif %}
+        <div class="dsl-design__body">
+          <span class="dsl-status dsl-status--{{ item.status }}">{{ item.get_status_display }}</span>
+          <h3>{{ item.product.name }}</h3>
+          <small>Updated {{ item.updated_at|naturaltime }}</small>
+          <span class="dsl-design__cta">{% if item.status == 'draft' or item.status == 'changes_requested' %}Continue editing{% elif item.status == 'quoted' %}View your quote{% else %}Track progress{% endif %} <i class="fa fa-arrow-right"></i></span>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
   {% endif %}
-</section>
+</div>
 {% endblock %}

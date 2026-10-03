@@ -99,3 +99,74 @@ class DesignerFlowTests(TestCase):
         shop = self.client.get(reverse("merchs"))
         self.assertEqual(shop.status_code, 200)
         self.assertNotContains(shop, self.product.name)
+
+
+class GuestDesignTests(TestCase):
+    def setUp(self):
+        self.staff = User.objects.create_user(email="staff@example.com", phone="+2348000000003", password="pass12345", is_staff=True)
+        self.size = Sizes.objects.create(name="Large")
+        self.product = Product.objects.create(user=self.staff, name="Blank Hoodie", image=image_file(), price=9000, stock=20, description="Hoodie", customizable=True)
+        self.product.size.add(self.size)
+        self.mockup = ProductMockupView.objects.create(product=self.product, name="Front", image=image_file("front.png"))
+
+    def _start(self, client=None):
+        client = client or self.client
+        response = client.get(reverse("designer:start", args=[self.product.uid]))
+        self.assertEqual(response.status_code, 302)
+        return DesignRequest.objects.get(uid=response.url.rstrip("/").split("/")[-2])
+
+    def test_guest_can_start_save_and_upload_without_an_account(self):
+        design = self._start()
+        self.assertIsNone(design.customer)
+        self.assertTrue(design.guest_key)
+        self.assertEqual(self.client.get(reverse("designer:editor", args=[design.uid])).status_code, 200)
+        payload = {"design": {"views": {str(self.mockup.pk): [{"type": "text", "text": "Blessed"}]}}}
+        save = self.client.post(reverse("designer:save", args=[design.uid]), json.dumps(payload), content_type="application/json")
+        self.assertEqual(save.status_code, 200)
+        upload = self.client.post(reverse("designer:asset", args=[design.uid]), {"image": image_file("art.png")})
+        self.assertEqual(upload.status_code, 200)
+        self.assertContains(self.client.get(reverse("designer:list")), "Blank Hoodie")
+
+    def test_reopening_customize_reuses_an_untouched_draft(self):
+        first = self._start()
+        second = self._start()
+        self.assertEqual(first.pk, second.pk)
+        self.assertEqual(DesignRequest.objects.count(), 1)
+
+    def test_other_visitor_cannot_open_a_guest_design(self):
+        design = self._start()
+        stranger = self.client_class()
+        self.assertEqual(stranger.get(reverse("designer:editor", args=[design.uid])).status_code, 404)
+        payload = {"design": {"views": {}}}
+        self.assertEqual(stranger.post(reverse("designer:save", args=[design.uid]), json.dumps(payload), content_type="application/json").status_code, 404)
+
+    def test_guest_submit_asks_for_sign_in_and_login_claims_the_design(self):
+        design = self._start()
+        response = self.client.post(reverse("designer:submit", args=[design.uid]), {"rights_confirmed": "on"})
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse("login"), response.url)
+        self.assertIn("next=", response.url)
+        User.objects.create_user(email="new@example.com", phone="+2348000000009", password="pass12345")
+        self.client.post(reverse("login"), {"username": "new@example.com", "password": "pass12345"})
+        design.refresh_from_db()
+        self.assertEqual(design.customer.email, "new@example.com")
+        self.assertEqual(design.guest_key, "")
+        self.assertEqual(self.client.get(reverse("designer:editor", args=[design.uid])).status_code, 200)
+
+    def test_guest_who_signs_up_returns_to_their_design(self):
+        design = self._start()
+        editor = reverse("designer:editor", args=[design.uid])
+        response = self.client.post(reverse("register") + "?next=" + editor, {
+            "first_name": "Ada", "last_name": "Obi", "phone": "+2348000000777", "email": "ada@example.com",
+            "password1": "S3cure-pass-123", "password2": "S3cure-pass-123", "next": editor,
+        })
+        self.assertRedirects(response, editor, fetch_redirect_response=False)
+        design.refresh_from_db()
+        self.assertEqual(design.customer.email, "ada@example.com")
+
+    def test_sign_up_ignores_off_site_next(self):
+        response = self.client.post(reverse("register"), {
+            "first_name": "Ada", "last_name": "Obi", "phone": "+2348000000778", "email": "ada2@example.com",
+            "password1": "S3cure-pass-123", "password2": "S3cure-pass-123", "next": "https://evil.example.com/",
+        })
+        self.assertRedirects(response, "/", fetch_redirect_response=False)

@@ -1,14 +1,336 @@
-{% extends "base.html" %}{% load static %}
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Design studio: {{ design.product.name }} |{% endblock title %}
+{% block body_class %}ds-focus{% endblock %}
 {% block main %}
-<link rel="stylesheet" href="{% static 'designer/designer.css' %}?v=20261003-picker">
-<section class="studio" id="studio" data-save-url="{% url 'designer:save' design.uid %}" data-asset-url="{% url 'designer:asset' design.uid %}">
-<header class="studio__head"><div><a href="{% url 'designer:list' %}">← My designs</a><h1>Customize {{ design.product.name }}</h1><span id="save-state">Changes saved automatically</span></div><div class="studio__actions"><button type="button" id="save-btn" class="btn lot-btn-secondary">Save draft</button><button type="button" id="open-submit" class="btn">Review & submit</button></div></header>
-<nav class="view-tabs" aria-label="Product views">{% for view in mockups %}<button type="button" class="view-tab{% if forloop.first %} active{% endif %}" data-id="{{ view.id }}" data-name="{{ view.name }}" data-image="{{ view.image.url }}" data-x="{{ view.print_x }}" data-y="{{ view.print_y }}" data-w="{{ view.print_width }}" data-h="{{ view.print_height }}">{{ view.name }}</button>{% endfor %}</nav>
-<div class="studio__layout"><aside class="toolbox" id="toolbox"><h2>Add</h2><label class="tool"><i class="fa fa-image"></i> Upload artwork<input id="image-upload" type="file" accept="image/png,image/jpeg,image/webp" hidden></label><button type="button" class="tool" data-add="text"><i class="fa fa-font"></i> Text</button><button type="button" class="tool" data-add="rect"><i class="fa fa-square"></i> Rectangle</button><button type="button" class="tool" data-add="circle"><i class="fa fa-circle"></i> Circle</button><button type="button" class="tool" data-add="draw"><i class="fa fa-pencil"></i> Draw</button><h2>Edit</h2><label>Colour <input id="object-color" type="color" value="#111111"></label><label>Size <input id="object-size" type="range" min="12" max="180" value="48"></label><label>Rotation <input id="object-rotation" type="range" min="-180" max="180" value="0"></label><div class="tool-row"><button type="button" id="duplicate">Duplicate</button><button type="button" id="remove">Delete</button></div><div class="tool-row"><button type="button" id="layer-up">Layer ↑</button><button type="button" id="layer-down">Layer ↓</button></div><div class="tool-row"><button type="button" id="undo">Undo</button><button type="button" id="redo">Redo</button></div></aside>
-<main class="canvas-wrap"><div class="canvas-stage"><canvas id="design-canvas" width="900" height="900" aria-label="Product design canvas"></canvas></div><p class="canvas-help">Drag artwork to position it. Use the size and rotation controls for the selected item. Everything must remain inside the dotted print area.</p></main>
-<aside class="layers"><h2>Layers</h2><div id="layer-list"></div><label>Zoom <input id="zoom" type="range" min="50" max="150" value="100"></label></aside></div>
-<dialog id="submit-dialog"><form method="post" action="{% url 'designer:submit' design.uid %}">{% csrf_token %}<button type="button" class="dialog-close" aria-label="Close">×</button><h2>Request your quote</h2><label>Colour or variant <input id="variant" value="{{ design.variant }}" maxlength="100"></label><fieldset><legend>Quantity by size</legend>{% for size in sizes %}<label>{{ size.name }} <input class="size-qty" type="number" data-size="{{ size.id }}" min="0" max="10000" value="0" inputmode="numeric"></label>{% endfor %}</fieldset><label>Production note <textarea id="note" maxlength="4000">{{ design.note }}</textarea></label><label class="rights"><input name="rights_confirmed" type="checkbox" required> I own or have permission to use this artwork and authorize LOTStore to produce it.</label><button type="submit" class="btn" id="submit-final">Submit for cost</button></form></dialog>
+<link rel="stylesheet" href="{% static 'designer/designer.css' %}?v=20261003-studio">
+<section class="ds" id="studio"
+         data-save-url="{% url 'designer:save' design.uid %}"
+         data-asset-url="{% url 'designer:asset' design.uid %}"
+         data-authed="{% if user.is_authenticated %}1{% else %}0{% endif %}"
+         data-variant="{{ design.variant }}" data-note="{{ design.note }}">
+
+  {# ---------- Top bar ---------- #}
+  <header class="ds-bar">
+    <div class="ds-bar__left">
+      <a href="{% url 'designer:list' %}" class="ds-icon-btn" aria-label="Back to the design studio" title="Back"><i class="fa fa-arrow-left"></i></a>
+      <div class="ds-bar__title">
+        <small>Design studio</small>
+        <h1>{{ design.product.name }}</h1>
+      </div>
+      <span class="ds-save" id="save-state" data-state="saved" role="status" aria-live="polite"><i></i><span>All changes saved</span></span>
+    </div>
+    <div class="ds-bar__right">
+      <button type="button" class="ds-icon-btn" id="undo" title="Undo (Ctrl+Z)" aria-label="Undo"><i class="fa fa-undo"></i></button>
+      <button type="button" class="ds-icon-btn" id="redo" title="Redo (Ctrl+Shift+Z)" aria-label="Redo"><i class="fa fa-repeat"></i></button>
+      <button type="button" class="ds-icon-btn" id="preview-toggle" aria-pressed="false" title="Preview without guides" aria-label="Preview"><i class="fa fa-eye"></i></button>
+      <button type="button" class="ds-icon-btn" id="help-btn" title="How it works" aria-label="How it works"><i class="fa fa-question"></i></button>
+      <button type="button" class="btn ds-cta" id="open-submit"><i class="fa fa-paper-plane"></i> <span>Get a quote</span></button>
+    </div>
+  </header>
+
+  {% if not user.is_authenticated %}
+  <div class="ds-guest">
+    <i class="fa fa-info-circle"></i>
+    <span>You're designing as a guest. Your work saves automatically on this device. <a href="{{ login_next }}">Sign in</a> or <a href="{{ register_next }}">create a free account</a> to keep it safe.</span>
+  </div>
+  {% endif %}
+
+  <div class="ds-layout">
+    {# ---------- Tool rail (bottom bar on phones) ---------- #}
+    <div class="ds-rail" role="tablist" aria-label="Design tools">
+      <button type="button" class="is-active" data-panel="upload" role="tab" aria-selected="true"><i class="fa fa-cloud-upload"></i><span>Upload</span></button>
+      <button type="button" data-panel="text" role="tab" aria-selected="false"><i class="fa fa-font"></i><span>Text</span></button>
+      <button type="button" data-panel="shapes" role="tab" aria-selected="false"><i class="fa fa-star"></i><span>Shapes</span></button>
+      <button type="button" data-panel="draw" role="tab" aria-selected="false"><i class="fa fa-pencil"></i><span>Draw</span></button>
+      <button type="button" data-panel="layers" role="tab" aria-selected="false"><i class="fa fa-clone"></i><span>Layers</span></button>
+    </div>
+
+    {# ---------- Tool panel ---------- #}
+    <div class="ds-panel" role="region" aria-label="Tool options">
+      <div class="ds-sheet-grip" data-close-sheet aria-hidden="true"></div>
+
+      <div class="ds-pane is-active" data-pane="upload">
+        <h2>Upload artwork</h2>
+        <p class="ds-muted">Add a logo, photo or drawing. You can resize and move it on the product.</p>
+        <label class="ds-drop" id="drop-zone">
+          <span class="ds-drop__icon"><i class="fa fa-cloud-upload"></i></span>
+          <strong>Drop an image here</strong>
+          <span>or <u>tap to browse</u></span>
+          <small>PNG, JPG or WebP · up to 8 MB</small>
+          <input id="image-upload" type="file" accept="image/png,image/jpeg,image/webp" hidden>
+        </label>
+        <div class="ds-progress" id="upload-progress" hidden><span></span></div>
+        <h3>Your uploads</h3>
+        <div class="ds-assets" id="asset-list">
+          {% for asset in assets %}
+          <button type="button" class="ds-asset" data-src="{{ asset.image.url }}" aria-label="Add {{ asset.original_name }} again"><img src="{{ asset.image.url }}" alt=""></button>
+          {% empty %}
+          <p class="ds-muted" id="assets-empty">Images you upload will appear here so you can reuse them.</p>
+          {% endfor %}
+        </div>
+        <div class="ds-tip"><i class="fa fa-lightbulb-o"></i><span>PNG files with a transparent background look best on fabric.</span></div>
+      </div>
+
+      <div class="ds-pane" data-pane="text">
+        <h2>Add text</h2>
+        <form id="text-form" class="ds-textform">
+          <textarea id="text-input" rows="2" maxlength="120" placeholder="Type your message..."></textarea>
+          <button type="submit" class="btn"><i class="fa fa-plus"></i> Add to design</button>
+        </form>
+        <h3>Quick ideas</h3>
+        <div class="ds-phrases">
+          <button type="button" data-phrase="Faith over fear">Faith over fear</button>
+          <button type="button" data-phrase="Blessed">Blessed</button>
+          <button type="button" data-phrase="Jesus Saves">Jesus Saves</button>
+          <button type="button" data-phrase="Walk by faith">Walk by faith</button>
+          <button type="button" data-phrase="Grace upon grace">Grace upon grace</button>
+          <button type="button" data-phrase="God is able">God is able</button>
+          <button type="button" data-phrase="Child of God">Child of God</button>
+          <button type="button" data-phrase="Layers of Truth">Layers of Truth</button>
+        </div>
+        <p class="ds-muted ds-small">Tip: double-click text on the product to edit it.</p>
+      </div>
+
+      <div class="ds-pane" data-pane="shapes">
+        <h2>Shapes &amp; symbols</h2>
+        <div class="ds-shapes">
+          <button type="button" data-shape="cross"><svg viewBox="0 0 40 40"><rect x="16" y="4" width="8" height="32" rx="1"/><rect x="7" y="11" width="26" height="7" rx="1"/></svg><span>Cross</span></button>
+          <button type="button" data-shape="heart"><svg viewBox="0 0 40 40"><path d="M20 34 C4 22 6 8 14 8 C17 8 19 10 20 12 C21 10 23 8 26 8 C34 8 36 22 20 34Z"/></svg><span>Heart</span></button>
+          <button type="button" data-shape="star"><svg viewBox="0 0 40 40"><path d="M20 3l5 11 12 1-9 8 3 12-11-6-11 6 3-12-9-8 12-1z"/></svg><span>Star</span></button>
+          <button type="button" data-shape="circle"><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="15"/></svg><span>Circle</span></button>
+          <button type="button" data-shape="rect"><svg viewBox="0 0 40 40"><rect x="6" y="10" width="28" height="20" rx="2"/></svg><span>Rectangle</span></button>
+          <button type="button" data-shape="triangle"><svg viewBox="0 0 40 40"><path d="M20 6 L35 33 H5Z"/></svg><span>Triangle</span></button>
+        </div>
+        <p class="ds-muted ds-small">Pick a colour for the shape after adding it.</p>
+      </div>
+
+      <div class="ds-pane" data-pane="draw">
+        <h2>Freehand drawing</h2>
+        <p class="ds-muted">Draw your own lines and signatures inside the dotted print area.</p>
+        <button type="button" class="btn ds-wide" id="draw-toggle"><i class="fa fa-pencil"></i> Start drawing</button>
+        <label class="ds-label" for="brush-size">Brush size</label>
+        <input type="range" id="brush-size" min="2" max="30" value="8">
+        <span class="ds-label">Brush colour</span>
+        <div class="ds-swatches ds-swatches--sm">
+          <button type="button" class="ds-swatch" data-brush-color="#111111" style="background:#111111" aria-label="Black"></button>
+          <button type="button" class="ds-swatch" data-brush-color="#ffffff" style="background:#ffffff" aria-label="White"></button>
+          <button type="button" class="ds-swatch" data-brush-color="#cdab4b" style="background:#cdab4b" aria-label="Gold"></button>
+          <button type="button" class="ds-swatch" data-brush-color="#c62828" style="background:#c62828" aria-label="Red"></button>
+          <button type="button" class="ds-swatch" data-brush-color="#1e3a8a" style="background:#1e3a8a" aria-label="Navy"></button>
+        </div>
+      </div>
+
+      <div class="ds-pane" data-pane="layers">
+        <h2>Layers</h2>
+        <p class="ds-muted ds-small">Items at the top sit in front. Tap one to select it.</p>
+        <ol class="ds-layers" id="layer-list"></ol>
+        <p class="ds-muted" id="layers-empty">Nothing on this side yet.</p>
+      </div>
+    </div>
+
+    {# ---------- Canvas ---------- #}
+    <main class="ds-canvas-area">
+      <div class="ds-views" role="tablist" aria-label="Product sides">
+        {% for view in mockups %}
+        <button type="button" class="ds-view{% if forloop.first %} is-active{% endif %}" role="tab" aria-selected="{% if forloop.first %}true{% else %}false{% endif %}"
+                data-id="{{ view.id }}" data-name="{{ view.name }}" data-image="{{ view.image.url }}"
+                data-x="{{ view.print_x }}" data-y="{{ view.print_y }}" data-w="{{ view.print_width }}" data-h="{{ view.print_height }}">
+          <img src="{{ view.image.url }}" alt="">
+          <span>{{ view.name }}</span>
+          <em class="ds-view__count" hidden></em>
+        </button>
+        {% endfor %}
+      </div>
+
+      <div class="ds-stage-wrap">
+        <div class="ds-stage" id="stage">
+          <canvas id="design-canvas" width="900" height="900" aria-label="Design canvas for {{ design.product.name }}"></canvas>
+          <div class="ds-empty-hint" id="empty-hint">
+            <span class="ds-empty-hint__icon"><i class="fa fa-magic"></i></span>
+            <strong>Start your design</strong>
+            <span>Add artwork or text inside the dotted area</span>
+            <div>
+              <button type="button" class="btn btn-sm" data-open-panel="upload"><i class="fa fa-cloud-upload"></i> Upload</button>
+              <button type="button" class="btn btn-sm lot-btn-secondary" data-open-panel="text"><i class="fa fa-font"></i> Add text</button>
+            </div>
+          </div>
+          <div class="ds-drop-overlay"><i class="fa fa-cloud-upload"></i> Drop to add your image</div>
+          <button type="button" class="btn btn-sm ds-draw-done" id="draw-done"><i class="fa fa-check"></i> Done drawing</button>
+        </div>
+      </div>
+
+      <div class="ds-canvas-foot">
+        <span class="ds-warn" id="area-warn" hidden><i class="fa fa-exclamation-triangle"></i> Part of this item is outside the print area and won't be printed.</span>
+        <div class="ds-zoom" role="group" aria-label="Zoom">
+          <button type="button" id="zoom-out" aria-label="Zoom out"><i class="fa fa-minus"></i></button>
+          <span id="zoom-label">100%</span>
+          <button type="button" id="zoom-in" aria-label="Zoom in"><i class="fa fa-plus"></i></button>
+          <button type="button" id="zoom-fit">Fit</button>
+        </div>
+      </div>
+    </main>
+
+    {# ---------- Properties of the selected item ---------- #}
+    <div class="ds-props" role="region" aria-label="Selected item">
+      <div id="props-empty" class="ds-props__empty">
+        <h2>How it works</h2>
+        <ol class="ds-steps">
+          <li><strong>Add</strong> artwork, text or a shape from the tools.</li>
+          <li><strong>Arrange</strong> it: drag to move, pull a corner to resize, use the gold handle to rotate.</li>
+          <li><strong>Get a quote.</strong> We review your design and email you a price. Nothing is charged until you accept.</li>
+        </ol>
+        <h3>Shortcuts</h3>
+        <ul class="ds-keys">
+          <li><kbd>Ctrl</kbd>+<kbd>Z</kbd> Undo</li>
+          <li><kbd>Ctrl</kbd>+<kbd>D</kbd> Duplicate</li>
+          <li><kbd>Del</kbd> Delete</li>
+          <li><kbd>←</kbd><kbd>→</kbd> Nudge</li>
+        </ul>
+      </div>
+
+      <div id="props-edit" hidden>
+        <div class="ds-props__head">
+          <h2 id="props-title">Item</h2>
+          <button type="button" class="ds-icon-btn" id="deselect" aria-label="Done editing" title="Done"><i class="fa fa-check"></i></button>
+        </div>
+
+        <div class="ds-field" data-for="text">
+          <label class="ds-label" for="prop-text">Text</label>
+          <textarea id="prop-text" rows="2" maxlength="120"></textarea>
+        </div>
+        <div class="ds-field ds-field--row" data-for="text">
+          <select id="prop-font" aria-label="Font">
+            <option value="Poppins" style="font-family: Poppins">Poppins</option>
+            <option value="Georgia" style="font-family: Georgia">Georgia</option>
+            <option value="Times New Roman" style="font-family: 'Times New Roman'">Times</option>
+            <option value="Impact" style="font-family: Impact">Impact</option>
+            <option value="Trebuchet MS" style="font-family: 'Trebuchet MS'">Trebuchet</option>
+            <option value="Courier New" style="font-family: 'Courier New'">Courier</option>
+            <option value="Brush Script MT" style="font-family: 'Brush Script MT'">Script</option>
+          </select>
+          <button type="button" class="ds-toggle" id="prop-bold" aria-label="Bold"><b>B</b></button>
+          <button type="button" class="ds-toggle" id="prop-italic" aria-label="Italic"><i>I</i></button>
+        </div>
+        <div class="ds-field" data-for="text shape path">
+          <span class="ds-label">Colour</span>
+          <div class="ds-swatches" id="swatches"></div>
+        </div>
+        <div class="ds-field">
+          <label class="ds-label" for="prop-size">Size <output id="size-out">100%</output></label>
+          <input type="range" id="prop-size" min="10" max="400" value="100">
+        </div>
+        <div class="ds-field">
+          <label class="ds-label" for="prop-rotation">Rotation <output id="rotation-out">0°</output></label>
+          <input type="range" id="prop-rotation" min="-180" max="180" value="0">
+        </div>
+        <div class="ds-field">
+          <label class="ds-label" for="prop-opacity">Opacity <output id="opacity-out">100%</output></label>
+          <input type="range" id="prop-opacity" min="10" max="100" value="100">
+        </div>
+
+        <div class="ds-actions">
+          <button type="button" data-act="center"><i class="fa fa-crosshairs"></i><span>Centre</span></button>
+          <button type="button" data-act="fit"><i class="fa fa-expand"></i><span>Fit area</span></button>
+          <button type="button" data-act="flip" data-for="image"><i class="fa fa-arrows-h"></i><span>Flip</span></button>
+          <button type="button" data-act="duplicate"><i class="fa fa-clone"></i><span>Copy</span></button>
+          <button type="button" data-act="forward"><i class="fa fa-arrow-up"></i><span>Forward</span></button>
+          <button type="button" data-act="backward"><i class="fa fa-arrow-down"></i><span>Back</span></button>
+          <button type="button" data-act="delete" class="ds-act-danger"><i class="fa fa-trash"></i><span>Delete</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# ---------- Get a quote ---------- #}
+  <dialog id="submit-dialog" class="ds-dialog" aria-labelledby="submit-title">
+    <button type="button" class="ds-dialog__close" data-close-dialog aria-label="Close"><i class="fa fa-times"></i></button>
+    {% if user.is_authenticated %}
+    <form method="post" action="{% url 'designer:submit' design.uid %}" id="submit-form" novalidate>
+      {% csrf_token %}
+      <span class="lot-eyebrow"><i class="fa fa-paper-plane"></i> Almost done</span>
+      <h2 id="submit-title">Request your quote</h2>
+      <p class="ds-muted">We'll review your design and email you a price. Nothing is charged until you accept the quote.</p>
+      <div class="ds-previews" id="submit-previews"></div>
+
+      <fieldset class="ds-qty">
+        <legend>How many do you need? <span>Total: <b id="qty-total">0</b></span></legend>
+        {% for size in sizes %}
+        <div class="ds-qty__row">
+          <span>{{ size.name }}</span>
+          <div class="lot-stepper">
+            <button type="button" data-qty-step="-1" aria-label="Fewer {{ size.name }}"><i class="fa fa-minus"></i></button>
+            <input class="size-qty" type="number" data-size="{{ size.id }}" min="0" max="10000" value="0" inputmode="numeric" aria-label="Quantity in {{ size.name }}">
+            <button type="button" data-qty-step="1" aria-label="More {{ size.name }}"><i class="fa fa-plus"></i></button>
+          </div>
+        </div>
+        {% empty %}
+        <div class="ds-qty__row">
+          <span>Quantity</span>
+          <div class="lot-stepper">
+            <button type="button" data-qty-step="-1" aria-label="Fewer"><i class="fa fa-minus"></i></button>
+            <input class="size-qty" type="number" data-size="0" min="0" max="10000" value="0" inputmode="numeric" aria-label="Quantity">
+            <button type="button" data-qty-step="1" aria-label="More"><i class="fa fa-plus"></i></button>
+          </div>
+        </div>
+        {% endfor %}
+      </fieldset>
+
+      <label class="ds-label" for="variant">Product colour <small class="ds-muted">optional</small></label>
+      <input id="variant" class="lot-input" value="{{ design.variant }}" maxlength="100" placeholder="e.g. Black, navy, white">
+      <label class="ds-label" for="note">Notes for our team <small class="ds-muted">optional</small></label>
+      <textarea id="note" class="lot-input" rows="3" maxlength="4000" placeholder="Anything we should know: deadline, placement, colours...">{{ design.note }}</textarea>
+
+      <label class="ds-rights"><input id="rights" name="rights_confirmed" type="checkbox"> <span>I own or have permission to use this artwork, and I authorize LOT Store to print it.</span></label>
+      <p class="ds-error" id="submit-error" role="alert" hidden></p>
+      <button type="submit" class="btn lot-pdp__cta" id="submit-final"><i class="fa fa-paper-plane"></i> Submit for a quote</button>
+    </form>
+    {% else %}
+    <div class="ds-guest-submit">
+      <span class="lot-eyebrow"><i class="fa fa-star"></i> Great design!</span>
+      <h2 id="submit-title">Sign in to get your quote</h2>
+      <p class="ds-muted">Your design is saved. Create a free account or sign in so we can email your quote and you can track your order. You'll come straight back here.</p>
+      <div class="ds-previews" id="submit-previews"></div>
+      <div class="ds-guest-submit__actions">
+        <a href="{{ register_next }}" class="btn"><i class="fa fa-user-plus"></i> Create free account</a>
+        <a href="{{ login_next }}" class="btn lot-btn-secondary"><i class="fa fa-sign-in"></i> I have an account</a>
+      </div>
+      <button type="button" class="ds-link" data-close-dialog>Keep designing</button>
+    </div>
+    {% endif %}
+  </dialog>
+
+  {# ---------- First-visit guide ---------- #}
+  <div class="ds-coach" id="coach" hidden role="dialog" aria-modal="true" aria-labelledby="coach-title">
+    <div class="ds-coach__card">
+      <div class="ds-coach__step">
+        <span class="ds-coach__icon"><i class="fa fa-magic"></i></span>
+        <h2 id="coach-title">Welcome to the design studio</h2>
+        <p>Make {{ design.product.name|lower }} your own in a few taps. No design skills needed.</p>
+      </div>
+      <div class="ds-coach__step" hidden>
+        <span class="ds-coach__icon"><i class="fa fa-cloud-upload"></i></span>
+        <h2>Add artwork or text</h2>
+        <p>Upload a picture, type a message or try one of our quick faith phrases and symbols.</p>
+      </div>
+      <div class="ds-coach__step" hidden>
+        <span class="ds-coach__icon"><i class="fa fa-arrows"></i></span>
+        <h2>Drag, resize and rotate</h2>
+        <p>Drag to move. Pull a corner to resize. Use the gold handle to rotate. Keep it inside the dotted print area.</p>
+      </div>
+      <div class="ds-coach__step" hidden>
+        <span class="ds-coach__icon"><i class="fa fa-paper-plane"></i></span>
+        <h2>Get a quote</h2>
+        <p>When you're happy, tap <b>Get a quote</b>. We'll review your design and email you a price. Nothing is charged until you accept.</p>
+      </div>
+      <div class="ds-coach__dots" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+      <div class="ds-coach__actions">
+        <button type="button" class="ds-link" id="coach-skip">Skip</button>
+        <button type="button" class="btn" id="coach-next">Next</button>
+      </div>
+    </div>
+  </div>
 </section>
 {{ design.current_design|json_script:"saved-design" }}{{ design.size_quantities|json_script:"saved-quantities" }}
-<script src="{% static 'designer/designer.js' %}"></script>
+<script src="{% static 'designer/designer.js' %}?v=20261003-studio"></script>
 {% endblock %}

@@ -1,4 +1,5 @@
 from django.db.models import Sum
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, authenticate, logout
@@ -19,6 +20,14 @@ def logout_view(request):
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
+
+def _safe_next(request):
+    """The page to return to after sign-up, only if it is on this site."""
+    target = request.POST.get('next') or request.GET.get('next')
+    if target and url_has_allowed_host_and_scheme(target, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
+        return target
+    return None
+
 
 def signup(request):
     if request.method == 'POST':
@@ -52,10 +61,10 @@ def signup(request):
                 # User creation should not fail when email delivery is unavailable.
                 pass
             
-            return redirect('/')
+            return redirect(_safe_next(request) or '/')
     else:
         form = RegisterForm()
-    return render(request, 'account/register.html', {'form': form})
+    return render(request, 'account/register.html', {'form': form, 'next': _safe_next(request) or ''})
 
 
 @login_required

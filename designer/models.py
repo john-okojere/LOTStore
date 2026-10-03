@@ -40,7 +40,10 @@ class DesignRequest(models.Model):
         ("delivered", "Delivered"), ("rejected", "Rejected"),
     ]
     uid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
-    customer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="design_requests")
+    # Guests can design without an account: their drafts carry a per-browser
+    # guest_key (kept in the session) and are moved to the account on sign-in.
+    customer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="design_requests", null=True, blank=True)
+    guest_key = models.CharField(max_length=64, blank=True, db_index=True)
     product = models.ForeignKey("shelf.Product", on_delete=models.PROTECT, related_name="design_requests")
     status = models.CharField(max_length=24, choices=STATUSES, default="draft", db_index=True)
     variant = models.CharField(max_length=100, blank=True)
@@ -63,8 +66,13 @@ class DesignRequest(models.Model):
             except (TypeError, ValueError): pass
         return total
 
+    @property
+    def object_count(self):
+        views = (self.current_design or {}).get("views") or {}
+        return sum(len(items) for items in views.values() if isinstance(items, list))
+
     def __str__(self):
-        return f"{self.product.name} design by {self.customer}"
+        return f"{self.product.name} design by {self.customer or 'guest'}"
 
 
 class DesignVersion(models.Model):

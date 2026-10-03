@@ -1,5 +1,77 @@
-{% extends "base.html" %}{% load humanize static %}
-{% block main %}<section class="lot-section design-page"><a href="{% url 'designer:list' %}">← My designs</a><div class="design-detail"><div>{% if design.preview %}<img class="detail-preview" src="{{ design.preview.url }}" alt="Design preview">{% else %}<img class="detail-preview" src="{{ design.product.image.url }}" alt="{{ design.product.name }}">{% endif %}</div><div><span class="status status--{{ design.status }}">{{ design.get_status_display }}</span><h1>{{ design.product.name }}</h1><p>{{ design.total_quantity }} item{{ design.total_quantity|pluralize }} requested{% if design.variant %} · {{ design.variant }}{% endif %}</p>{% if design.note %}<p><strong>Note:</strong> {{ design.note }}</p>{% endif %}
-{% if design.status == 'quoted' %}<div class="quote-box"><p>Your production quote</p><strong>₦{{ design.quote.amount|intcomma }}</strong>{% if design.quote.explanation %}<p>{{ design.quote.explanation }}</p>{% endif %}<div class="quote-actions"><form method="post" action="{% url 'designer:quote_decision' design.uid 'accept' %}">{% csrf_token %}<button class="btn">Accept and checkout</button></form><form method="post" action="{% url 'designer:quote_decision' design.uid 'decline' %}">{% csrf_token %}<button class="btn lot-btn-secondary">Decline</button></form></div></div>{% endif %}
-{% if design.status == 'changes_requested' %}<a class="btn" href="{% url 'designer:editor' design.uid %}">Edit requested changes</a>{% endif %}
-<h2>Updates</h2><div class="timeline">{% for note in design.messages.all %}<article><strong>{{ note.author.full_name|default:"LOTStore" }}</strong><p>{{ note.body }}</p><small>{{ note.created_at|naturaltime }}</small></article>{% empty %}<p>No messages yet. We will update this page after review.</p>{% endfor %}</div></div></div></section>{% endblock %}
+{% extends "base.html" %}
+{% load humanize static %}
+{% block title %}{{ design.product.name }} design |{% endblock title %}
+{% block main %}
+<link rel="stylesheet" href="{% static 'designer/designer.css' %}?v=20261003-studio">
+<div class="lot-page">
+  <div class="lot-crumbs reveal" role="navigation" aria-label="Breadcrumb">
+    <a href="{% url 'designer:list' %}">Design studio</a>
+    <i class="fa fa-angle-right"></i>
+    <span>{{ design.product.name }}</span>
+  </div>
+
+  <div class="dsl-detail">
+    <div class="dsl-detail__preview reveal">
+      {% if design.preview %}<img src="{{ design.preview.url }}" alt="Your {{ design.product.name }} design">{% else %}<img src="{{ design.product.image.url }}" alt="{{ design.product.name }}">{% endif %}
+    </div>
+
+    <div>
+      <section class="lot-form-card reveal">
+        <span class="dsl-status dsl-status--{{ design.status }}">{{ design.get_status_display }}</span>
+        <h1 style="margin: 10px 0 4px; font-size: clamp(1.4rem, 3vw, 1.9rem); font-weight: 700;">{{ design.product.name }}</h1>
+        <p class="lot-text-muted" style="margin: 0 !important;">
+          {{ design.total_quantity }} item{{ design.total_quantity|pluralize }}{% if design.variant %} · {{ design.variant }}{% endif %} · updated {{ design.updated_at|naturaltime }}
+        </p>
+
+        {% if design.status == 'quoted' %}
+        <div class="dsl-quote">
+          <p>Your production quote</p>
+          <strong>&#8358;{{ design.quote.amount|intcomma }}</strong>
+          {% if design.quote.explanation %}<p>{{ design.quote.explanation }}</p>{% endif %}
+          <div class="dsl-quote__actions">
+            <form method="post" action="{% url 'designer:quote_decision' design.uid 'accept' %}">{% csrf_token %}<button class="btn"><i class="fa fa-check"></i> Accept and checkout</button></form>
+            <form method="post" action="{% url 'designer:quote_decision' design.uid 'decline' %}">{% csrf_token %}<button class="btn lot-btn-secondary">Decline</button></form>
+          </div>
+        </div>
+        {% elif design.status == 'changes_requested' %}
+        <div class="lot-legal__note" style="margin-top: 16px;">
+          <i class="fa fa-pencil"></i>
+          <div><strong>Our team asked for a few changes.</strong> See the message below, update your design and send it again.
+            <div style="margin-top: 10px;"><a class="btn btn-sm" href="{% url 'designer:editor' design.uid %}"><i class="fa fa-paint-brush"></i> Edit my design</a></div>
+          </div>
+        </div>
+        {% elif design.status == 'rejected' or design.status == 'quote_declined' %}
+        <div class="lot-legal__note" style="margin-top: 16px;">
+          <i class="fa fa-info-circle"></i>
+          <div>{% if design.status == 'rejected' %}We couldn't produce this design.{% else %}You declined this quote.{% endif %} Questions? <a href="https://wa.me/2347044448932" target="_blank" rel="noopener" style="color: var(--lot-gold);">Chat with Pastor Oshoma</a>.</div>
+        </div>
+        {% endif %}
+
+        {% if design.status != 'rejected' and design.status != 'quote_declined' %}
+        <h2 style="margin: 22px 0 0; font-size: 1rem; font-weight: 600;">Progress</h2>
+        <ol class="dsl-track">
+          {% for step in track %}<li class="{% if step.state %}is-{{ step.state }}{% endif %}">{{ step.label }}</li>{% endfor %}
+        </ol>
+        {% endif %}
+
+        {% if design.note %}<p style="margin: 0 !important;"><strong>Your note:</strong> <span class="lot-text-muted">{{ design.note }}</span></p>{% endif %}
+      </section>
+
+      <section class="lot-section reveal">
+        <h2 class="lot-section__title" style="margin-bottom: 14px;">Messages from our team</h2>
+        <div class="dsl-messages">
+          {% for note in design.messages.all %}
+          <article class="dsl-message">
+            <strong>{{ note.author.first_name|default:"LOT Store" }}</strong>
+            <p>{{ note.body }}</p>
+            <small>{{ note.created_at|naturaltime }}</small>
+          </article>
+          {% empty %}
+          <p class="lot-text-muted">No messages yet. We'll update this page and email you after reviewing your design.</p>
+          {% endfor %}
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+{% endblock %}

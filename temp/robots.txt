@@ -5,3 +5,4 @@ Disallow: /cart/
 Disallow: /account/
 Disallow: /search
 Disallow: /filter/
+Disallow: /designs/
