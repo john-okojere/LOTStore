@@ -1,169 +1,125 @@
 {% extends "base.html" %}
 {% load static %}
+{% block title %}About Us |{% endblock title %}
 {% block main %}
-
-<style>
-    
-.about-section {
-  margin: 2rem auto;
-  max-width: 800px;
-  padding: 0 1rem;
-}
-
-.about-section h2 {
-  color: #fff;
-}
-
-</style>
-<style>
-    .carousel {
-     position: relative;
-     width: 100%;
-     overflow: hidden;
- }
- 
- .slides {
-     display: flex;
- }
- 
- .slide {
-     flex: 0 0 auto;
-     display: none;
- }
- 
- .slide img {
-     width: 100%;
- }
- 
- .active {
-     display: block;
- }
- 
- .indicators {
-     position: absolute;
-     bottom: 10px;
-     left: 50%;
-     transform: translateX(-50%);
-     display: flex;
- }
- 
- .indicator {
-     width: 10px;
-     height: 10px;
-     background-color: #ccc;
-     border-radius: 50%;
-     margin: 0 5px;
-     cursor: pointer;
- }
- 
- .active-indicator {
-     background-color: #555;
- }
- 
- </style>
- <div class="carousel">
-    <div class="slides one">
-        <div class="slide">
-            <img src="{% static 'home/img/6.png' %}" alt="Banner 1">
+<div class="lot-page">
+    <section class="lot-hero reveal">
+        <span class="lot-hero__cross" aria-hidden="true"></span>
+        <span class="lot-eyebrow"><i class="fa fa-heart"></i> About LOT Store</span>
+        <h1>Embrace your faith. <em>Wear your belief.</em></h1>
+        <p class="lot-hero__lead">LotStore is a distinguished hub for faith-inspired fashion and lifestyle products, catering to a diverse community of individuals who seek to express their beliefs with grace and sophistication.</p>
+        <div class="lot-hero__actions">
+            <a href="{% url 'merchs' %}" class="btn">Shop the collection <i class="fa fa-arrow-right"></i></a>
+            <a href="{% url 'contact' %}" class="btn lot-btn-secondary">Get in touch</a>
         </div>
-        <div class="slide">
-            <img src="{% static 'home/img/3.png' %}" alt="Banner 1">
+    </section>
+
+    <section class="lot-story">
+        <div class="reveal">
+            <span class="lot-eyebrow">Our story</span>
+            <h2 class="lot-section__title" style="margin-bottom: 16px;">More than a brand</h2>
+            <div class="lot-prose">
+                <p>We stand as more than just a brand; we are a beacon of inspiration and unity, bringing people together through our shared values and commitment to excellence.</p>
+                <p>Whether you're looking for a meaningful gift or a stylish addition to your wardrobe, LotStore has something for everyone. Our unique designs, commitment to quality, and dedication to customer satisfaction set us apart as a trusted and beloved destination for faith-inspired products.</p>
+            </div>
+            <div class="lot-stats">
+                <div class="lot-stat"><strong data-count-to="{{ product_count }}">{{ product_count }}</strong><span>Designs in store</span></div>
+                <div class="lot-stat"><strong data-count-to="{{ category_count }}">{{ category_count }}</strong><span>Collections</span></div>
+                <div class="lot-stat"><strong>12h</strong><span>Until production starts</span></div>
+            </div>
         </div>
-        <div class="slide">
-            <img src="{% static 'home/img/2.png' %}" alt="Banner 1">
+        <div class="lot-story__media reveal">
+            <div class="lot-carousel" data-carousel data-interval="5000" aria-roledescription="carousel" aria-label="LOT Store collections">
+                <div class="lot-carousel__track">
+                    <a href="{% url 'merchs' %}" class="lot-carousel__slide"><img src="{% static 'home/img/6.png' %}" alt="New arrivals at LOT Store"></a>
+                    <a href="{% url 'merchs' %}" class="lot-carousel__slide"><img src="{% static 'home/img/3.png' %}" alt="LOT Store collection" loading="lazy"></a>
+                    <a href="{% url 'merchs' %}" class="lot-carousel__slide"><img src="{% static 'home/img/2.png' %}" alt="LOT Store collection" loading="lazy"></a>
+                </div>
+                <div class="lot-carousel__dots"></div>
+            </div>
+            <div class="lot-story__badge"><i class="fa fa-check-circle"></i> Rooted in Christian values</div>
         </div>
-    </div>
-    <div class="indicators one"></div>
+    </section>
+
+    <section class="lot-grid-2" style="margin-bottom: 32px;">
+        <article class="lot-tile reveal">
+            <span class="lot-tile__icon"><i class="fa fa-bullseye"></i></span>
+            <h3>Our mission</h3>
+            <p>At LotStore, our mission is to empower individuals to boldly showcase their faith through stylish and meaningful apparel, accessories, and lifestyle products. We strive to create a welcoming space where people from all walks of life can come together to celebrate their beliefs, find inspiration, and connect with like-minded individuals.</p>
+        </article>
+        <article class="lot-tile reveal">
+            <span class="lot-tile__icon"><i class="fa fa-eye"></i></span>
+            <h3>Our vision</h3>
+            <p>We envision LotStore as a global leader in the faith-inspired retail sector, renowned for our unwavering dedication to quality, creativity, and inclusivity. Our goal is to inspire and uplift our community, fostering a sense of belonging and purpose through our carefully curated offerings and heartfelt connections.</p>
+        </article>
+    </section>
+
+    <blockquote class="lot-quote reveal">
+        Every item is crafted with care and attention to detail, so that every purchase is a meaningful expression of one's beliefs.
+    </blockquote>
+
+    <section class="lot-section">
+        <div class="lot-section__head reveal">
+            <h2 class="lot-section__title">What we offer</h2>
+            <a href="{% url 'merchs' %}" class="lot-section__link">Browse all <i class="fa fa-arrow-right"></i></a>
+        </div>
+        <p class="lot-text-muted reveal" style="max-width: 720px; margin-bottom: 18px; line-height: 1.8;">LotStore offers a diverse range of products designed to reflect the beauty and depth of faith.</p>
+        <div class="lot-grid-3">
+            <a href="{% url 'merchs' %}" class="lot-tile reveal">
+                <span class="lot-tile__icon"><i class="fa fa-tshirt"></i></span>
+                <h3>Graphic tees</h3>
+                <p>Stylish, faith-inspired prints made to be worn every day.</p>
+            </a>
+            <a href="{% url 'merchs' %}" class="lot-tile reveal">
+                <span class="lot-tile__icon"><i class="fa fa-gem"></i></span>
+                <h3>Elegant jewelry</h3>
+                <p>Thoughtful accessories that carry a message close to the heart.</p>
+            </a>
+            <a href="{% url 'merchs' %}" class="lot-tile reveal">
+                <span class="lot-tile__icon"><i class="fa fa-home"></i></span>
+                <h3>Cozy home decor</h3>
+                <p>Pieces that fill your space with faith and warmth.</p>
+            </a>
+        </div>
+    </section>
+
+    <section class="lot-section">
+        <div class="lot-section__head reveal">
+            <h2 class="lot-section__title">Our values</h2>
+        </div>
+        <div class="lot-grid-4">
+            <article class="lot-tile reveal">
+                <span class="lot-tile__icon"><i class="fa fa-cross"></i></span>
+                <h3>Faith-centered</h3>
+                <p>Our store is rooted in Christian values, and we strive to uphold integrity, compassion, and humility in everything we do.</p>
+            </article>
+            <article class="lot-tile reveal">
+                <span class="lot-tile__icon"><i class="fa fa-users"></i></span>
+                <h3>Community-oriented</h3>
+                <p>We believe in the power of community and seek to foster connections among believers by providing resources that promote spiritual growth and fellowship.</p>
+            </article>
+            <article class="lot-tile reveal">
+                <span class="lot-tile__icon"><i class="fa fa-award"></i></span>
+                <h3>Quality assurance</h3>
+                <p>We are committed to offering only the highest quality products, sourced from trusted suppliers who share our dedication to excellence.</p>
+            </article>
+            <article class="lot-tile reveal">
+                <span class="lot-tile__icon"><i class="fa fa-smile"></i></span>
+                <h3>Customer satisfaction</h3>
+                <p>Your satisfaction is our top priority. We aim to provide exceptional customer service and support so your shopping experience is enjoyable and fulfilling.</p>
+            </article>
+        </div>
+    </section>
+
+    <section class="lot-cta-band reveal">
+        <div>
+            <h2>Find something that speaks your faith</h2>
+            <p>New designs are added regularly. Questions? Pastor Oshoma is a message away.</p>
+        </div>
+        <div class="lot-cta-band__actions">
+            <a href="{% url 'merchs' %}" class="btn">Shop now <i class="fa fa-arrow-right"></i></a>
+            <a href="https://wa.me/2347044448932" target="_blank" rel="noopener" class="btn lot-btn-ghost"><i class="fa fa-whatsapp"></i> WhatsApp us</a>
+        </div>
+    </section>
 </div>
- 
- <script>
-     document.addEventListener("DOMContentLoaded", function() {
-     var slides = document.querySelectorAll(".slide");
-     var indicatorsContainer = document.querySelector(".indicators");
-     var currentSlide = 0;
- 
-     // Show the first slide initially
-     slides[currentSlide].classList.add("active");
- 
-     // Function to move to the next slide
-     function nextSlide() {
-         slides[currentSlide].classList.remove("active");
-         indicators[currentSlide].classList.remove("active-indicator");
-         currentSlide = (currentSlide + 1) % slides.length;
-         slides[currentSlide].classList.add("active");
-         indicators[currentSlide].classList.add("active-indicator");
-     }
- 
-     // Automatically move to the next slide every 5 seconds
-     setInterval(nextSlide, 5000);
- 
-     // Create indicators
-     var indicators = [];
-     for (var i = 0; i < slides.length; i++) {
-         var indicator = document.createElement("div");
-         indicator.classList.add("indicator");
-         if (i === currentSlide) {
-             indicator.classList.add("active-indicator");
-         }
-         indicators.push(indicator);
-         indicatorsContainer.appendChild(indicator);
-     }
- 
-     // Add click event listeners to indicators
-     indicators.forEach(function(indicator, index) {
-         indicator.addEventListener("click", function() {
-             slides[currentSlide].classList.remove("active");
-             indicators[currentSlide].classList.remove("active-indicator");
-             currentSlide = index;
-             slides[currentSlide].classList.add("active");
-             indicators[currentSlide].classList.add("active-indicator");
-         });
-     });
- });
- </script>
- <section class="about-section">
-    <h2>About LOTSTORE</h2>
-    <p>
-        LotStore is a distinguished hub for faith-inspired fashion and lifestyle products, catering to a diverse community of individuals who seek to express their beliefs with grace and sophistication. We stand as more than just a brand; we are a beacon of inspiration and unity, bringing people together through our shared values and commitment to excellence.
-    </p>
- </section>
-<section class="about-section">
-    <h2>Our Mission</h2>
-    <p>At LotStore, our mission is to empower individuals to boldly showcase their faith through stylish and meaningful apparel, accessories, and lifestyle products. We strive to create a welcoming space where people from all walks of life can come together to celebrate their beliefs, find inspiration, and connect with like-minded individuals.</p>
-  </section>
-
-  <section class="about-section">
-    <h2>Our Vision</h2>
-    <p>
-        We envision LotStore as a global leader in the faith-inspired retail sector, renowned for our unwavering dedication to quality, creativity, and inclusivity. Our goal is to inspire and uplift our community, fostering a sense of belonging and purpose through our carefully curated offerings and heartfelt connections.
-    </p>
-  </section>
-  <section class="about-section">
-<h2>
-    What We Offer
-
-</h2>
-<p>
-    LotStore offers a diverse range of products designed to reflect the beauty and depth of faith. From stylish graphic tees and elegant jewelry to cozy home decor, each item is crafted with care and attention to detail, ensuring that every purchase is a meaningful expression of one's beliefs.
-</p>
-  </section>
-  <section class="about-section">
-    <h2>Our Values</h2>
-    <ul>
-      <li><strong>Faith-Centered:</strong> Our store is rooted in Christian values, and we strive to uphold integrity, compassion, and humility in everything we do.</li>
-      <li><strong>Community-Oriented:</strong> We believe in the power of community and seek to foster connections among believers by providing resources that promote spiritual growth and fellowship.</li>
-      <li><strong>Quality Assurance:</strong> We are committed to offering only the highest quality products, sourced from trusted suppliers who share our dedication to excellence.</li>
-      <li><strong>Customer Satisfaction:</strong> Your satisfaction is our top priority. We aim to provide exceptional customer service and support to ensure that your shopping experience with us is enjoyable and fulfilling.</li>
-    </ul>
-  </section>
-<section class="about-section">
-<h2>
-    Why Choose LotStore:
-
-</h2>
-<p>
-    Whether you're looking for a meaningful gift or a stylish addition to your wardrobe, LotStore has something for everyone. Our unique designs, commitment to quality, and dedication to customer satisfaction set us apart as a trusted and beloved destination for faith-inspired products.
-</p>
-</section>
- 
 {% endblock main %}

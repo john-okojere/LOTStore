@@ -1,8 +1,10 @@
+from django.db.models import Sum
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, authenticate, logout
 from .models import User, ProfilePic
 from .forms import RegisterForm, EditRegisterForm, ProfileForm
+from cart.models import Payment
 
 from django.conf import settings
 from django.contrib import messages
@@ -63,11 +65,15 @@ def profile(request, uid):
         return redirect('profile', uid=request.user.uid)
     profile_pic = getattr(person, 'profilepic', None)
     about = getattr(person, 'aboutprofile', None)
+    paid = Payment.objects.filter(user=person, verified=True)
     return render(request, 'account/index.html', {
         'person': person,
         'profile_pic': profile_pic,
         'about': about,
         'profile_form': ProfileForm(),
+        'order_count': paid.count(),
+        'total_spent': paid.aggregate(total=Sum('amount'))['total'] or 0,
+        'recent_orders': paid.select_related('order')[:3],
     })
 
 @login_required

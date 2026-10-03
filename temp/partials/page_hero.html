@@ -1,0 +1,7 @@
+{# Usage: {% include "partials/page_hero.html" with eyebrow="Policies" icon="fa-shield" title="Return Policy" lead="..." %} #}
+<section class="lot-hero reveal">
+    <span class="lot-hero__cross" aria-hidden="true"></span>
+    {% if eyebrow %}<span class="lot-eyebrow">{% if icon %}<i class="fa {{ icon }}"></i>{% endif %} {{ eyebrow }}</span>{% endif %}
+    <h1>{{ title }}</h1>
+    {% if lead %}<p class="lot-hero__lead">{{ lead }}</p>{% endif %}
+</section>

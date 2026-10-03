@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% comment %}
+Shared layout for the policy pages. Child templates fill:
+  legal_title, legal_icon, legal_lead, legal_updated (optional), legal_content.
+Each section in legal_content is <section class="lot-legal__section" id="..."><h2>...</h2>...</section>;
+the table of contents and numbering are built from those headings by ui.js.
+{% endcomment %}
+{% block main %}
+<div class="lot-progress" id="lot-progress" aria-hidden="true"></div>
+<div class="lot-page">
+    <section class="lot-hero reveal">
+        <span class="lot-hero__cross" aria-hidden="true"></span>
+        <span class="lot-eyebrow"><i class="fa {% block legal_icon %}fa-file-text{% endblock %}"></i> Policies</span>
+        <h1>{% block legal_title %}{% endblock %}</h1>
+        <p class="lot-hero__lead">{% block legal_lead %}{% endblock %}</p>
+        <div class="lot-hero__meta">
+            <span><i class="fa fa-clock-o"></i><span data-read-time>A few minutes</span> read</span>
+            {% block legal_updated %}{% endblock %}
+            <span><i class="fa fa-envelope"></i>Questions? <a href="mailto:store@layersoftruth.org" style="color: var(--lot-gold);">store@layersoftruth.org</a></span>
+        </div>
+    </section>
+
+    <div class="lot-policy-tabs reveal" role="navigation" aria-label="Store policies">
+        {% url 'return-policy' as u_return %}{% url 'delivery-policy' as u_delivery %}{% url 'privacy-policy' as u_privacy %}{% url 'TermsCondition' as u_terms %}
+        <a href="{{ u_return }}" class="{% if request.path == u_return %}is-active{% endif %}"><i class="fa fa-undo"></i> Return Policy</a>
+        <a href="{{ u_delivery }}" class="{% if request.path == u_delivery %}is-active{% endif %}"><i class="fa fa-truck"></i> Delivery Policy</a>
+        <a href="{{ u_privacy }}" class="{% if request.path == u_privacy %}is-active{% endif %}"><i class="fa fa-lock"></i> Privacy Policy</a>
+        <a href="{{ u_terms }}" class="{% if request.path|urlencode == u_terms or request.path == u_terms %}is-active{% endif %}"><i class="fa fa-balance-scale"></i> Terms &amp; Conditions</a>
+    </div>
+
+    <div class="lot-legal">
+        <div class="lot-legal__side">
+            <details class="lot-toc reveal" open data-toc>
+                <summary>On this page <i class="fa fa-chevron-down"></i></summary>
+                <ol></ol>
+            </details>
+        </div>
+        <article class="lot-legal__content" data-legal>
+            {% block legal_content %}{% endblock %}
+        </article>
+    </div>
+
+    <section class="lot-cta-band reveal">
+        <div>
+            <h2>Need help with an order?</h2>
+            <p>Our team is happy to answer any question about this policy.</p>
+        </div>
+        <div class="lot-cta-band__actions">
+            <a href="https://wa.me/2347044448932" target="_blank" rel="noopener" class="btn"><i class="fa fa-whatsapp"></i> WhatsApp Pastor Oshoma</a>
+            <a href="{% url 'contact' %}" class="btn lot-btn-ghost">Contact us</a>
+        </div>
+    </section>
+</div>
+{% endblock main %}

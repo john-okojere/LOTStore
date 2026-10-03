@@ -1,53 +1,163 @@
 {% extends "base.html" %}
-{% load static %}
-
+{% load static humanize %}
+{% block title %}{% if request.user == person %}My Profile{% else %}{{ person.first_name|title }}'s Profile{% endif %} |{% endblock title %}
 {% block main %}
-<div style="max-width: 960px; margin: 0 auto; padding: 20px;">
-  <h2 style="margin-bottom: 16px;">{% if request.user == person %}My Profile{% else %}{{ person.full_name|title }}{% endif %}</h2>
-  <div style="display: flex; flex-wrap: wrap; gap: 20px; background: #fff; color: #333; padding: 20px; border-radius: 8px;">
-    <div style="flex: 0 0 200px; text-align: center; margin: 0 auto;">
-      {% if profile_pic and profile_pic.image %}
-      <img src="{{ profile_pic.image.url }}" alt="Profile picture" style="width: 160px; height: 160px; border-radius: 50%; object-fit: cover;">
-      {% else %}
-      <img src="{% static 'assets/images/lg/avatar2.jpg' %}" alt="Default profile picture" style="width: 160px; height: 160px; border-radius: 50%; object-fit: cover;">
-      {% endif %}
-      {% if request.user == person %}
-      <form method="post" action="{% url 'upload' %}" enctype="multipart/form-data" style="margin-top: 12px; display: flex; flex-direction: column; gap: 8px; align-items: center;">
-        {% csrf_token %}
-        <label for="id_image" style="font-size: 0.9rem;">Change photo</label>
-        <input type="file" name="image" id="id_image" accept="image/*" required style="max-width: 200px; font-size: 0.8rem;">
-        <button type="submit" class="btn lot-btn-primary" style="padding: 6px 14px;">Upload</button>
-      </form>
-      {% endif %}
+<div class="lot-page">
+    <section class="lot-profile-hero reveal">
+        <div class="lot-profile-hero__cover"></div>
+        <div class="lot-profile-hero__body">
+            <div class="lot-profile-avatar" id="profile-avatar">
+                {% if profile_pic and profile_pic.image %}
+                <img src="{{ profile_pic.image.url }}" alt="Profile picture of {{ person.first_name }}" id="profile-avatar-img">
+                {% elif person.first_name %}
+                <span class="lot-profile-avatar__initial">{{ person.first_name|first|upper }}</span>
+                {% else %}
+                <span class="lot-profile-avatar__initial"><i class="fa fa-user"></i></span>
+                {% endif %}
+                {% if request.user == person %}
+                <form method="post" action="{% url 'upload' %}" enctype="multipart/form-data" id="avatar-form">
+                    {% csrf_token %}
+                    <label class="lot-profile-avatar__cam" for="id_image" title="Change photo" aria-label="Change profile photo"><i class="fa fa-camera"></i></label>
+                    <input type="file" name="image" id="id_image" accept="image/*" hidden>
+                </form>
+                {% endif %}
+            </div>
+            <div class="lot-profile-id">
+                <h1>{% if person.first_name or person.last_name %}{{ person.first_name|title }} {{ person.last_name|title }}{% else %}{{ person.email }}{% endif %}</h1>
+                {% if person.first_name or person.last_name %}<p><i class="fa fa-envelope" style="color: var(--lot-gold); margin-right: 6px;"></i>{{ person.email }}</p>{% else %}<p><i class="fa fa-star" style="color: var(--lot-gold); margin-right: 6px;"></i>LOT Store member</p>{% endif %}
+            </div>
+            {% if request.user == person %}
+            <div class="lot-profile-actions">
+                <a href="{% url 'editprofile' %}" class="btn"><i class="fa fa-pencil"></i> Edit profile</a>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+
+    <div class="lot-stats reveal" style="margin: 0 0 22px;">
+        <div class="lot-stat"><strong data-count-to="{{ order_count }}">{{ order_count }}</strong><span>Paid order{{ order_count|pluralize }}</span></div>
+        <div class="lot-stat"><strong>&#8358;{{ total_spent|intcomma }}</strong><span>Total spent</span></div>
+        <div class="lot-stat"><strong>{{ person.date_joined|date:"Y" }}</strong><span>Member since</span></div>
     </div>
 
-    <div style="flex: 1 1 300px; min-width: 0;">
-      <p><strong>Name:</strong> {{ person.first_name|title }} {{ person.last_name|title }}</p>
-      <p><strong>Email:</strong> {{ person.email }}</p>
-      <p><strong>Phone:</strong> {{ person.phone }}</p>
-      <p><strong>Gender:</strong> {{ person.gender|default:"Not set" }}</p>
-      <p><strong>Date of Birth:</strong> {{ person.date_of_birth|default:"Not set" }}</p>
-      <p><strong>Joined:</strong> {{ person.date_joined|date:"j M Y" }}</p>
+    <div class="lot-profile-grid">
+        <section class="lot-form-card reveal">
+            <div class="lot-card-head">
+                <h2><i class="fa fa-id-card"></i> Personal details</h2>
+                {% if request.user == person %}<a href="{% url 'editprofile' %}">Edit <i class="fa fa-pencil"></i></a>{% endif %}
+            </div>
+            <dl class="lot-dl">
+                <div><dt>First name</dt><dd>{{ person.first_name|title|default:"" }}{% if not person.first_name %}<span class="is-empty">Not set</span>{% endif %}</dd></div>
+                <div><dt>Last name</dt><dd>{{ person.last_name|title|default:"" }}{% if not person.last_name %}<span class="is-empty">Not set</span>{% endif %}</dd></div>
+                <div class="lot-dl__wide"><dt>Email</dt><dd>{{ person.email }}</dd></div>
+                <div><dt>Phone</dt><dd>{% if person.phone %}{{ person.phone }}{% else %}<span class="is-empty">Not set</span>{% endif %}</dd></div>
+                <div><dt>Gender</dt><dd>{% if person.gender %}{{ person.gender|title }}{% else %}<span class="is-empty">Not set</span>{% endif %}</dd></div>
+                <div><dt>Date of birth</dt><dd>{% if person.date_of_birth %}{{ person.date_of_birth|date:"j F Y" }}{% else %}<span class="is-empty">Not set</span>{% endif %}</dd></div>
+                <div><dt>Joined</dt><dd>{{ person.date_joined|date:"j M Y" }}</dd></div>
+            </dl>
+        </section>
 
-      {% if about %}
-      <hr>
-      <p><strong>Address:</strong> {{ about.address }}, {{ about.state }}, {{ about.country }}</p>
-      {% if about.about %}<p><strong>About:</strong> {{ about.about|linebreaksbr }}</p>{% endif %}
-      {% endif %}
+        <section class="lot-form-card reveal">
+            <div class="lot-card-head">
+                <h2><i class="fa fa-map-marker"></i> Delivery address</h2>
+                {% if request.user == person %}
+                {% if about %}<a href="{% url 'editAbout' %}">Edit <i class="fa fa-pencil"></i></a>{% else %}<a href="{% url 'AddAbout' %}">Add <i class="fa fa-plus"></i></a>{% endif %}
+                {% endif %}
+            </div>
+            {% if about %}
+            <dl class="lot-dl">
+                <div class="lot-dl__wide"><dt>Address</dt><dd>{{ about.address|default:"" }}{% if not about.address %}<span class="is-empty">Not set</span>{% endif %}</dd></div>
+                <div><dt>State</dt><dd>{{ about.state|default:"" }}{% if not about.state %}<span class="is-empty">Not set</span>{% endif %}</dd></div>
+                <div><dt>Country</dt><dd>{{ about.country|default:"" }}{% if not about.country %}<span class="is-empty">Not set</span>{% endif %}</dd></div>
+                {% if about.about %}<div class="lot-dl__wide"><dt>About</dt><dd>{{ about.about|linebreaksbr }}</dd></div>{% endif %}
+            </dl>
+            {% else %}
+            <div class="lot-empty" style="padding: 18px 10px;">
+                <div class="lot-empty__icon" style="width: 56px; height: 56px; font-size: 1.3rem;"><i class="fa fa-map-marker"></i></div>
+                <p class="lot-text-muted" style="margin-bottom: 14px;">Save your address once and checkout fills it in for you.</p>
+                {% if request.user == person %}<a href="{% url 'AddAbout' %}" class="btn btn-sm"><i class="fa fa-plus"></i> Add address</a>{% endif %}
+            </div>
+            {% endif %}
+        </section>
 
-      {% if request.user == person %}
-      <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px;">
-        <a href="{% url 'editprofile' %}" class="btn" style="background: var(--lot-ink); color: #fff;">Edit Profile</a>
-        {% if about %}
-        <a href="{% url 'editAbout' %}" class="btn" style="background: var(--lot-ink); color: #fff;">Edit Address</a>
-        {% else %}
-        <a href="{% url 'AddAbout' %}" class="btn" style="background: var(--lot-ink); color: #fff;">Add Address</a>
+        <section class="lot-form-card reveal">
+            <div class="lot-card-head">
+                <h2><i class="fa fa-shopping-bag"></i> Recent orders</h2>
+                {% if request.user == person %}<a href="{% url 'payment_history' %}">View all <i class="fa fa-arrow-right"></i></a>{% endif %}
+            </div>
+            {% if recent_orders %}
+            <ul class="lot-orders">
+                {% for payment in recent_orders %}
+                <li>
+                    <a href="{% url 'payment_view' payment.ref %}">
+                        <span class="lot-orders__icon"><i class="fa fa-receipt"></i></span>
+                        <span class="lot-orders__main">
+                            <strong>Order {{ payment.ref|truncatechars:12 }}</strong>
+                            <small>{{ payment.date_created|date:"j M Y" }}</small>
+                        </span>
+                        <span class="lot-orders__side">
+                            <b>&#8358;{{ payment.amount|intcomma }}</b>
+                            {% include "partials/order_status.html" with order=payment.order %}
+                        </span>
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="lot-empty" style="padding: 18px 10px;">
+                <div class="lot-empty__icon" style="width: 56px; height: 56px; font-size: 1.3rem;"><i class="fa fa-shopping-bag"></i></div>
+                <p class="lot-text-muted" style="margin-bottom: 14px;">No orders yet. Your first one will show up here.</p>
+                <a href="{% url 'merchs' %}" class="btn btn-sm">Start shopping</a>
+            </div>
+            {% endif %}
+        </section>
+
+        {% if request.user == person %}
+        <section class="lot-form-card reveal">
+            <div class="lot-card-head">
+                <h2><i class="fa fa-shield"></i> Account &amp; security</h2>
+            </div>
+            <div class="lot-quick">
+                <a href="{% url 'password_change' %}"><i class="fa fa-key"></i><span>Change password</span><i class="fa fa-chevron-right"></i></a>
+                <a href="{% url 'view_cart' %}"><i class="fa fa-shopping-cart"></i><span>My cart</span><i class="fa fa-chevron-right"></i></a>
+                <a href="{% url 'payment_history' %}"><i class="fa fa-history"></i><span>Order history</span><i class="fa fa-chevron-right"></i></a>
+                <a href="{% url 'logout' %}" class="is-danger"><i class="fa fa-sign-out"></i><span>Log out</span><i class="fa fa-chevron-right"></i></a>
+            </div>
+        </section>
         {% endif %}
-        <a href="{% url 'payment_history' %}" class="btn lot-btn-primary">My Orders</a>
-        <a href="{% url 'password_change' %}" class="btn" style="background: var(--lot-gold); color: var(--lot-ink);">Change Password</a>
-      </div>
-      {% endif %}
     </div>
-  </div>
 </div>
+
+{% if request.user == person %}
+<script>
+    // Choosing a photo previews it instantly and uploads it straight away.
+    (function () {
+        var input = document.getElementById('id_image');
+        var form = document.getElementById('avatar-form');
+        var avatar = document.getElementById('profile-avatar');
+        if (!input || !form) { return; }
+        input.addEventListener('change', function () {
+            var file = input.files && input.files[0];
+            if (!file) { return; }
+            if (file.size > 5 * 1024 * 1024) {
+                if (window.LOT) { LOT.toast('Please choose an image under 5 MB.', { type: 'error' }); }
+                input.value = '';
+                return;
+            }
+            var url = URL.createObjectURL(file);
+            var img = document.getElementById('profile-avatar-img');
+            if (!img) {
+                img = document.createElement('img');
+                img.id = 'profile-avatar-img';
+                img.alt = 'New profile picture';
+                var initial = avatar.querySelector('.lot-profile-avatar__initial');
+                avatar.replaceChild(img, initial);
+            }
+            img.src = url;
+            avatar.classList.add('is-uploading');
+            form.submit();
+        });
+    })();
+</script>
+{% endif %}
 {% endblock main %}

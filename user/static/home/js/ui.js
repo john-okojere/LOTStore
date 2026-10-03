@@ -468,6 +468,161 @@
         }
     }
 
+    /* ---------- Content pages ---------- */
+
+    // Numbers count up from zero when they scroll into view.
+    function initCounters() {
+        var els = document.querySelectorAll('[data-count-to]');
+        if (!els.length) { return; }
+        function run(el) {
+            var target = parseInt(el.getAttribute('data-count-to'), 10) || 0;
+            if (reduceMotion || target === 0) { el.textContent = target.toLocaleString('en-NG'); return; }
+            var start = null;
+            function step(ts) {
+                if (!start) { start = ts; }
+                var t = Math.min((ts - start) / 1200, 1);
+                var eased = 1 - Math.pow(1 - t, 3);
+                el.textContent = Math.round(target * eased).toLocaleString('en-NG');
+                if (t < 1) { window.requestAnimationFrame(step); }
+            }
+            window.requestAnimationFrame(step);
+        }
+        if (!('IntersectionObserver' in window)) { els.forEach(run); return; }
+        var io = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                if (entry.isIntersecting) { run(entry.target); io.unobserve(entry.target); }
+            });
+        }, { threshold: 0.6 });
+        els.forEach(function (el) { el.textContent = '0'; io.observe(el); });
+    }
+
+    // Live "12 / 2000" counter under text areas.
+    function initCharCounters() {
+        document.querySelectorAll('[data-count-chars]').forEach(function (field) {
+            var counter = field.parentElement.querySelector('.lot-field__count');
+            if (!counter) { return; }
+            var max = field.getAttribute('maxlength');
+            var update = function () { counter.textContent = field.value.length + (max ? ' / ' + max : ''); };
+            field.addEventListener('input', update);
+            update();
+        });
+    }
+
+    // Spinner on the submit button so people don't double-submit.
+    function initLoadingForms() {
+        document.querySelectorAll('form[data-loading-form]').forEach(function (form) {
+            form.addEventListener('submit', function () {
+                if (form.noValidate === false && !form.checkValidity()) { return; }
+                var btn = form.querySelector('button[type=submit]');
+                if (btn) { btn.classList.add('is-loading'); }
+            });
+        });
+    }
+
+    // FAQ: instant search plus topic filter.
+    function initFaq() {
+        var list = document.getElementById('faq-list');
+        if (!list) { return; }
+        var input = document.getElementById('faq-search');
+        var empty = document.getElementById('faq-empty');
+        var tabs = document.querySelectorAll('#faq-topics [data-topic]');
+        var items = list.querySelectorAll('.accordion-item');
+        var topic = 'all';
+        items.forEach(function (item) {
+            var header = item.querySelector('.accordion-header');
+            var icon = header.querySelector('i');
+            header.setAttribute('data-q', header.textContent.trim());
+            item._icon = icon;
+        });
+        function esc(v) { var d = document.createElement('div'); d.textContent = v; return d.innerHTML; }
+        function apply() {
+            var q = (input && input.value.trim().toLowerCase()) || '';
+            var shown = 0;
+            items.forEach(function (item) {
+                var header = item.querySelector('.accordion-header');
+                var question = header.getAttribute('data-q');
+                var text = (question + ' ' + item.querySelector('.accordion-content').textContent).toLowerCase();
+                var match = (topic === 'all' || item.getAttribute('data-topic') === topic) && (!q || text.indexOf(q) !== -1);
+                item.classList.toggle('is-hidden', !match);
+                // Highlight the matching words in the question.
+                var i = q ? question.toLowerCase().indexOf(q) : -1;
+                header.innerHTML = (i < 0 ? esc(question) : esc(question.slice(0, i)) + '<mark>' + esc(question.slice(i, i + q.length)) + '</mark>' + esc(question.slice(i + q.length))) + ' ';
+                header.appendChild(item._icon);
+                if (match) {
+                    shown += 1;
+                    item.classList.add('is-visible');
+                }
+            });
+            if (empty) { empty.classList.toggle('is-shown', shown === 0); }
+        }
+        if (input) { input.addEventListener('input', apply); }
+        tabs.forEach(function (tab) {
+            tab.addEventListener('click', function (e) {
+                e.preventDefault();
+                topic = tab.getAttribute('data-topic');
+                tabs.forEach(function (t) {
+                    t.classList.toggle('is-active', t === tab);
+                    t.setAttribute('aria-selected', t === tab ? 'true' : 'false');
+                });
+                apply();
+            });
+        });
+    }
+
+    // Policies: numbered sections, table of contents, reading progress and time.
+    function initLegal() {
+        var article = document.querySelector('[data-legal]');
+        if (!article) { return; }
+        var sections = article.querySelectorAll('.lot-legal__section');
+        var toc = document.querySelector('[data-toc]');
+        var list = toc && toc.querySelector('ol');
+        var links = [];
+        sections.forEach(function (section, i) {
+            var h2 = section.querySelector('h2');
+            if (!h2) { return; }
+            var num = document.createElement('span');
+            num.className = 'lot-legal__num';
+            num.textContent = i + 1;
+            h2.insertBefore(num, h2.firstChild);
+            if (list) {
+                var li = document.createElement('li');
+                var a = document.createElement('a');
+                a.href = '#' + section.id;
+                a.textContent = h2.textContent.replace(/^\d+/, '').trim();
+                li.appendChild(a);
+                list.appendChild(li);
+                links.push({ a: a, section: section });
+            }
+        });
+        // Collapse the contents list on small screens so the policy text comes first.
+        if (toc && window.matchMedia('(max-width: 1100px)').matches) { toc.removeAttribute('open'); }
+
+        var words = article.textContent.trim().split(/\s+/).length;
+        var readTime = document.querySelector('[data-read-time]');
+        if (readTime) { readTime.textContent = Math.max(1, Math.round(words / 200)) + ' min'; }
+
+        var bar = document.getElementById('lot-progress');
+        function onScroll() {
+            if (bar) {
+                var rect = article.getBoundingClientRect();
+                var total = rect.height - window.innerHeight * 0.6;
+                var done = Math.min(Math.max(-rect.top + window.innerHeight * 0.2, 0) / Math.max(total, 1), 1);
+                bar.style.transform = 'scaleX(' + done + ')';
+            }
+            var current = null;
+            links.forEach(function (l) {
+                if (l.section.getBoundingClientRect().top < window.innerHeight * 0.35) { current = l; }
+            });
+            links.forEach(function (l) {
+                var on = l === current;
+                l.a.classList.toggle('is-active', on);
+                l.section.classList.toggle('is-current', on);
+            });
+        }
+        window.addEventListener('scroll', function () { window.requestAnimationFrame(onScroll); }, { passive: true });
+        onScroll();
+    }
+
     /* ---------- Back to top ---------- */
     function initBackToTop() {
         var btn = document.querySelector('.lot-fab--top');
@@ -537,6 +692,11 @@
         initSteppers();
         initAccordion();
         initSidebar();
+        initCounters();
+        initCharCounters();
+        initLoadingForms();
+        initFaq();
+        initLegal();
         initBackToTop();
     });
 })();

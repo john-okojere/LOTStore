@@ -30,7 +30,10 @@ def FAQ(request):
     return render(request, 'home/faq.html')
 
 def about(request):
-    return render(request, 'home/about.html')
+    return render(request, 'home/about.html', {
+        'product_count': Product.objects.filter(is_public=True).count(),
+        'category_count': Category.objects.count(),
+    })
 
 def returnPolicy(request):
     return render(request, 'home/returnPolicy.html')

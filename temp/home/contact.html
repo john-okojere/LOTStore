@@ -1,36 +1,86 @@
 {% extends "base.html" %}
 {% load static %}
+{% block title %}Contact Us |{% endblock title %}
 {% block main %}
-<link rel="stylesheet" href="{% static 'home/css/contact.css' %}">
-<section class="contact-section">
-    <div class="contact-info">
-      <h2>Contact Information</h2>
-      <p><strong>Email:</strong> store@layersoftruth.org</p>
-      <p><strong>Phone:</strong> +234(0) 817 052 6942</p>
-      <p><strong>Address:</strong> Soul Center, Along Mothercat Road, Farin-Gida Mando. Kaduna Nigeria.
-      </p>
-      <div class="map" style="width: 100%;">
-        <iframe class="dc-video" src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3921.988932757856!2d7.418283175821573!3d10.580037762783864!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x11b2cb526701f3d9%3A0xca499d63506c1830!2sLayers%20Of%20Truth!5e0!3m2!1sen!2sng!4v1702852530840!5m2!1sen!2sng" height="450" style="border:0;width: 100%;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+<div class="lot-page">
+    {% include "partials/page_hero.html" with eyebrow="Contact us" icon="fa-comments" title="We'd love to hear from you" lead="Questions about an order, sizes or a custom design? Reach out on WhatsApp for the quickest reply, or send us a message below." %}
+
+    <div class="lot-contact-cards">
+        <a class="lot-contact-card lot-contact-card--wa reveal" href="https://wa.me/2347044448932" target="_blank" rel="noopener">
+            <span class="lot-contact-card__icon"><i class="fa fa-whatsapp"></i></span>
+            <div>
+                <h3>WhatsApp Pastor Oshoma</h3>
+                <p>+234 704 444 8932</p>
+                <span class="lot-contact-card__go">Start a chat <i class="fa fa-arrow-right"></i></span>
+            </div>
+        </a>
+        <a class="lot-contact-card reveal" href="mailto:store@layersoftruth.org">
+            <span class="lot-contact-card__icon"><i class="fa fa-envelope"></i></span>
+            <div>
+                <h3>Email us</h3>
+                <p>store@layersoftruth.org</p>
+                <span class="lot-contact-card__go">Write an email <i class="fa fa-arrow-right"></i></span>
+            </div>
+        </a>
+        <a class="lot-contact-card reveal" href="https://www.google.com/maps/dir/?api=1&destination=Layers+Of+Truth+Mando+Kaduna" target="_blank" rel="noopener">
+            <span class="lot-contact-card__icon"><i class="fa fa-map-marker"></i></span>
+            <div>
+                <h3>Visit us</h3>
+                <p>Soul Center, Along Mothercat Road, Farin-Gida Mando, Kaduna, Nigeria.</p>
+                <span class="lot-contact-card__go">Get directions <i class="fa fa-arrow-right"></i></span>
+            </div>
+        </a>
     </div>
+
+    <div class="lot-contact-main">
+        <div class="lot-form-card reveal" id="message">
+            <h2>Send us a message</h2>
+            <p>Fill in the form and our team will get back to you by email.</p>
+            {% if success_message %}
+            <div class="lot-alert lot-alert--ok" role="status">
+                <svg class="lot-check" viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="24"/><path d="M15 27l7 7 15-15"/></svg>
+                <span>{{ success_message }}</span>
+            </div>
+            {% endif %}
+            {% if error_message %}
+            <div class="lot-alert lot-alert--err" role="alert"><i class="fa fa-exclamation-circle"></i><span>{{ error_message }}</span></div>
+            {% endif %}
+            <form method="post" action="{% url 'contact' %}#message" data-loading-form>
+                {% csrf_token %}
+                <div class="lot-field">
+                    <input type="text" id="name" name="name" placeholder=" " autocomplete="name" required>
+                    <label for="name">Your name</label>
+                </div>
+                <div class="lot-field">
+                    <input type="email" id="email" name="email" placeholder=" " autocomplete="email" required>
+                    <label for="email">Your email</label>
+                </div>
+                <div class="lot-field">
+                    <textarea id="message-text" name="message" placeholder=" " maxlength="2000" required data-count-chars></textarea>
+                    <label for="message-text">How can we help?</label>
+                    <span class="lot-field__count" aria-hidden="true">0 / 2000</span>
+                </div>
+                <button type="submit" class="btn"><i class="fa fa-paper-plane"></i> Send message</button>
+            </form>
+        </div>
+
+        <div class="lot-map reveal">
+            <iframe title="Map to Layers of Truth, Kaduna" src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3921.988932757856!2d7.418283175821573!3d10.580037762783864!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x11b2cb526701f3d9%3A0xca499d63506c1830!2sLayers%20Of%20Truth!5e0!3m2!1sen!2sng!4v1702852530840!5m2!1sen!2sng" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+            <div class="lot-map__foot">
+                <span><i class="fa fa-map-marker" style="color: var(--lot-gold); margin-right: 6px;"></i> Layers of Truth, Mando, Kaduna</span>
+                <a href="https://www.google.com/maps/dir/?api=1&destination=Layers+Of+Truth+Mando+Kaduna" target="_blank" rel="noopener">Open in Maps <i class="fa fa-external-link"></i></a>
+            </div>
+        </div>
     </div>
-    <div class="contact-form">
-      <h2>Send Us a Message</h2>
-      {% if success_message %}
-      <p style="color: var(--lot-green); font-weight: 600;">{{ success_message }}</p>
-      {% endif %}
-      {% if error_message %}
-      <p style="color: var(--lot-danger); font-weight: 600;">{{ error_message }}</p>
-      {% endif %}
-      <form  method="post">
-        {% csrf_token %}
-        <label for="name">Your Name:</label>
-        <input type="text" id="name" name="name" required>
-        <label for="email">Your Email:</label>
-        <input type="email" id="email" name="email" required>
-        <label for="message">Your Message:</label>
-        <textarea id="message" name="message" required></textarea>
-        <button type="submit">Send Message</button>
-      </form>
-    </div>
-  </section>
+
+    <section class="lot-cta-band reveal">
+        <div>
+            <h2>Looking for a quick answer?</h2>
+            <p>Most questions about orders, payment and delivery are answered in our FAQs.</p>
+        </div>
+        <div class="lot-cta-band__actions">
+            <a href="{% url 'faq' %}" class="btn">Read the FAQs <i class="fa fa-arrow-right"></i></a>
+        </div>
+    </section>
+</div>
 {% endblock main %}
