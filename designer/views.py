@@ -59,9 +59,18 @@ def _save_preview(obj, data_url, prefix):
         return
 
 
-@login_required
 def design_list(request):
-    return render(request, "designer/list.html", {"designs": DesignRequest.objects.filter(customer=request.user).select_related("product")})
+    designs = (
+        DesignRequest.objects.filter(customer=request.user).select_related("product")
+        if request.user.is_authenticated else DesignRequest.objects.none()
+    )
+    products = (
+        Product.objects.filter(customizable=True, is_public=True, mockup_views__isnull=False)
+        .prefetch_related("categories")
+        .distinct()
+        .order_by("name")
+    )
+    return render(request, "designer/list.html", {"designs": designs, "customizable_products": products})
 
 
 @login_required

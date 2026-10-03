@@ -47,9 +47,10 @@
             {% if product.productType == "Gift on Buy" %}<span class="lot-chip" style="padding: 2px 12px; font-size: 0.8rem; border-color: var(--lot-green);"><i class="fa fa-gift"></i> Gift on buy</span>{% endif %}
         </div>
         <h1 class="lot-pdp__title">{{ product.name }}</h1>
-        <p class="lot-pdp__price">&#8358;{{ product.price|intcomma }}</p>
+        <p class="lot-pdp__price">{% if product.customizable %}Price confirmed after design review{% else %}&#8358;{{ product.price|intcomma }}{% endif %}</p>
         <p class="lot-pdp__stock">
-            {% if product.stock <= 0 %}<span class="lot-text-danger" style="font-weight: 600;">Out of stock</span>
+            {% if product.customizable %}<span class="lot-text-success" style="font-weight: 500;"><i class="fa fa-paint-brush"></i> Made to order</span>
+            {% elif product.stock <= 0 %}<span class="lot-text-danger" style="font-weight: 600;">Out of stock</span>
             {% elif product.stock <= 5 %}<span class="lot-stock-low">Only {{ product.stock }} left, order soon</span>
             {% else %}<span class="lot-text-success" style="font-weight: 500;"><i class="fa fa-check-circle"></i> In stock</span>{% endif %}
         </p>
@@ -64,7 +65,7 @@
         {% if product.customizable %}
         <a href="{% url 'designer:start' product.uid %}" class="btn lot-pdp__cta" style="display:block;text-align:center;margin-bottom:12px;"><i class="fa fa-paint-brush"></i> Customize this product</a>
         {% endif %}
-        {% if product.stock > 0 %}
+        {% if not product.customizable and product.stock > 0 %}
         <form id="add-to-cart-form" method="post" action="{% url 'add_to_cart' product.uid %}" novalidate>
             {% csrf_token %}
             {% with sizes=product.size.all %}

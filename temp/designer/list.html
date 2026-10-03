@@ -1,6 +1,51 @@
-{% extends "base.html" %}{% load humanize static %}
+{% extends "base.html" %}
+{% load humanize static %}
+
 {% block main %}
-<link rel="stylesheet" href="{% static 'designer/designer.css' %}">
-<section class="lot-section design-page"><div class="design-heading"><div><p class="eyebrow">CUSTOM STUDIO</p><h1>My designs</h1><p>Draft, submit and track your custom product requests.</p></div><a class="btn" href="{% url 'merchs' %}">Choose a product</a></div>
-<div class="design-grid">{% for item in designs %}<a class="design-card" href="{% if item.status == 'draft' or item.status == 'changes_requested' %}{% url 'designer:editor' item.uid %}{% else %}{% url 'designer:detail' item.uid %}{% endif %}">{% if item.preview %}<img src="{{ item.preview.url }}" alt="{{ item.product.name }} preview">{% else %}<img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">{% endif %}<div><span class="status status--{{ item.status }}">{{ item.get_status_display }}</span><h2>{{ item.product.name }}</h2><small>Updated {{ item.updated_at|naturaltime }}</small></div></a>{% empty %}<div class="empty-state"><h2>No designs yet</h2><p>Choose a customizable product to begin.</p><a class="btn" href="{% url 'merchs' %}">Browse products</a></div>{% endfor %}</div></section>
+<link rel="stylesheet" href="{% static 'designer/designer.css' %}?v=20261003-picker">
+<section class="lot-section design-page">
+  <div class="design-heading">
+    <div>
+      <p class="eyebrow">CUSTOM STUDIO</p>
+      <h1>Choose what you want to customize</h1>
+      <p>Select a blank product, add your artwork or text, and submit it for a custom quote.</p>
+    </div>
+  </div>
+
+  <div class="custom-product-grid">
+    {% for product in customizable_products %}
+    <article class="custom-product-card">
+      <a href="{% url 'designer:start' product.uid %}" class="custom-product-card__image">
+        <img src="{{ product.image.url }}" alt="Customize {{ product.name }}" loading="lazy">
+      </a>
+      <div class="custom-product-card__body">
+        <div class="custom-product-card__categories">
+          {% for category in product.categories.all %}<span>{{ category.name }}</span>{% endfor %}
+        </div>
+        <h2>{{ product.name }}</h2>
+        <p>{{ product.description|truncatewords:18 }}</p>
+        <a class="btn" href="{% url 'designer:start' product.uid %}"><i class="fa fa-paint-brush"></i> Start designing</a>
+      </div>
+    </article>
+    {% empty %}
+    <div class="empty-state"><h2>Custom products are coming soon</h2></div>
+    {% endfor %}
+  </div>
+
+  {% if user.is_authenticated %}
+  <div class="design-history-heading">
+    <div><p class="eyebrow">YOUR WORK</p><h2>My designs</h2><p>Continue drafts and track submitted requests.</p></div>
+  </div>
+  <div class="design-grid">
+    {% for item in designs %}
+    <a class="design-card" href="{% if item.status == 'draft' or item.status == 'changes_requested' %}{% url 'designer:editor' item.uid %}{% else %}{% url 'designer:detail' item.uid %}{% endif %}">
+      {% if item.preview %}<img src="{{ item.preview.url }}" alt="{{ item.product.name }} preview">{% else %}<img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">{% endif %}
+      <div><span class="status status--{{ item.status }}">{{ item.get_status_display }}</span><h2>{{ item.product.name }}</h2><small>Updated {{ item.updated_at|naturaltime }}</small></div>
+    </a>
+    {% empty %}
+    <div class="empty-state"><h2>No designs yet</h2><p>Choose one of the customizable products above to begin.</p></div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</section>
 {% endblock %}
