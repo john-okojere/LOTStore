@@ -1,6 +1,6 @@
 {% extends "base.html" %}{% load static %}
 {% block main %}
-<link rel="stylesheet" href="{% static 'designer/designer.css' %}">
+<link rel="stylesheet" href="{% static 'designer/designer.css' %}?v=20261003-picker">
 <section class="studio" id="studio" data-save-url="{% url 'designer:save' design.uid %}" data-asset-url="{% url 'designer:asset' design.uid %}">
 <header class="studio__head"><div><a href="{% url 'designer:list' %}">← My designs</a><h1>Customize {{ design.product.name }}</h1><span id="save-state">Changes saved automatically</span></div><div class="studio__actions"><button type="button" id="save-btn" class="btn lot-btn-secondary">Save draft</button><button type="button" id="open-submit" class="btn">Review & submit</button></div></header>
 <nav class="view-tabs" aria-label="Product views">{% for view in mockups %}<button type="button" class="view-tab{% if forloop.first %} active{% endif %}" data-id="{{ view.id }}" data-name="{{ view.name }}" data-image="{{ view.image.url }}" data-x="{{ view.print_x }}" data-y="{{ view.print_y }}" data-w="{{ view.print_width }}" data-h="{{ view.print_height }}">{{ view.name }}</button>{% endfor %}</nav>

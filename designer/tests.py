@@ -89,3 +89,13 @@ class DesignerFlowTests(TestCase):
         self.client.force_login(self.staff)
         self.assertEqual(self.client.get(reverse("designer_staff:list")).status_code, 200)
         self.assertEqual(self.client.get(reverse("designer_staff:detail", args=[design.uid])).status_code, 200)
+
+    def test_customizable_products_are_listed_in_studio_not_shop(self):
+        studio = self.client.get(reverse("designer:list"))
+        self.assertEqual(studio.status_code, 200)
+        self.assertContains(studio, self.product.name)
+        self.assertContains(studio, "Start designing")
+
+        shop = self.client.get(reverse("merchs"))
+        self.assertEqual(shop.status_code, 200)
+        self.assertNotContains(shop, self.product.name)
